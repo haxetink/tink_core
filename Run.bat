@@ -1,4 +1,3 @@
-@echo off
 cd bin
-neko tinkcore.n
+neko tests.n
 pause
