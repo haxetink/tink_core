@@ -20,7 +20,7 @@ Here is an overview:
 
 The outcome type is quite similar to [`haxe.ds.Option`](http://haxe.org/api/haxe/ds/option), but is different in that it is tailored specifically to represent the result of an operation that either fails or succeeds.
 
-```haxe
+```    
 enum Outcome<Data, Failure> {
 	Success(data:Data);
 	Failure(?failure:Failure);
@@ -53,7 +53,7 @@ Tells whether an outcome was successful.
 
 Here is some example code of what neko file access might look like:
 
-```haxe
+```    
 using tink.core.Outcome;
 enum FileAccessError {
 	NoSuchFile(path:String);
@@ -100,7 +100,7 @@ class Main {
 
 Because in Haxe 3 `Void` can no longer have values, i.e. values of a type that always holds nothing, `tink_core` introduces `Noise`.
 
-```haxe
+```    
 enum Noise { Noise; }
 ```
 
@@ -108,7 +108,7 @@ Technically, `null` is also a valid value for `Noise`. In any case, there is no 
 
 An example where using `Noise` makes sense is when you have an operation that succeeds with out any data to speak of:
 
-```haxe
+```    
 function writeToFile(content:String):Outcome<Noise, IoError>;
 ```
 
@@ -116,7 +116,7 @@ function writeToFile(content:String):Outcome<Noise, IoError>;
 
 To denote callbacks, `tink_core` introduces a special type:
 
-```haxe
+```    
 abstract Callback<T> from T->Void {
 	function invoke(data:T):Void;
 	@:from static function fromNiladic<A>(f:Void->Void):Callback<A> 
@@ -136,7 +136,7 @@ myButton.onClick(function (e) trace('clicked at (${e.x}, ${e.y})'));
 
 Beyond that, one might ask what to do if you don't have any data to pass to the callback, or more than a single value. In that case, you could use these two respectively:
 
-```haxe
+```    
 Callback<Noise>
 Callback<{a:A, b:B}>
 ```
@@ -152,7 +152,7 @@ When you register a callback to a caller, you often want to be able to undo this
 
 As opposed to that, tink adheres to a different approach, where the registration returns a "callback link", i.e. a value representing the link between the caller and the callback. It looks as follows:
 
-```haxe
+```    
 abstract CallbackLink {
 	function dissolve():Void;
 	@:to function toCallback<A>():Callback<A>;
@@ -164,7 +164,7 @@ Calling `dissolve` will dissolve the link, as suggested by the name. Ain't no ro
 
 The link itself can be promoted to become a callback, so that you can in fact register it as a handler elsewhere:
 
-```haxe
+```    
 button.onPress(function () {
 	var stop = button.onMouseMove(function () trace('move!');
 	button.onRelease(stop);
@@ -175,7 +175,7 @@ button.onPress(function () {
 
 While the `Callback` and `CallbackLink` are pretty nice in theory, on their own, they have no application. For that reasons `tink_core` defines a basic infrastructure to provide callback registration and link dissolving:
 
-```haxe
+```    
 abstract CallbackList<T> {
 	var length(get, never):Int;
 	function new():Void;
@@ -203,7 +203,7 @@ Finally, it is worth nothing that as the last function indicates, the list can a
 
 Despite an overabundance of signal implementations, `tink_core` does provide its own flavour of signals. One that aims at utmost simplicity and full integration with the rest of tink. Here it is:
 
-```haxe
+```    
 abstract Signal<T> {
 	function new(f:Callback<T>->CallbackLink):Void;
 
@@ -227,7 +227,7 @@ When compared to mechanisms like flash's `EventDispatcher` or the DOM's `EventTa
 
 Say you have the following class:
 
-```haxe
+```    
 class Button {
 	public var pressed(default, null):Signal<MouseEvent>;
 	public var clicked(default, null):Signal<MouseEvent>;
@@ -241,7 +241,7 @@ You know exactly which events to expect and what type they will have. Also, an i
 
 As the constructor indicates, a signal can be constructed from any function that consumes a callback and returns a link. It should become obvious, how a `CallbackList` becomes a `Signal` and that's alse the suggested method to create signals. Note that as stated above, a `CallbackList` will be implicitly converted to a `Signal`, so this is valid code:
 
-```haxe
+```    
 var signal:Signal<Int> = new CallbackList();
 ```
 
@@ -257,7 +257,7 @@ Unlike many other signal flavors, tink's signals do not allow client code to inv
 
 Here's an example of just that:
 
-```haxe
+```    
 class Clock {
 	public var tick(default, null):Signal<Noise>;
 	var tickHandlers:CallbackList<Noise>;
@@ -275,7 +275,7 @@ That being said, if you wish to provide means to dispatch a signal from outside,
 
 It is also quite easy to take an arbitrary API and wrap it in signals. Let's take the beloved `IEventDispatcher`.
 
-```haxe
+```    
 function makeSignal<A:Event>(dispatcher:IEventDispatcher, type:String):Signal<A> 
     return new Signal(
         function (cb:Callback<A>):CallbackLink {
@@ -299,7 +299,7 @@ First of all, `map` comes from the functional term of mapping. The idea is to us
 
 Secondly, we have `join` that allows us to join two signals of the same type into one. Here's an example of what that might look like, where we assume that we have a `plusButton` and a `minusButton` on our GUI and they each have a signal called `clicked`:
 
-```haxe
+```    
 var delta = 
 	plusButton.clicked
 		.map(function (_) return 1)
@@ -335,7 +335,7 @@ The implications of using gathering or not are rather subtle. But when in doubt,
 
 As the name would suggest, futures express the idea that something is going to happen in the future. Or much rather: a future represents the result of an asynchronous operation, that will become available at some point in time. It allows you to register a `Callback` for `when` the operation is finished.
 
-```haxe
+```    
 abstract Future<T> {
 	static function ofConstant<A>(v:A):Future<A>;
 	static function ofAsyncCall<A>(f:(A->Void)->Void):Future<A>;
@@ -353,7 +353,7 @@ We do already have callbacks after all. The main reason is that futures are valu
 
 Say you have these functions, that are built on one another:
 
-```haxe
+```    
 function loadFromURL(url:String, callback:String->Void):Void { 
 	/* load data somehow */ 
 }
@@ -376,7 +376,7 @@ function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<St
 
 Now let's see that code with futures:
 
-```haxe
+```    
 function loadFromURL(url:String):Future<Dynamic> { 
 	/* load the data somehow */ 
 }
@@ -407,7 +407,7 @@ While you can create Futures with the constructor very similarly to how you woul
 
 Suppose we didn't have a future based version of `loadFromURL` in the example above. In that case, we could construct one:
 
-```haxe
+```    
 function loadFromURL2(url:String) {
 	return Future.ofAsyncCall(loadFromURL.bind(url));
 }
@@ -417,7 +417,7 @@ And voila, we could build the other two functions on top of that and happily liv
 
 It may be possible that you have an operation that is sometimes synchronous and sometimes asynchronous. In that case, you can use `ofConstant`. Example:
 
-```haxe
+```    
 function loadFromURL2(url:String) {
 	return 
 		if (url == 'default') 
@@ -439,7 +439,7 @@ Dissolving links after the corresponding callbacks have been invoked simply has 
 
 For all those who love surprises and for all those who hate them, `tink_core` provides a neat way of expressing them. Simply put, a surprise is nothing but a future outcome. Literally:
 
-```haxe
+```    
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
 ```
 
@@ -449,7 +449,7 @@ This type thus represents an operation that will finish at some point in time an
 
 You often want to roll your own future. The simplest way to do this is by using a helper class:
 
-```haxe
+```    
 class FutureTrigger<T> {
 	function new():Void;
 	function asFuture():Future<T>;
@@ -459,7 +459,7 @@ class FutureTrigger<T> {
 
 Here is how you would use such a trigger:
 
-```haxe
+```    
 class Http {
 	static public function requestURL(url:String):Surprise<String, String> {
 	   var req = new haxe.Http(url),
@@ -473,7 +473,7 @@ class Http {
 
 And then client code can simply do this:
 
-```haxe
+```    
 Http.requestURL('http://example.com').when(function (result) switch result {
 	case Success(data): //...
 	case Failure(data): //...
@@ -484,7 +484,7 @@ Looks pretty neat already. And it forces client code to consider failure.
 
 Also, in `tink_lang` we have sugars to write the same piece of code as:
 
-```haxe
+```    
 @when(Http.requestURL('http://example.com'))
 	@do switch _ {
 		case Success(data): //...
@@ -496,7 +496,7 @@ Also, in `tink_lang` we have sugars to write the same piece of code as:
 
 Represents a value that can have either of two types:
 
-```haxe
+```    
 enum Either<A,B> {
 	Left(a:A);
 	Right(b:B);
@@ -509,7 +509,7 @@ At times you wish to share the same reference (and therefore changes to it) amon
 
 The `Ref` type does just that, but in an abstract:
 
-```haxe
+```    
 abstract Ref<T> {
 	var value(get, set):T;
 	function toString():String;
@@ -520,7 +520,7 @@ abstract Ref<T> {
 
 It is worth noting that `Ref` defines implicit conversion in both ways. The following code will thus compile:
 
-```haxe
+```    
 var r:Ref<Int> = 4;
 var i:Int = r;
 ```
