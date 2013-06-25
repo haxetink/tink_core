@@ -4,17 +4,17 @@ All modules are situated in `tink.core.*`. Some contain more than a single type.
 
 Here is an overview:
 
-- [Outcome](#outcome)
-- Noise
-- Callback
- - CallbackLink
- - CallbackList
-- Signal
-- Future
- - Surprise
- - FutureTrigger
-- Either
-- Ref
+- [`Outcome`](#outcome)
+- [`Noise`](#noise)
+- [`Callback`](#callback)
+ - [`CallbackLink`](#callbacklink)
+ - [`CallbackList`](#callbacklist)
+- [`Signal`](#signal)
+- [`Future`](#future)
+ - [`Surprise`](#surprise)
+ - [`FutureTrigger`](#futuretrigger)
+- [`Either`](#either)
+- [`Ref`](#ref)
 
 # Outcome
 
@@ -48,10 +48,6 @@ If the `outcome` failed, uses `fallback` instead. Note that this can still be a 
 Tells whether an `Outcome` is successful and the value is equal to `to`.
 * `function map<A,B,F> ( outcome:Outcome<A,F>, transform:A->B ):Outcome<B, F>`  
 Returns a new `Outcome`, where the success (if any) is transformed with the given transformer.
-* `function asSuccess<D,F> ( data:D ):Outcome<D,F>`  
-Converts an arbitrary value to a successful `Outcome`.
-* `function asFailure<D,F> ( reason:F ):Outcome<D,F>`  
-Converts an arbitrary value to a failed `Outcome`.
 * `function isSuccess<D,F> ( outcome:Outcome<D,F> ):Bool`  
 Tells whether an outcome was successful.
 
