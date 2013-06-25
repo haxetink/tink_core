@@ -2,4 +2,4 @@
 -cp tests
 -main Run
 -neko bin/tests.n
-#iota start "neko bin/test.n"
+#iota start Run.bat

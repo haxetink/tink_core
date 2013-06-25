@@ -10,12 +10,24 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	public function when(handler:Callback<T>):CallbackLink 
 		return (this)(handler);
 	
-	public function map<A>(f:T->A, ?dike = true):Signal<A> {
-		var ret = new Signal(function (cb) return (this)(function (result) cb.invoke(f(result))));
-		if (dike) ret = ret.dike();
+	public function map<A>(f:T->A, ?gather = true):Signal<A> {
+		var ret = new Signal(function (cb) return when(this, function (result) cb.invoke(f(result))));
+		if (gather) ret = ret.gather();
 		return ret;
 	}
-		
+	
+	public function join(other:Signal<T>, ?gather = true):Signal<T> {
+		var ret = new Signal(
+			function (cb:Callback<T>):CallbackLink 
+				return [
+					when(this, cb),
+					other.when(cb)
+				]
+		);
+		if (gather) ret = ret.gather();
+		return ret;
+	}
+	
 	public function next():Future<T> {
 		var ret = Future.create();
 		when(ret.invoke);
@@ -25,7 +37,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	public function noise():Signal<Noise>
 		return map(function (_) return Noise);
 	
-	public function dike():Signal<T> {
+	public function gather():Signal<T> {
 		var ret = new CallbackList<T>();
 		when(ret.invoke);
 		return ret;

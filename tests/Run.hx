@@ -17,6 +17,5 @@ class Run {
 		for (test in tests)
 			runner.add(test);
 		runner.run();
-		trace(Ref.to(5));
 	}
 }
