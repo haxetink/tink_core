@@ -247,7 +247,7 @@ var signal:Signal<Int> = new CallbackList();
 
 Registering callbacks is pretty straight forward. You provide the callback to `when` and get a link in return.
 
-Normally, `Signal` is implemented with a `CallbackList` and thus the same rules apply for callback registration.
+Normally, `Signal` is implemented with a `CallbackList` and thus [the same rules](#registering-callbacks) apply for callback registration.
 
 ### No way to dispatch from outside
 
@@ -429,7 +429,7 @@ function loadFromURL2(url:String) {
 
 As with `Signal` you use `when` to register a `Callback` and get a `CallbackLink` in return.
 
-Futures are usually created by `Future.ofAsyncCall` which is implemented on top of `CallbackList`. Thus the same rules apply. Please note that if you register a callback *after* the `Future` has completed, it will be called immediately.
+Futures are usually created by `Future.ofAsyncCall` which is implemented on top of `CallbackList`. Thus [the same rules](#registering-callbacks) apply. Please note that if you register a callback *after* the `Future` has completed, it will be called immediately.
 
 Dissolving links after the corresponding callbacks have been invoked simply has no effect.
 
