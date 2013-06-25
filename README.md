@@ -128,10 +128,8 @@ The most important question to ask here is why to complicate a simple concept as
 
 * It brings more clarity to code. Function types use structural subtyping, i.e. the signature alone defines the type. Type matches can thus be unintentional. Also calling something a callback when that's what it really is, carries more meaning.
 * The use of abstracts allows for implicit conversions. If you want to subscribe to an event but don't really care for the data, you don't have to define an argument you're not using. You can simply do either of both:
-```
-myButton.onClick(function () trace('clicked'));
-myButton.onClick(function (e) trace('clicked at (${e.x}, ${e.y})'));
-```
+ * `myButton.onClick(function () trace('clicked'));`
+ * `myButton.onClick(function (e) trace('clicked at (${e.x}, ${e.y})'));`
 * Instead of specifically relying on a function type, we have a separate abstraction, which at some point can be used to leverage platform knowledge to provide for faster code that doesn't have suffer from the performance penalties anonymous function have on most platforms
 
 Beyond that, one might ask what to do if you don't have any data to pass to the callback, or more than a single value. In that case, you could use these two respectively:
