@@ -188,6 +188,8 @@ abstract CallbackList<T> {
 
 By calling `add` you can thus register a callback and will obtain a link that allows undoig the registration. You can `invoke` all callbacks in the list with some data, or `clear` the list if you wish to. 
 
+### Registering callbacks
+
 Unlike with similar mechanisms, you can `add` the same callback multiple times and one `invoke` will then cause the callback to be called multiple times. You will however get distinct callback links that allow you to separately undo the registrations.
 While this behavior might strike you as unfamiliar, it does have advantages:
 
@@ -217,9 +219,31 @@ abstract Signal<T> {
 }
 ```
 
+A `Signal` quite simply invokes `Callback`s with some data `when` an event represented by that data occurs.
+
+### Why use signals?
+
+When compared to mechanisms like flash's `EventDispatcher` or the DOM's `EventTarget` or nodejs's `EventEmitter`, the main advantage is type safety.
+
+Say you have the following class:
+
+```haxe
+class Button {
+	public var pressed(default, null):Signal<MouseEvent>;
+	public var clicked(default, null):Signal<MouseEvent>;
+	public var released(default, null):Signal<MouseEvent>;
+}
+```
+
+You know exactly which events to expect and what type they will have. Also, an interface can define signals that an implementor must thus provide. And lastly, the fact that a signal itself is a value, you can pass it around rather then the whole object owning it.
+
 ### Rolling your own
 
-As the constructor indicates, a signal can be constructed from any function that consumes a callback and returns a link. It should become obvious, how a `CallbackList` becomes a `Signal`.
+As the constructor indicates, a signal can be constructed from any function that consumes a callback and returns a link. It should become obvious, how a `CallbackList` becomes a `Signal` and that's alse the suggested method to create signals. Note that as stated above, a `CallbackList` will be implicitly converted to a `Signal`, so this is valid code:
+
+```haxe
+var signal:Signal<Int> = new CallbackList();
+```
 
 ### Registering callbacks
 
@@ -313,15 +337,103 @@ As the name would suggest, futures express the idea that something is going to h
 
 ```haxe
 abstract Future<T> {
+	static function ofConstant<A>(v:A):Future<A>;
+	static function ofAsyncCall<A>(f:(A->Void)->Void):Future<A>;
 	function new(f:Callback<T>->CallbackLink):Void;	
 	function when(callback:Callback<T>):CallbackLink;
 	function map<A>(f:T->A):Future<A> 
 	function flatMap<A>(next:T->Future<A>):Future<A>; 
 	@:from static function fromMany<A>(a:Array<Future<A>>):Future<Array<A>>;
-	static function ofConstant<A>(v:A):Future<A>;
-	static function ofAsyncCall<A>(f:(A->Void)->Void):Future<A>;
 }
 ```
+
+### Why use futures?
+
+We do already have callbacks after all. The main reason is that futures are values and that has a number of advatages.
+
+Say you have these functions, that are built on one another:
+
+```haxe
+function loadFromURL(url:String, callback:String->Void):Void { 
+	/* load data somehow */ 
+}
+
+function loadFromParameters(params: { host: String, port: Int, url:String, params:Map<String> }, callback:String->Void):Void {
+	var url = buildURL(params);//wherever this comes from
+	loadFromURL(url, callback);
+}
+
+function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<String> }, callback:Array<String>->Void):Void {
+    var results = [],
+    	count = params.length;
+    for (i in 0...params.length) 
+    	loadFromParameters(params[i], function (data) {
+    		results[i] = data;
+    		if (--count == 0) callback(results);
+		});
+}
+```
+
+Now let's see that code with futures:
+
+```haxe
+function loadFromURL(url:String):Future<Dynamic> { 
+	/* load the data somehow */ 
+}
+
+function loadFromParameters(params: { host: String, port: Int, url:String, params:Map<String> }):Future<String> {
+	var url = buildURL(params);//wherever this comes from
+	return loadFromURL(url, callback);
+}
+
+function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<String> }):Future<Array<String>> {
+    return [for (p in params) 
+    	loadFromParameters(params)
+    ];
+}
+```
+
+A couple of observations:
+
+- Rather than passing callbacks from function to function, we return futures. We do not know, that somebody is going to want to be called back and we don't really care. We simply return a future and client code can decide whether or not it wants to handle the result of an operation.
+- Futures can be composed, because they are values. If you compare the implementations of `loadAll` the advantage of that should become evident. In the future based implementation, we use an [array comprehension](http://haxe.org/manual/comprehension) to simply comprise the individual futures resulting from `loadFromParameters` to an array.  
+Note that the value that we constructed is `Array<Future<String>>` whereas what we are returning is a single `Future<Array<String>>`. They are not at all the same but converting the former to the latter is indeed possible and happens automagically here, because `Future` defines an implicit conversion rule (see `fromMany`) to do just that.
+
+So rather than passing callbacks along with all calls, we simply return futures and the resulting code is much closer to how we would do this with synchronous APIs.
+
+### Rolling your own
+
+While you can create Futures with the constructor very similarly to how you would create Signals, the suggested method is to use either `ofConstant` or `ofAsyncCall`.
+
+Suppose we didn't have a future based version of `loadFromURL` in the example above. In that case, we could construct one:
+
+```haxe
+function loadFromURL2(url:String) {
+	return Future.ofAsyncCall(loadFromURL.bind(url));
+}
+```
+
+And voila, we could build the other two functions on top of that and happily live in future land.
+
+It may be possible that you have an operation that is sometimes synchronous and sometimes asynchronous. In that case, you can use `ofConstant`. Example:
+
+```haxe
+function loadFromURL2(url:String) {
+	return 
+		if (url == 'default') 
+			Future.ofConstant('Default Data');
+		else 
+			Future.ofAsyncCall(loadFromURL.bind(url));
+}
+```
+
+### Registering callbacks
+
+As with `Signal` you use `when` to register a `Callback` and get a `CallbackLink` in return.
+
+Futures are usually created by `Future.ofAsyncCall` which is implemented on top of `CallbackList`. Thus the same rules apply. Please note that if you register a callback *after* the `Future` has completed, it will be called immediately.
+
+Dissolving links after the corresponding callbacks have been invoked simply has no effect.
 
 ## Surprise
 
