@@ -16,6 +16,8 @@ Here is an overview:
 - [`Either`](#either)
 - [`Ref`](#ref)
 
+Despite the abundance of documentation here, `tink_core` does not exceed 300 lines of code. And while it primarily serves as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
+
 # Outcome
 
 The outcome type is quite similar to [`haxe.ds.Option`](http://haxe.org/api/haxe/ds/option), but is different in that it is tailored specifically to represent the result of an operation that either fails or succeeds.
@@ -92,8 +94,7 @@ class Main {
 		var equal = MyFile.getContent('path/to/file').map(haxe.Md5.encode).equals(otherMd5Sig);
 		//will be true, if the file could be openend and its content's Md5 signature is equal to `otherMd5Sig`
 	}
-}
-	
+}	
 ```
 
 # Noise
@@ -106,7 +107,7 @@ enum Noise { Noise; }
 
 Technically, `null` is also a valid value for `Noise`. In any case, there is no good reason to inspect values of type noise, only to create them.
 
-An example where using `Noise` makes sense is when you have an operation that succeeds with out any data to speak of:
+An example where using `Noise` makes sense is when you have an operation that succeeds without any result to speak of:
 
 ```    
 function writeToFile(content:String):Outcome<Noise, IoError>;
@@ -240,8 +241,10 @@ You know exactly which events to expect and what type they will have. Also, an i
 As the constructor indicates, a signal can be constructed from any function that consumes a callback and returns a link. It should become obvious, how a `CallbackList` becomes a `Signal` and that's alse the suggested method to create signals. Note that as stated above, a `CallbackList` will be implicitly converted to a `Signal`, so this is valid code:
 
 ```    
-var signal:Signal<Int> = new CallbackList();
+var signal:Signal<Int> = new CallbackList<Int>();
 ```
+
+Note that if you do not specify the type parameter, the implicit conversion will not work with Haxe 3.0.0.
 
 ### Registering callbacks
 
