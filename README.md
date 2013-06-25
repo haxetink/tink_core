@@ -2,29 +2,19 @@ The `tink_core` package is [separately available on haxelib](http://lib.haxe.org
 
 All modules are situated in `tink.core.*`. Some contain more than a single type. Generally, it is advisable to import the modules of this package through `using` rather than `import`.
 
-# Ref
+Here is an overview:
 
-At times you wish to share the same reference (and therefore changes to it) among different places. Since Haxe doesn't support pointer arithmetics, you need to box the reference in an object, on which you can then operate.
-
-The `Ref` type does just that, but in an abstract:
-
-```haxe
-abstract Ref<T> {
-	var value(get, set):T;
-	function toString():String;
-	@:from static function to(value:T):Ref<T>;
-	@:to function toPlain():T;
-}
-```
-
-It is worth noting that `Ref` defines implicit conversion in both ways. The following code will thus compile:
-
-```haxe
-var r:Ref<Int> = 4;
-var i:Int = r;
-```
-
-The current implementation is very naive, not leveraging any platform specifics to provide optimal performance, but there are plans to change this in the future.
+- [Outcome](#outcome)
+- Noise
+- Callback
+ - CallbackLink
+ - CallbackList
+- Signal
+- Future
+ - Surprise
+ - FutureTrigger
+- Either
+- Ref
 
 # Outcome
 
@@ -108,17 +98,6 @@ class Main {
 	}
 }
 	
-```
-
-# Either
-
-Represents a value that can have either of two types:
-
-```haxe
-enum Either<A,B> {
-	Left(a:A);
-	Right(b:B);
-}
 ```
 
 # Noise
@@ -334,7 +313,7 @@ The implications of using gathering or not are rather subtle. But when in doubt,
 
 # Future
 
-As the name would suggest, futures express the idea that something is going to happen in the future. This idea is very common.
+As the name would suggest, futures express the idea that something is going to happen in the future. Or much rather: a future represents the result of an asynchronous operation, that will become available at some point in time. It allows you to register a `Callback` for `when` the operation is finished.
 
 ```haxe
 abstract Future<T> {
@@ -404,3 +383,38 @@ Also, in `tink_lang` we have sugars to write the same piece of code as:
 		case Failure(data): //...
 	}
 ```
+
+# Either
+
+Represents a value that can have either of two types:
+
+```haxe
+enum Either<A,B> {
+	Left(a:A);
+	Right(b:B);
+}
+```
+
+# Ref
+
+At times you wish to share the same reference (and therefore changes to it) among different places. Since Haxe doesn't support pointer arithmetics, you need to box the reference in an object, on which you can then operate.
+
+The `Ref` type does just that, but in an abstract:
+
+```haxe
+abstract Ref<T> {
+	var value(get, set):T;
+	function toString():String;
+	@:from static function to(value:T):Ref<T>;
+	@:to function toPlain():T;
+}
+```
+
+It is worth noting that `Ref` defines implicit conversion in both ways. The following code will thus compile:
+
+```haxe
+var r:Ref<Int> = 4;
+var i:Int = r;
+```
+
+The current implementation is very naive, not leveraging any platform specifics to provide optimal performance, but there are plans to change this in the future.
