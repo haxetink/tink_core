@@ -12,6 +12,7 @@ class Run {
 		new Futures(),
 		new Outcomes(),
 		new Signals(),
+		new Refs(),
 	];
 	static function main() {
 		var runner = new TestRunner();
