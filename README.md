@@ -504,9 +504,21 @@ enum Either<A,B> {
 }
 ```
 
+For example the following can represent a physical type in Haxe: 
+
+```    
+typedef PhysicalType<T> = Either<Class<T>, Enum<T>>`
+
+function name(t:PhysicalType<Dynamic>) 
+	return switch t {
+		case Left(c): Type.getClassName(c);
+		case Right(e): Type.getEnumName(e);
+	}
+```
+
 # Ref
 
-At times you wish to share the same reference (and therefore changes to it) among different places. Since Haxe doesn't support pointer arithmetics, you need to box the reference in an object, on which you can then operate.
+At times you wish to share the same reference (and therefore changes to it) among different places. Since Haxe doesn't support old fashioned pointer arithmetics, we need to find other ways.
 
 The `Ref` type does just that, but in an abstract:
 
@@ -526,4 +538,4 @@ var r:Ref<Int> = 4;
 var i:Int = r;
 ```
 
-The current implementation is very naive, not leveraging any platform specifics to provide optimal performance, but there are plans to change this in the future.
+The current implementation is built over `haxe.ds.Vector` and should thus perform decently across most platforms.
