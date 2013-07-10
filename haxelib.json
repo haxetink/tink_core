@@ -1,10 +1,11 @@
 {
 	"name": "tink_core",
-	"url" : "http://haxetink.org",
+	"url" : "http://haxetink.org/tink_core",
 	"license": "MIT",
 	"tags": ["tink", "cross", "utility"],
 	"description": "Tinkerbell Core",
 	"version": "1.0.0-alpha.2",
 	"releasenote": "Slightly flattened packages",
-	"contributors": ["back2dos"], "classPath": "src" 
+	"contributors": ["back2dos"], 
+	"classPath": "src" 
 }
