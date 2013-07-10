@@ -350,7 +350,7 @@ abstract Future<T> {
 
 ### Why use futures?
 
-We do already have callbacks after all. The main reason is that futures are values and that has a number of advatages.
+We do already have callbacks after all. The main reason is that futures are values and that has a number of advantages.
 
 Say you have these functions, that are built on one another:
 
