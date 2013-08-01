@@ -143,7 +143,7 @@ Callback<{a:A, b:B}>
 This approach has two advantages:
 
 * For one, it greatly simplifies things. Implementations of signals only ever consume one type of callbacks, so you don't need signals for 0, 1, 2 and possibly 3 arguments.
-* Types written against this single callback type are easier to work with in a consistent matter.
+* Code written against this single callback type is easier to work with in a consistent matter.
 
 ## CallbackLink
 
@@ -325,9 +325,9 @@ But why bother, you say?
 
 Well, as we've seen **any** function that accepts a `Callback` and returns a `CallbackLink` is suitable to act as a `Signal`. But such a `Signal` needn't behave consistently with those built on `CallbackList`, i.e. invokation order might be different or duplicate registration might not be allowed or whatever. Or in some instances, the implementation might be slower or weird in some other way (e.g. [ACE's EventEmitter](https://github.com/ajaxorg/ace/blob/master/lib/ace/lib/event_emitter.js#L39) implementation that has all sorts of unexpected behavior if you add/remove handlers for an event type, while an event of the type is dispatched).
 
-As seen in the example with `IEventDispatcher`, a signal is quite easy to build. However, in the above implementation, the `Signal` will always call down to the underlying dispatcher to deal with registration. 
+As seen in the example with `IEventDispatcher`, a signal is quite easy to build. However, in the above implementation, the `Signal` will always call down to the underlying dispatcher to deal with registration - which may be unwanted at times. 
 
-You may have noticed that both `map` and `join` have a paremeter for diking, that is true by default. If we do not use diking, what these functions do is to return Signals that implement registration by calling down to the original signals they were constructed from.
+You may have noticed that both `map` and `join` have a paremeter for gathering, that is true by default. If we do not use gathering, what these functions do is to return Signals that implement registration by calling down to the original signals they were constructed from.
 Thus `map` will cause the mapping function to be called **for every registered callback**, which can be very expensive. Also `join` will cause the resulting `Signal` to propagate any callback registration to both underlying signals, which can become quite expensive if you join a lot of signals together and perform many registration and deregistrations on them. However, if you create some signals only as intermediary results to be composed into a larger signal, then you should not use `gather` as this introduces unnecessary intermediary objects.
 
 The implications of using gathering or not are rather subtle. But when in doubt, do use it. Or send me an email ;)
