@@ -16,6 +16,12 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 		return ret;
 	}
 	
+	public function filter(f:T->Bool, ?gather = true):Signal<T> {
+		var ret = new Signal(function (cb) return when(this, function (result) if (f(result)) cb.invoke(result)));
+		if (gather) ret = ret.gather();
+		return ret;
+	}
+	
 	public function join(other:Signal<T>, ?gather = true):Signal<T> {
 		var ret = new Signal(
 			function (cb:Callback<T>):CallbackLink 
