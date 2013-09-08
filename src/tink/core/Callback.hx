@@ -51,7 +51,7 @@ private class Cell<T> {
 	
 	static public inline function get<A>():Cell<A> 
 		return
-			if (pool.length > 0)cast pool.pop();
+			if (pool.length > 0) cast pool.pop();
 			else new Cell();
 }
 
@@ -69,12 +69,10 @@ abstract CallbackList<T>(Array<Cell<T>>) {
 		var cell = Cell.get();
 		cell.cb = cb;
 		this.push(cell);
-		var done = false;
 		return function () {
-			if (done) return;//TODO: consider moving this guard into CallbackLink
-			done = true;
-			this.remove(cell);
-			cell.free();
+			if (this.remove(cell))
+				cell.free();
+			cell = null;
 		}
 	}
 	
