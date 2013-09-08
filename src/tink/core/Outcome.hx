@@ -19,7 +19,7 @@ class OutcomeTools {
 					data;
 				case Failure(failure): 
 					if (Std.is(failure, ThrowableFailure)) 
-						cast(failure, ThrowableFailure).throwSelf();
+						untyped failure.throwSelf();
 					else
 						throw failure;
 			}
