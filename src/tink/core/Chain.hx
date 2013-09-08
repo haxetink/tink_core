@@ -2,9 +2,11 @@ package tink.core;
 
 import haxe.ds.Option;
 import tink.core.Callback;
+
 using tink.core.Outcome;
 
 abstract Chain<D>(Future<Option<{ data: D, next: Chain<D> }>>) {
+	
 	public function new(f) this = f;
 	
 	public function map<A>(f:D->A, ?gather = true):Chain<A> {
@@ -14,6 +16,38 @@ abstract Chain<D>(Future<Option<{ data: D, next: Chain<D> }>>) {
 			case None: None;
 		}, gather));
 	}
+	
+	public function zip<B, R>(other:Chain<B>, zipper:D->B->R, ?gather = true):Chain<R> {
+		var that = other.toFuture();
+		var ret = new Future(function (cb:Callback<Option<{ data: R, next: Chain<R> }>>) {
+			var link = null;
+			var l = this.when(function (o1) 
+				link = that.when(function (o2)
+					switch [o1, o2] {
+						case [Some({ data: d1, next: n1}), Some({ data: d2, next: n2})]:
+							cb.invoke(Some({ 
+								data: zipper(d1, d2), 
+								next: n1.zip(n2, zipper, gather)
+							}));
+						default:
+							cb.invoke(None);
+					}
+				)
+			);
+			return 
+				if (link == null) l;
+				else link;
+		});
+		return new Chain(
+			if (gather) ret.gather()
+			else ret
+		);
+	}
+	
+	public function slice(count:Int) 
+		return 
+			until(function (_) return count-- <= 0, false)
+			.fold([], function (ret:Array<D>, x) { ret.push(x); return ret; });//Modifying the array in place is not very pretty - but faster
 	
 	public function until(f:D->Bool, ?gather = true):Chain<D> {
 		return new Chain(this.map(function (data) return switch data {
@@ -107,6 +141,14 @@ abstract Chain<D>(Future<Option<{ data: D, next: Chain<D> }>>) {
 		return lazy(function () {
 			return 
 				if (i < a.length) Some(a[i++]);
+				else None;
+		});
+	}
+	@:from static public function ofIterable<A>(a:Iterable<A>):Chain<A> {
+		var i = a.iterator();
+		return lazy(function () {
+			return 
+				if (i.hasNext()) Some(i.next());
 				else None;
 		});
 	}
