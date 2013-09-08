@@ -10,7 +10,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 	public function when(callback:Callback<T>):CallbackLink 
 		return (this)(callback);
 	
-	static public function done<D, F>(s:Surprise<D, F>, callback:Callback<D>):Void 
+	/*static public function done<D, F>(s:Surprise<D, F>, callback:Callback<D>):Void 
 		s.when(function (o) switch o {
 			case Success(d): callback.invoke(d);
 			default:
@@ -26,13 +26,41 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 		return s.map(function (o) return switch o {
 			case Success(d): Success(f(d));
 			case Failure(f): Failure(f);
+		});*/
+	
+	public function filter(f:T->Bool, ?gather = true) {
+		var ret = new Future(function (callback) return (this)(function (result) if (f(result)) callback.invoke(result)));
+		return
+			if (gather) ret.gather();
+			else ret;		
+	}
+	
+	public function gather():Future<T> {
+		var op = Future.create(),
+			active = true;
+		return new Future(function (cb:Callback<T>) {
+			if (active) {
+				active = false;
+				when(this, op.invoke);
+			}
+			return op.asFuture().when(cb);
 		});
+	}
 	
-	public function map<A>(f:T->A):Future<A> 
-		return new Future(function (callback) return (this)(function (result) callback.invoke(f(result))));
+	public function map<A>(f:T->A, ?gather = true):Future<A> {
+		var ret = new Future(function (callback) return (this)(function (result) callback.invoke(f(result))));
+		return
+			if (gather) ret.gather();
+			else ret;
+	}
 	
-	public function flatMap<A>(next:T->Future<A>):Future<A> 
-		return flatten(map(next));
+	public function flatMap<A>(next:T->Future<A>, ?gather = true):Future<A> {
+		var ret = flatten(map(next, false));
+		return
+			if (gather) ret.gather();
+			else ret;		
+	}
+		
 	
 	static public function flatten<A>(f:Future<Future<A>>):Future<A> {
 		return new Future(function (callback) {
@@ -59,7 +87,19 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 			);
 		return ret;
 	}
-	
+	@:noUsing static public function lazy<A>(calc:Void->A):Future<A> {
+		var done = false,
+			value = null;
+		return
+			new Future(function (cb:Callback<A>) {
+				if (!done) {
+					done = true;
+					value = calc();
+				}
+				cb.invoke(value);
+				return null;
+			});
+	}
 	@:noUsing static public function ofConstant<A>(v:A):Future<A> 
 		return new Future(function (callback) { callback.invoke(v); return null; } );
 		
@@ -74,6 +114,8 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 	
 	@:to public function toSurprise<F>():Surprise<T, F> 
 		return map(Success);
+	
+	static public function never<A>():Future<A> return new Future(function (_) return null);
 	
 }
 
