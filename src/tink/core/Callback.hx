@@ -81,7 +81,8 @@ abstract CallbackList<T>(Array<Cell<T>>) {
 		
 	public function invoke(data:T) 
 		for (cell in this.copy()) 
-			cell.cb.invoke(data);
+			if (cell.cb != null) //This occurs when an earlier cell in this run dissolves the link for a later cell - usually a sign of convoluted code, but who am I to judge
+				cell.cb.invoke(data);
 			
 	public function clear():Void 
 		for (cell in this.splice(0, this.length)) 
