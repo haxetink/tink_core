@@ -112,7 +112,7 @@ abstract Chain<D>(Future<Option<{ data: D, next: Chain<D> }>>) {
 			link.dissolve();
 	}
 	
-	static public function compose<D, E>(data:Signal<D>, ?end:Future<E>) {
+	static public function async<D, E>(data:Signal<D>, ?end:Future<E>) {
 		if (end == null) end = Future.never();
 		function make() 
 			return new Chain(Future.ofAsyncCall(function (cb:Option<{ data: D, next: Chain<D> }>->Void) {
