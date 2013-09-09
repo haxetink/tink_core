@@ -74,7 +74,7 @@ abstract Chain<D>(Future<Option<{ data: D, next: Chain<D> }>>) {
 		}, gather));
 	}
 	
-	//This is a lookahead for synchronous situations, that could otherwise cause stack overflows
+	//Lookahead for synchronous situations, that could otherwise cause stack overflows
 	function sync(v:D->Void):Chain<D> {
 		var end = this;
 		while (true) {
@@ -84,7 +84,7 @@ abstract Chain<D>(Future<Option<{ data: D, next: Chain<D> }>>) {
 				case Some({ data: d, next: n}):
 					next = n.toFuture();
 					v(d);
-			});
+			}).dissolve();
 			if (next == end || next == null) break;
 			end = next;
 		}
