@@ -12,14 +12,23 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	
 	public function map<A>(f:T->A, ?gather = true):Signal<A> {
 		var ret = new Signal(function (cb) return when(this, function (result) cb.invoke(f(result))));
-		if (gather) ret = ret.gather();
-		return ret;
+		return
+			if (gather) ret.gather();
+			else ret;
+	}
+	
+	public function flatMap<A>(f:T->Future<A>, ?gather = true):Signal<A> {
+		var ret = new Signal(function (cb) return when(this, function (result) f(result).when(cb)));
+		return 
+			if (gather) ret.gather() 
+			else ret;
 	}
 	
 	public function filter(f:T->Bool, ?gather = true):Signal<T> {
 		var ret = new Signal(function (cb) return when(this, function (result) if (f(result)) cb.invoke(result)));
-		if (gather) ret = ret.gather();
-		return ret;
+		return
+			if (gather) ret.gather();
+			else ret;
 	}
 	
 	public function join(other:Signal<T>, ?gather = true):Signal<T> {
@@ -30,8 +39,9 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 					other.when(cb)
 				]
 		);
-		if (gather) ret = ret.gather();
-		return ret;
+		return
+			if (gather) ret.gather();
+			else ret;
 	}
 	
 	public function next():Future<T> {
