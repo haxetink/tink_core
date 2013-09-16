@@ -23,7 +23,7 @@ abstract CallbackLink(Void->Void) {
 	inline function new(link:Void->Void) 
 		this = link;
 		
-	public function dissolve():Void 
+	public inline function dissolve():Void 
 		if (this != null) (this)();
 		
 	@:to function toCallback<A>():Callback<A> 
