@@ -1,23 +1,22 @@
 package ;
 
-import haxe.unit.TestCase;
-import haxe.unit.TestRunner;
-import neko.Lib;
-import tink.core.Ref;
-
+import haxe.unit.*;
+import tink.core.Pair;
 class Run {
 	static var tests:Array<TestCase> = [
+		new Chains(),
 		new Base.TestBase(),
 		new Callbacks(),
 		new Futures(),
 		new Outcomes(),
 		new Signals(),
 		new Refs(),
+		new TestCons()
 	];
 	static function main() {
-		var runner = new TestRunner();
-		for (test in tests)
-			runner.add(test);
-		runner.run();
+		var r = new TestRunner();
+		for (c in tests)
+			r.add(c);
+		r.run();
 	}
 }

@@ -16,7 +16,7 @@ class Signals extends Base {
 	function testNext() {
 		var next = signal1.next();
 		var value = null;
-		next.when(function (v) value = v);
+		next.handle(function (v) value = v);
 		handlers1.invoke('foo');
 		assertEquals('foo', value);
 		handlers1.invoke('bar');
@@ -30,8 +30,8 @@ class Signals extends Base {
 		
 		var calls = 0;
 		
-		var link1 = s.when(function () calls++),
-			link2 = s.when(function () calls++);
+		var link1 = s.handle(function () calls++),
+			link2 = s.handle(function () calls++);
 		
 		assertEquals(2, handlers1.length);
 		assertEquals(2, handlers2.length);		
@@ -63,8 +63,8 @@ class Signals extends Base {
 		
 		var calls = 0;
 		
-		var link1 = s.when(function () calls++),
-			link2 = s.when(function () calls++);
+		var link1 = s.handle(function () calls++),
+			link2 = s.handle(function () calls++);
 		
 		assertEquals(1, handlers1.length);
 		assertEquals(1, handlers2.length);		
@@ -97,8 +97,8 @@ class Signals extends Base {
 		
 		var calls = 0;
 		
-		var link1 = s.when(function () calls++),
-			link2 = s.when(function () calls++);
+		var link1 = s.handle(function () calls++),
+			link2 = s.handle(function () calls++);
 		
 		assertEquals(1, handlers1.length);
 		
@@ -126,8 +126,8 @@ class Signals extends Base {
 		
 		var calls = 0;
 		
-		var link1 = s.when(function () calls++),
-			link2 = s.when(function () calls++);
+		var link1 = s.handle(function () calls++),
+			link2 = s.handle(function () calls++);
 		
 		assertEquals(2, handlers1.length);
 		
@@ -167,9 +167,9 @@ class Signals extends Base {
 		
 		var calls = 0;
 		
-		var link1 = s.when(function () calls++),
-			link2 = s.when(function () calls++),
-			link3 = s.when(function (v) out += v);
+		var link1 = s.handle(function () calls++),
+			link2 = s.handle(function () calls++),
+			link3 = s.handle(function (v) out += v);
 		
 		assertEquals(1, handlers1.length);
 
@@ -229,9 +229,9 @@ class Signals extends Base {
 		
 		var calls = 0;
 		
-		var link1 = s.when(function () calls++),
-			link2 = s.when(function () calls++),
-			link3 = s.when(function (v) out += v);
+		var link1 = s.handle(function () calls++),
+			link2 = s.handle(function () calls++),
+			link3 = s.handle(function (v) out += v);
 		
 		assertEquals(3, handlers1.length);
 

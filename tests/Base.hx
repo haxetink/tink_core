@@ -13,8 +13,8 @@ abstract PhysicalType<T>(Either<Class<T>, Enum<T>>) {
 	public function toString() 
 		return 
 			switch this {
-				case Left(c): return Type.getClassName(c);
-				case Right(e): return Type.getEnumName(e);
+				case Left(c): Type.getClassName(c);
+				case Right(e): Type.getEnumName(e);
 			}
 			
 	public function check(v:T) 

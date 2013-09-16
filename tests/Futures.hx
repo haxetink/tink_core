@@ -3,12 +3,14 @@ package ;
 using tink.core.Future;
 
 class Futures extends Base {
+	
 	function testOfConstant() {
 		var f = Future.ofConstant(4);
 		var x = -4;
-		f.when(function (v) x = v);
+		f.handle(function (v) x = v);
 		assertEquals(4, x);
 	}
+	
 	function testOfAsyncCall() {
 		var callbacks:Array<Int->Void> = [];
 		function fake(callback:Int->Void) {
@@ -21,10 +23,10 @@ class Futures extends Base {
 		
 		var calls = 0;
 		
-		var link1 = f.when(function () calls++),
-			link2 = f.when(function () calls++);
+		var link1 = f.handle(function () calls++),
+			link2 = f.handle(function () calls++);
 			
-		f.when(function (v) {
+		f.handle(function (v) {
 			assertEquals(4, v);
 			calls++;
 		});
@@ -48,7 +50,7 @@ class Futures extends Base {
 		
 		var calls = 0;
 		
-		f.when(function (v) {
+		f.handle(function (v) {
 			assertEquals(4, v);
 			calls++;
 		});
@@ -64,7 +66,7 @@ class Futures extends Base {
 		var flat = Future.flatten(f),
 			calls = 0;
 			
-		flat.when(function (v) {
+		flat.handle(function (v) {
 			assertEquals(4, v);
 			calls++;
 		});
