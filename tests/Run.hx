@@ -11,7 +11,7 @@ class Run {
 		new Outcomes(),
 		new Signals(),
 		new Refs(),
-		new TestCons()
+		new Pairs()
 	];
 	static function main() {
 		var r = new TestRunner();

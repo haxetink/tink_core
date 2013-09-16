@@ -4,7 +4,7 @@ import tink.core.Pair;
 import tink.core.Future;
 import haxe.ds.Option;
 
-class TestCons extends Base {
+class Pairs extends Base {
 	function test() {
 		var c = new Pair(new Pair(1, 2), new Pair(3, 4));
 		assertEquals(1, c.a.a);
