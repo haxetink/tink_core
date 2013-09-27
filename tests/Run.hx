@@ -1,10 +1,9 @@
 package ;
 
 import haxe.unit.*;
-import tink.core.Pair;
+
 class Run {
 	static var tests:Array<TestCase> = [
-		new Chains(),
 		new Base.TestBase(),
 		new Callbacks(),
 		new Futures(),
@@ -13,7 +12,7 @@ class Run {
 		new Refs(),
 		new Pairs()
 	];
-	static function main() {
+	static function main() {		
 		var r = new TestRunner();
 		for (c in tests)
 			r.add(c);
