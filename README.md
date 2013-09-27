@@ -57,7 +57,7 @@ As any complex data, pairs are nullable. For `Pair` we consider `null` an "empty
 
 ## MPair
 
-The `MPair` is the mutable counterpart to `Pair`. It is nothing but a thin abstraction on top of platform dependent ways to encode a pair in the most efficient way. In fact `Pair` is implemented on top of `MPair`.
+The `MPair` is the mutable counterpart to `Pair`. It is nothing but a thin abstraction on top of platform dependent ways to encode a pair in the most efficient way. In fact `Pair` is implemented on top of `MPair`. You can use this as a primitive to implement mutable datastructures.
 
 # Lazy
 
