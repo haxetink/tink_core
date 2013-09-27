@@ -94,7 +94,10 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 	
 	@:noCompletion @:op(a || b) static public function or<A>(a:Future<A>, b:Future<A>):Future<A>
 		return a.first(b);
-	
+		
+	@:noCompletion @:op(a || b) static public function either<A, B>(a:Future<A>, b:Future<B>):Future<Either<A, B>>
+		return a.map(Either.Left, false).first(b.map(Either.Right, false));
+			
 	@:noCompletion @:op(a && b) static public function and<A, B>(a:Future<A>, b:Future<B>):Future<Pair<A, B>>
 		return a.merge(b, function (a, b) return new Pair(a, b));
 	
