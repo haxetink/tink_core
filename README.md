@@ -601,7 +601,7 @@ Because `Future` is an abstract, we can do some neat tricks with operator overlo
 
 1. `||`
  1. If futures are of the same type, will use `first`
- 2. If futures are of different type, will collapse the type by means of `Either` and then use `first` (as seen above)
+ 2. If futures are of different type, will collapse the type by means of `Either` and then use `first` (as shown at the end of the "Composition" section)
 2. `&&` - will combine a `Future<A>` and `Future<B>` to a `Future<Pair<A, B>>`.
 3. `>>`
  1. Will `flatMap` a `Surprise<A, F>` to a `Surprise<B, F>` with a `A->Surprise<B, F>`
