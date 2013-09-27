@@ -45,8 +45,8 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	}
 	
 	public function next():Future<T> {
-		var ret = Future.create();
-		handle(handle(ret.invoke));
+		var ret = Future.trigger();
+		handle(handle(ret.trigger));
 		return ret.asFuture();
 	}
 	
@@ -54,20 +54,31 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 		return map(function (_) return Noise);
 	
 	public function gather():Signal<T> {
-		var ret = create();
-		handle(ret.invoke);
+		var ret = trigger();
+		handle(ret.trigger);
 		return ret;
 	}
 	
-	static public function create<T>():SignalTrigger<T>
+	static public function trigger<T>():SignalTrigger<T>
 		return new CallbackList();
+		
+	static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather = true) {
+		var ret = new Signal(function (cb:Callback<A>) {
+			var f = function (a) cb.invoke(a);
+			add(f);
+			return remove.bind(f);
+		});
+		return
+			if (gather) ret.gather();
+			else ret;
+	}
 }
 
 abstract SignalTrigger<T>(CallbackList<T>) from CallbackList<T> {
-	public inline function invoke(event:T)
+	public inline function trigger(event:T)
 		this.invoke(event);
 	public inline function getLength()
 		return this.length;
-	@:to public function toSignal():Signal<T> 
+	@:to public function asSignal():Signal<T> 
 		return new Signal(this.add);
 }

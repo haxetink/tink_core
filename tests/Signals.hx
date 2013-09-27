@@ -10,16 +10,16 @@ class Signals extends Base {
 	var signal2:Signal<String>;
 	var handlers2:SignalTrigger<String>;
 	override function setup() {
-		signal1 = handlers1 = Signal.create();
-		signal2 = handlers2 = Signal.create();
+		signal1 = handlers1 = Signal.trigger();
+		signal2 = handlers2 = Signal.trigger();
 	}
 	function testNext() {
 		var next = signal1.next();
 		var value = null;
 		next.handle(function (v) value = v);
-		handlers1.invoke('foo');
+		handlers1.trigger('foo');
 		assertEquals('foo', value);
-		handlers1.invoke('bar');
+		handlers1.trigger('bar');
 		assertEquals('foo', value);
 	}
 	
@@ -36,11 +36,11 @@ class Signals extends Base {
 		assertEquals(2, handlers1.getLength());
 		assertEquals(2, handlers2.getLength());		
 		
-		handlers1.invoke('foo');
+		handlers1.trigger('foo');
 		
 		assertEquals(2, calls);
 		
-		handlers2.invoke('foo');
+		handlers2.trigger('foo');
 		
 		assertEquals(4, calls);
 		
@@ -69,11 +69,11 @@ class Signals extends Base {
 		assertEquals(1, handlers1.getLength());
 		assertEquals(1, handlers2.getLength());		
 		
-		handlers1.invoke('foo');
+		handlers1.trigger('foo');
 		
 		assertEquals(2, calls);
 		
-		handlers2.invoke('foo');
+		handlers2.trigger('foo');
 		
 		assertEquals(4, calls);
 		
@@ -102,7 +102,7 @@ class Signals extends Base {
 		
 		assertEquals(1, handlers1.getLength());
 		
-		handlers1.invoke('foo');
+		handlers1.trigger('foo');
 		
 		assertEquals(2, calls);
 		assertEquals(1, mapCalls);
@@ -131,7 +131,7 @@ class Signals extends Base {
 		
 		assertEquals(2, handlers1.getLength());
 		
-		handlers1.invoke('foo');
+		handlers1.trigger('foo');
 		
 		assertEquals(2, calls);
 		assertEquals(2, mapCalls);
@@ -153,9 +153,9 @@ class Signals extends Base {
 			inQueue = [];
 		
 		function make() {
-			var f = Future.create();
+			var f = Future.trigger();
 			var data = inQueueData.shift();
-			inQueue.push(function () f.invoke(data));
+			inQueue.push(function () f.trigger(data));
 			return f.asFuture();
 		}
 		function step() 
@@ -176,12 +176,12 @@ class Signals extends Base {
 		assertEquals(0, calls);
 		assertEquals(0, mapCalls);
 		
-		handlers1.invoke('1');
+		handlers1.trigger('1');
 		
 		assertEquals(0, calls);
 		assertEquals(1, mapCalls);
 		
-		handlers1.invoke('2');
+		handlers1.trigger('2');
 		
 		assertEquals(0, calls);
 		assertEquals(2, mapCalls);
@@ -195,7 +195,7 @@ class Signals extends Base {
 		
 		assertEquals('11', out);
 		
-		handlers1.invoke('3');
+		handlers1.trigger('3');
 		
 		assertEquals(2, calls);
 		assertEquals(3, mapCalls);
@@ -215,9 +215,9 @@ class Signals extends Base {
 			inQueue = [];
 		
 		function make() {
-			var f = Future.create();
+			var f = Future.trigger();
 			var data = inQueueData.shift();
-			inQueue.push(function () f.invoke(data));
+			inQueue.push(function () f.trigger(data));
 			return f.asFuture();
 		}
 		function step() 
@@ -238,12 +238,12 @@ class Signals extends Base {
 		assertEquals(0, calls);
 		assertEquals(0, mapCalls);
 		
-		handlers1.invoke('1');
+		handlers1.trigger('1');
 		
 		assertEquals(0, calls);
 		assertEquals(3, mapCalls);
 		
-		handlers1.invoke('2');
+		handlers1.trigger('2');
 		
 		assertEquals(0, calls);
 		assertEquals(6, mapCalls);

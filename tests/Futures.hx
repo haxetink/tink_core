@@ -41,11 +41,11 @@ class Futures extends Base {
 	}
 	
 	function testTrigger() {
-		var t = Future.create();
-		assertTrue(t.invoke(4));
-		assertFalse(t.invoke(4));
+		var t = Future.trigger();
+		assertTrue(t.trigger(4));
+		assertFalse(t.trigger(4));
 		
-		t = Future.create();
+		t = Future.trigger();
 		
 		var f:Future<Int> = t;
 		
@@ -56,7 +56,7 @@ class Futures extends Base {
 			calls++;
 		});
 		
-		t.invoke(4);
+		t.trigger(4);
 		
 		assertEquals(1, calls);
 		
@@ -76,14 +76,14 @@ class Futures extends Base {
 	}
 	
 	function testOps() {
-		var t1 = Future.create(),
-			t2 = Future.create();
+		var t1 = Future.trigger(),
+			t2 = Future.trigger();
 		var f1:Future<Int> = t1,
 			f2:Future<Int> = t2;
 			
 		var f = f1 || f2;
-		t1.invoke(1);
-		t2.invoke(2);
+		t1.trigger(1);
+		t2.trigger(2);
 		f.handle(assertEquals.bind(1));
 		var f = f1 && f2;
 		f.handle(function (p) {

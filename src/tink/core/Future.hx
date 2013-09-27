@@ -12,11 +12,11 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 		return (this)(callback);
 	
 	public function gather():Future<T> {
-		var op = Future.create(),
+		var op = Future.trigger(),
 			self = this;
 		return new Future(function (cb:Callback<T>) {
 			if (self != null) {
-				handle(self, op.invoke);
+				handle(self, op.trigger);
 				self = null;				
 			}
 			return op.asFuture().handle(cb);
@@ -87,8 +87,8 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 		if (lazy) 
 			return flatten(Future.lazy(async.bind(f, false)));
 		else {
-			var op = create();
-			f(op.invoke);
+			var op = trigger();
+			f(op.trigger);
 			return op;			
 		}
 	
@@ -128,7 +128,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 	@:noCompletion @:op(a >> b) static public function _map<T, R>(f:Future<T>, map:T->R)
 		return f.map(map);
 
-	@:noUsing static public inline function create<A>():FutureTrigger<A> 
+	@:noUsing static public inline function trigger<A>():FutureTrigger<A> 
 		return new FutureTrigger();
 	
 	@:to public function toSurprise<F>():Surprise<T, F> 
@@ -155,7 +155,7 @@ class FutureTrigger<T> {
 	}
 	public inline function asFuture() return future;
 	
-	public function invoke(result:T):Bool
+	public function trigger(result:T):Bool
 		return
 			switch (state) {
 				case Left(callbacks):
