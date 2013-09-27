@@ -1,11 +1,8 @@
 package ;
 
 using tink.core.Outcome;
+using tink.core.Error;
 
-private class Fail implements ThrowableFailure {
-	public function new() {}
-	public function throwSelf():Dynamic return throw 'four';
-}
 class Outcomes extends Base {
 	function testSure() {
 		assertEquals(4, Success(4).sure());
@@ -16,9 +13,9 @@ class Outcomes extends Base {
 			function (f) return f == 'four'
 		);
 		throws(
-			function () Failure(new Fail()).sure(),
-			String,
-			function (f) return f == 'four'
+			function () Failure(new Error('test')).sure(),
+			Error,
+			function (e) return e.message == 'test'
 		);
 	}
 	

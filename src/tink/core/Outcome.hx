@@ -7,10 +7,6 @@ enum Outcome<Data, Failure> {//TODO: turn into abstract when this commit is rele
 	Failure(failure:Failure);
 }
 
-interface ThrowableFailure {
-	function throwSelf():Dynamic;
-}
-
 class OutcomeTools {
 	static public function sure<D, F>(outcome:Outcome<D, F>):D 
 		return
@@ -18,7 +14,7 @@ class OutcomeTools {
 				case Success(data): 
 					data;
 				case Failure(failure): 
-					if (Std.is(failure, ThrowableFailure)) 
+					if (Std.is(failure, Error)) 
 						untyped failure.throwSelf();
 					else
 						throw failure;
