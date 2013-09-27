@@ -7,7 +7,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	
 	public inline function new(f:Callback<T>->CallbackLink) this = f;	
 	
-	public function handle(handler:Callback<T>):CallbackLink 
+	public inline function handle(handler:Callback<T>):CallbackLink 
 		return (this)(handler);
 	
 	public function map<A>(f:T->A, ?gather = true):Signal<A> {
@@ -46,7 +46,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	
 	public function next():Future<T> {
 		var ret = Future.create();
-		handle(ret.invoke);
+		handle(handle(ret.invoke));
 		return ret.asFuture();
 	}
 	
@@ -54,8 +54,20 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 		return map(function (_) return Noise);
 	
 	public function gather():Signal<T> {
-		var ret = new CallbackList<T>();
+		var ret = create();
 		handle(ret.invoke);
 		return ret;
 	}
+	
+	static public function create<T>():SignalTrigger<T>
+		return new CallbackList();
+}
+
+abstract SignalTrigger<T>(CallbackList<T>) from CallbackList<T> {
+	public inline function invoke(event:T)
+		this.invoke(event);
+	public inline function getLength()
+		return this.length;
+	@:to public function toSignal():Signal<T> 
+		return new Signal(this.add);
 }
