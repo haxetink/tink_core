@@ -1,5 +1,25 @@
 package tink.core;
 
+abstract Pair<A, B>(MPair<A, B>) {
+	
+	public var a(get, never):A;
+	public var b(get, never):B;
+	
+	public inline function new(a:A, b:B) this = new MPair(a, b);
+	
+	inline function get_a():A return this.a;
+	inline function get_b():B return this.b;
+	
+	@:to inline function toBool() 
+		return this != null;
+		
+	@:op(!a) public function isNil() 
+		return this == null;
+	
+	static public function nil<A, B>():Pair<A, B> 
+		return null;
+}
+
 #if neko
 	private typedef Data<A, B> = neko.NativeArray<Dynamic>;
 #elseif js
@@ -15,10 +35,9 @@ package tink.core;
 	}
 #end
 
-abstract Pair<A, B>(Data<A, B>) from Data<A, B> {
-	
-	public var a(get, never):A;
-	public var b(get, never):B;
+abstract MPair<A, B>(Data<A, B>) {
+	public var a(get, set):A;
+	public var b(get, set):B;
 	
 	public inline function new(a:A, b:B) this =
 		#if neko
@@ -31,13 +50,14 @@ abstract Pair<A, B>(Data<A, B>) from Data<A, B> {
 	
 	inline function get_a():A 
 		return #if neko this[0] #else this.a #end;
+		
 	inline function get_b():B 
 		return #if neko this[1] #else this.b #end;
-	
-	@:to inline function toBool() 
-		return this != null;
 		
-	@:op(!a) public function isNil() return this == null;
-	
-	static public function nil<A, B>():Pair<A, B> return null;
+	inline function set_a(v:A):A
+		return #if neko this[0] #else this.a #end = v;
+		
+	inline function set_b(v:B):B
+		return #if neko this[1] #else this.b #end = v;
 }
+	
