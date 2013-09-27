@@ -1,4 +1,5 @@
-The `tink_core` package <!--is [separately available on haxelib](http://lib.haxe.org/p/tink_core) and--> contains a set of lightweight tools for robust programming. 
+The `tink_core` package contains a set of lightweight tools for robust programming. 
+<!--The `tink_core` package is [separately available on haxelib](http://lib.haxe.org/p/tink_core) and contains a set of lightweight tools for robust programming. -->
 
 All modules are situated in `tink.core.*`. Some contain more than a single type. Generally, it is advisable to import the modules of this package through `using` rather than `import`. 
 
