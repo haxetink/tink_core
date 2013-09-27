@@ -1,11 +1,12 @@
 package ;
 
 using tink.core.Future;
+using tink.core.Outcome;
 
 class Futures extends Base {
 	
-	function testOfConstant() {
-		var f = Future.ofConstant(4);
+	function testsync() {
+		var f = Future.sync(4);
 		var x = -4;
 		f.handle(function (v) x = v);
 		assertEquals(4, x);
@@ -19,7 +20,7 @@ class Futures extends Base {
 		function trigger() 
 			for (c in callbacks) c(4);
 		
-		var f = Future.ofAsyncCall(fake);
+		var f = Future.async(fake);
 		
 		var calls = 0;
 		
@@ -62,7 +63,7 @@ class Futures extends Base {
 	}
 	
 	function testFlatten() {
-		var f = Future.ofConstant(Future.ofConstant(4));
+		var f = Future.sync(Future.sync(4));
 		var flat = Future.flatten(f),
 			calls = 0;
 			
@@ -73,4 +74,28 @@ class Futures extends Base {
 		
 		assertEquals(1, calls);
 	}
+	
+	function testOps() {
+		var t1 = Future.create(),
+			t2 = Future.create();
+		var f1:Future<Int> = t1,
+			f2:Future<Int> = t2;
+			
+		var f = f1 || f2;
+		t1.invoke(1);
+		t2.invoke(2);
+		f.handle(assertEquals.bind(1));
+		var f = f1 && f2;
+		f.handle(function (p) {
+			assertEquals(p.a, 1);	
+			assertEquals(p.b, 2);	
+		});
+	}
 }
+
+
+
+
+
+
+
