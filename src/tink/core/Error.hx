@@ -25,14 +25,14 @@ class Error {
 				pos.className+'.'+pos.methodName+':'+pos.lineNumber;
 			#end
 			
-	public function toString() {
+	@:keep public function toString() {
 		var ret = 'Error: $message';
 		if (pos != null)
 			ret += printPos();
 		return ret;
 	}
 	
-	public function throwSelf():Dynamic
+	@:keep public function throwSelf():Dynamic
 		return
 			#if macro
 				haxe.macro.Context.error(message, if (pos == null) haxe.macro.Context.currentPos() else pos);
