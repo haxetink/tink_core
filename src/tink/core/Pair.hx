@@ -59,5 +59,4 @@ abstract MPair<A, B>(Data<A, B>) {
 		
 	inline function set_b(v:B):B
 		return #if neko this[1] #else this.b #end = v;
-}
-	
+}	
