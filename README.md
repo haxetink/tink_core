@@ -11,15 +11,16 @@ All modules are situated in `tink.core.*`. Some contain more than a single type.
 - [`Outcome`](#outcome)
 - [`Error`](#error)
 - [`Noise`](#noise)
+- [`Either`](#either)
+- [`Ref`](#ref)
 - [`Callback`](#callback)
  - [`CallbackLink`](#callbacklink)
  - [`CallbackList`](#callbacklist)
 - [`Future`](#future)
  - [`Surprise`](#surprise)
  - [`FutureTrigger`](#futuretrigger)
-- [`Either`](#either)
-- [`Ref`](#ref)
 - [`Signal`](#signal)
+ - [`SignalTrigger`](#signaltrigger)
 
 Despite the rather long documentation here, `tink_core` does not exceed 1KLOC. And while it primarily serves as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
 
@@ -191,6 +192,53 @@ An example where using `Noise` makes sense is when you have an operation that su
 ```    
 function writeToFile(content:String):Outcome<Noise, IoError>;
 ```
+
+# Either
+
+Represents a value that can have either of two types:
+
+```    
+enum Either<A,B> {
+	Left(a:A);
+	Right(b:B);
+}
+```
+
+For example the following can represent a physical type in Haxe: 
+
+```    
+typedef PhysicalType<T> = Either<Class<T>, Enum<T>>`
+
+function name(t:PhysicalType<Dynamic>) 
+	return switch t {
+		case Left(c): Type.getClassName(c);
+		case Right(e): Type.getEnumName(e);
+	}
+```
+
+# Ref
+
+At times you wish to share the same reference (and therefore changes to it) among different places. Since Haxe doesn't support old fashioned pointer arithmetics, we need to find other ways.
+
+The `Ref` type does just that, but in an abstract:
+
+```    
+abstract Ref<T> {
+	var value(get, set):T;
+	function toString():String;
+	@:from static function to(value:T):Ref<T>;
+	@:to function toPlain():T;
+}
+```
+
+It is worth noting that `Ref` defines implicit conversion in both ways. The following code will thus compile:
+
+```    
+var r:Ref<Int> = 4;
+var i:Int = r;
+```
+
+The current implementation is built over `haxe.ds.Vector` and should thus perform quite decently across most platforms.
 
 # Callback
 
@@ -570,53 +618,6 @@ class Http {
 
 Looks pretty neat already. And it forces client code to consider failure.
 
-# Either
-
-Represents a value that can have either of two types:
-
-```    
-enum Either<A,B> {
-	Left(a:A);
-	Right(b:B);
-}
-```
-
-For example the following can represent a physical type in Haxe: 
-
-```    
-typedef PhysicalType<T> = Either<Class<T>, Enum<T>>`
-
-function name(t:PhysicalType<Dynamic>) 
-	return switch t {
-		case Left(c): Type.getClassName(c);
-		case Right(e): Type.getEnumName(e);
-	}
-```
-
-# Ref
-
-At times you wish to share the same reference (and therefore changes to it) among different places. Since Haxe doesn't support old fashioned pointer arithmetics, we need to find other ways.
-
-The `Ref` type does just that, but in an abstract:
-
-```    
-abstract Ref<T> {
-	var value(get, set):T;
-	function toString():String;
-	@:from static function to(value:T):Ref<T>;
-	@:to function toPlain():T;
-}
-```
-
-It is worth noting that `Ref` defines implicit conversion in both ways. The following code will thus compile:
-
-```    
-var r:Ref<Int> = 4;
-var i:Int = r;
-```
-
-The current implementation is built over `haxe.ds.Vector` and should thus perform quite decently across most platforms.
-
 # Signal
 
 Despite an overabundance of signal implementations, `tink_core` does provide its own flavour of signals. One that aims at utmost simplicity and full integration with the rest of tink. Here it is:
@@ -725,7 +726,7 @@ The `noise` method mentioned earlier is merely a shortcut to `map` any `Signal` 
 
 ### Gathering
 
-Similar to `Future`, we have *gathering* for `Signal` as well - for pretty much the same reasons. But it also has another role - normalizing behavior:
+Similar to `Future`, we have "gathering" for `Signal` as well - for pretty much the same reasons. But it also has another role - normalizing behavior:
 
 As we've seen **any** function that accepts a `Callback` and returns a `CallbackLink` is suitable to act as a `Signal`. But such a `Signal` needn't behave consistently with those built on `CallbackList`, i.e. invokation order might be different or duplicate registration might not be allowed or whatever. Or in some instances, the implementation might be slower or weird in some other way (e.g. [ACE's EventEmitter](https://github.com/ajaxorg/ace/blob/master/lib/ace/lib/event_emitter.js#L39) implementation that has all sorts of unexpected behavior if you add/remove handlers for an event type, while an event of the type is dispatched).
 
