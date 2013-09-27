@@ -75,9 +75,6 @@ abstract CallbackList<T>(Array<Cell<T>>) {
 			cell = null;
 		}
 	}
-	
-	@:to public function toSignal():Signal<T> 
-		return new Signal(add);
 		
 	public function invoke(data:T) 
 		for (cell in this.copy()) 
