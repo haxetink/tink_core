@@ -1,26 +1,77 @@
-The `tink_core` package is [separately available on haxelib](http://lib.haxe.org/p/tink_core) and contains a set of lightweight tools for robust programming. 
+The `tink_core` package <!--is [separately available on haxelib](http://lib.haxe.org/p/tink_core) and--> contains a set of lightweight tools for robust programming. 
 
-All modules are situated in `tink.core.*`. Some contain more than a single type. Generally, it is advisable to import the modules of this package through `using` rather than `import`.
+All modules are situated in `tink.core.*`. Some contain more than a single type. Generally, it is advisable to import the modules of this package through `using` rather than `import`. 
 
-Here is an overview:
+### Overview
 
+- [`Pair`](#pair)
+ - [`MPair`](#mpair)
+- [`Lazy`](#lazy)
 - [`Outcome`](#outcome)
+- [`Error`](#error)
 - [`Noise`](#noise)
 - [`Callback`](#callback)
  - [`CallbackLink`](#callbacklink)
  - [`CallbackList`](#callbacklist)
-- [`Signal`](#signal)
 - [`Future`](#future)
  - [`Surprise`](#surprise)
  - [`FutureTrigger`](#futuretrigger)
 - [`Either`](#either)
 - [`Ref`](#ref)
+- [`Signal`](#signal)
 
-Despite the abundance of documentation here, `tink_core` does not exceed 300 lines of code. And while it primarily serves as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
+Despite the rather long documentation here, `tink_core` does not exceed 1KLOC. And while it primarily serves as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
+
+# Pair
+
+The `Pair` represents an [ordered pair](http://en.wikipedia.org/wiki/Ordered_pair):
+
+```
+abstract Pair<A, B> {
+    function new(a:A, b:B);
+    var a(get, never):A;
+    var b(get, never):B;
+}
+```
+
+The representation is immutable and optimized for runtime performance. It can be used as a basic means of composition, although you should beware not to abuse it.
+
+- Good `function getCredentials():Pair<User, Password>`
+- Bad `function getAddress():Pair<Pair<String, Int>, String>`
+
+In the latter example, there are two ways to actually convey meaning:
+
+- with pairs: `function getAddress():Pair<Pair<Host, Port>, Path>`
+- vanilla haxe: `function getAddress():{ host:String, port:Int, path:String }`
+
+Advantages of the pair approach:
+
+1. Performance is good on all platforms.
+2. The returned value is immutable without having to declare all fields as readonly - this assumes you *want* immutability
+
+### Nullness
+
+As any complex data, pairs are nullable. For `Pair` we consider `null` an "empty pair", which is not sensible from a mathematical point of view, but Lisp managed to build a whole ecosystem on this convention, so it seems a fair bet.
+
+## MPair
+
+The `MPair` is the mutable counterpart to `Pair`. It is nothing but a thin abstraction on top of platform dependent ways to encode a pair in the most efficient way. In fact `Pair` is implemented on top of `MPair`.
+
+# Lazy
+
+The `Lazy` type is a primitive for [lazy evaluation](http://en.wikipedia.org/wiki/Lazy_evaluation):
+
+```
+abstract Lazy<T> {	
+	@:to function get():T;
+	@:from static function ofFunc<T>(f:Void->T):Lazy<T>;
+	@:from static function ofConst<T>(c:T):Lazy<T>;
+}
+```
 
 # Outcome
 
-The outcome type is quite similar to [`haxe.ds.Option`](http://haxe.org/api/haxe/ds/option), but is different in that it is tailored specifically to represent the result of an operation that either fails or succeeds.
+The `Outcome` type is quite similar to [`haxe.ds.Option`](http://haxe.org/api/haxe/ds/option), but is different in that it is tailored specifically to represent the result of an operation that either fails or succeeds.
 
 ```    
 enum Outcome<Data, Failure> {
@@ -35,22 +86,22 @@ Because switching on `Outcome` all the time can become tedious, the module where
 
 This will give you a number of helper methods:
 
-* `function sure<D,F> ( outcome:Outcome<D,F> ):D`  
+* `function sure<D,F>(outcome:Outcome<D,F>):D`  
 Will return the result in case of success or throw an exception otherwise. Therefore the exception is raised not when an operation fails, but when other code doesn't handle failure at all.
 
-* `function toOption<D,F> ( outcome:Outcome<D,F> ):Option<D>`  
+* `function toOption<D,F>(outcome:Outcome<D,F>):Option<D>`  
 Will transform an `Outcome` into an `Option`. Information on failure is thereby lost.
-* `function toOutcome<D> ( option:Option<D>, ?pos:haxe.PosInfos ):Outcome<D, String>`  
+* `function toOutcome<D>(option:Option<D>, ?pos:haxe.PosInfos):Outcome<D, String>`  
 Converts an `Option` into an `Outcome`, where `Some(value)` is considered success and `None` is considered failure, with an error message.
-* `function orUse<D,F> ( outcome:Outcome<D,F>, fallback:D ):D`  
+* `function orUse<D,F>(outcome:Outcome<D,F>, fallback:D):D`  
 Attempts to get data from a successful `Outcome` or returns a `fallback` otherwise.
-* `function orTry<D,F> ( outcome:Outcome<D,F>, fallback:Outcome<D,F> ):Outcome<D,F>`  
+* `function orTry<D,F>(outcome:Outcome<D,F>, fallback:Outcome<D,F>):Outcome<D,F>`  
 If the `outcome` failed, uses `fallback` instead. Note that this can still be a failure.
-* `function equals<D,F> ( outcome:Outcome<D,F>, to:D ):Bool`  
+* `function equals<D,F>(outcome:Outcome<D,F>, to:D):Bool`  
 Tells whether an `Outcome` is successful and the value is equal to `to`.
-* `function map<A,B,F> ( outcome:Outcome<A,F>, transform:A->B ):Outcome<B, F>`  
+* `function map<A,B,F>(outcome:Outcome<A,F>, transform:A->B):Outcome<B, F>`  
 Returns a new `Outcome`, where the success (if any) is transformed with the given transformer.
-* `function isSuccess<D,F> ( outcome:Outcome<D,F> ):Bool`  
+* `function isSuccess<D,F>(outcome:Outcome<D,F>):Bool`  
 Tells whether an outcome was successful.
 
 Here is some example code of what neko file access might look like:
@@ -97,6 +148,33 @@ class Main {
 }	
 ```
 
+# Error
+
+The `Error` class is meant as a standard class for errors.
+
+This is its API:
+
+```
+class Error {
+	var message(default, null):String;
+	var data(default, null):Null<Dynamic>;
+	var pos(default, null):Pos;
+	
+	function new(message:String, ?pos);
+	function toString():String;
+	function throwSelf():Dynamic;
+	static function withData(message:String, data:Dynamic, ?pos:Pos):Error;
+}
+```
+
+The `Pos` type is just a typedef that will be `haxe.macro.Expr.Position` in the macro context and `haxe.PosInfos` otherwise.
+
+There are a couple of interesting things to point out:
+
+1. The `throwSelf` method will be called if you do `sure` on a `Failure` that is an `Error`. This is useful to not just have willy-nilly stack traces but instead have a chance to die gracefully.
+2. In macro context, the `throwSelf` method will cause a compiler error at `pos` (defaults to `haxe.macro.Context.currentPos()` at the time of creation).
+3. Outside macro context, `Pos` is `PosInfos` which happens to be a magical type, that when left to default, will contain the call site position. So when you pass around an `Outcome` and at some point call `sure` and it happens to be a `Failure(someError)`, the stack trace will contain information on where the `Error` was actually constructed. Future versions may also capture the stack at the point of the error's creation.
+
 # Noise
 
 Because in Haxe 3 `Void` can no longer have values, i.e. values of a type that always holds nothing, `tink_core` introduces `Noise`.
@@ -105,7 +183,7 @@ Because in Haxe 3 `Void` can no longer have values, i.e. values of a type that a
 enum Noise { Noise; }
 ```
 
-Technically, `null` is also a valid value for `Noise`. In any case, there is no good reason to inspect values of type noise, only to create them.
+Technically, `null` is also a valid value for `Noise`. In any case, there is no good reason to inspect values of type noise, only to create them and ignore them.
 
 An example where using `Noise` makes sense is when you have an operation that succeeds without any result to speak of:
 
@@ -125,7 +203,7 @@ abstract Callback<T> from T->Void {
 }
 ```
 
-The most important question to ask here is why to complicate a simple concept as callbacks when we already have first class functions.
+The obvious question to ask here is why to complicate a simple concept as callbacks when we already have first class functions.
 
 * It brings more clarity to code. Function types use structural subtyping, i.e. the signature alone defines the type. Type matches can thus be unintentional. Also calling something a callback when that's what it really is, carries more meaning.
 * The use of abstracts allows for implicit conversions. If you want to subscribe to an event but don't really care for the data, you don't have to define an argument you're not using. You can simply do either of both:
@@ -133,17 +211,19 @@ The most important question to ask here is why to complicate a simple concept as
  * `myButton.onClick(function (e) trace('clicked at (${e.x}, ${e.y})'));`
 * Instead of specifically relying on a function type, we have a separate abstraction, which at some point can be used to leverage platform knowledge to provide for faster code that doesn't have suffer from the performance penalties anonymous function have on most platforms
 
-Beyond that, one might ask what to do if you don't have any data to pass to the callback, or more than a single value. In that case, you could use these two respectively:
+Beyond that, one might ask what to do if you don't have any data to pass to the callback, or more than a single value. In that case, you could use these respectively:
 
 ```    
 Callback<Noise>
-Callback<{a:A, b:B}>
+Callback<Pair<A, B>>
+Callback<{ a: A, b: B, c: C }>
 ```
 
 This approach has two advantages:
 
 * For one, it greatly simplifies things. Implementations of signals only ever consume one type of callbacks, so you don't need signals for 0, 1, 2 and possibly 3 arguments.
 * Types written against this single callback type are easier to work with in a consistent matter.
+* In the last case you can add additional information in a new field without breaking code
 
 ## CallbackLink
 
@@ -181,7 +261,6 @@ abstract CallbackList<T> {
 	function add(cb:Callback<T>):CallbackLink;
 	function invoke(data:T):Void; 
 	function clear():Void;
-	@:to function toSignal():Signal<T>;		
 }
 ```
 
@@ -196,161 +275,40 @@ While this behavior might strike you as unfamiliar, it does have advantages:
 - Avoid trouble with all sorts of inconsistencies regarding function equality on different Haxe targets
 - Have a clear and simple behavior, that is thus highly predictable - i.e. callbacks are simply executed in the order they are registered in. If you register a new callback, you can expect *all* previously registered callbacks to execute *before* it. The same cannot be said in case of the more common approach, if the callback was registered already once. Usually execution order is therefore undefined.
 
-Finally, it is worth nothing that as the last function indicates, the list can also act as a signal. Let's have a look at those now.
-
-# Signal
-
-Despite an overabundance of signal implementations, `tink_core` does provide its own flavour of signals. One that aims at utmost simplicity and full integration with the rest of tink. Here it is:
-
-```    
-abstract Signal<T> {
-	function new(f:Callback<T>->CallbackLink):Void;
-
-	function when(calback:Callback<T>):CallbackLink;
-	
-	function map<A>(f:T->A, ?gather:Bool = true):Signal<A>;
-	function join(other:Signal<T>, ?gather:Bool = true):Signal<T>;
-	function noise():Signal<Noise>;
-	
-	function gather():Signal<T>;
-	
-	function next():Future<T>;	
-}
-```
-
-A `Signal` quite simply invokes `Callback`s with some data `when` an event represented by that data occurs.
-
-### Why use signals?
-
-When compared to mechanisms like flash's `EventDispatcher` or the DOM's `EventTarget` or nodejs's `EventEmitter`, the main advantage is type safety.
-
-Say you have the following class:
-
-```    
-class Button {
-	public var pressed(default, null):Signal<MouseEvent>;
-	public var clicked(default, null):Signal<MouseEvent>;
-	public var released(default, null):Signal<MouseEvent>;
-}
-```
-
-You know exactly which events to expect and what type they will have. Also, an interface can define signals that an implementor must thus provide. And lastly, the fact that a signal itself is a value, you can pass it around rather then the whole object owning it.
-
-### Rolling your own
-
-As the constructor indicates, a signal can be constructed from any function that consumes a callback and returns a link. It should become obvious, how a `CallbackList` becomes a `Signal` and that's alse the suggested method to create signals. Note that as stated above, a `CallbackList` will be implicitly converted to a `Signal`, so this is valid code:
-
-```    
-var signal:Signal<Int> = new CallbackList<Int>();
-```
-
-Note that if you do not specify the type parameter, the implicit conversion will not work with Haxe 3.0.0.
-
-### Registering callbacks
-
-Registering callbacks is pretty straight forward. You provide the callback to `when` and get a link in return.
-
-Normally, `Signal` is implemented with a `CallbackList` and thus [the same rules](#registering-callbacks) apply for callback registration.
-
-### No way to dispatch from outside
-
-Unlike many other signal flavors, tink's signals do not allow client code to invoke the signal. Typically, you will expose only a `Signal` while internally knowing the `CallbackList` that implements it, so that only you can invoke it.
-
-Here's an example of just that:
-
-```    
-class Clock {
-	public var tick(default, null):Signal<Noise>;
-	var tickHandlers:CallbackList<Noise>;
-	public function new() {
-		this.tick = this.tickHandlers = new CallbackList();
-		var t = new Timer(1000);
-		t.run = function () this.tickHandlers.invoke(Noise);
-	}
-}
-```
-
-That being said, if you wish to provide means to dispatch a signal from outside, you can of course do so by exposing this functionality in whatever way you see fit.
-
-### Wrapping 3rd party APIs
-
-It is also quite easy to take an arbitrary API and wrap it in signals. Let's take the beloved `IEventDispatcher`.
-
-```    
-function makeSignal<A:Event>(dispatcher:IEventDispatcher, type:String):Signal<A> 
-    return new Signal(
-        function (cb:Callback<A>):CallbackLink {
-        	var f = function (e:A) cb.invoke(e);
-            dispatcher.addEventListener(type, f); 
-            return dispatcher.removeEventListener.bind(type, f);
-        }
-    )
-
-
-var keydown:Signal<KeyboardEvent> = makeSignal(stage, 'keydown');//yay!!!
-```
-
-As far as just `tink.core.Signal` and interoperability with other APIs is concerned, the primary goal is to make it extremely simple to represent any kind of API with signals. And as seen above, there's really not much to it.
-
-### Composing
-
-Now let's have a look at the `map` and `join` and `noise` methods. Please do not yet concern yourself with the `gather` parameter some of them define as it will be covered later and is not essential to their intention.
-
-First of all, `map` comes from the functional term of mapping. The idea is to use a function that maps values of one type onto other values (possibly of another type) and give that to a more complex data structure that also deals with values of that type, creating a similar data structure, where the function has been applied to every value. In Haxe `Lambda.map` does this for all iterable data structures. Also `Array` and `List` have built in support for this. So if you want to understand this concept, that's probably the best place to look for an easy example.
-
-Secondly, we have `join` that allows us to join two signals of the same type into one. Here's an example of what that might look like, where we assume that we have a `plusButton` and a `minusButton` on our GUI and they each have a signal called `clicked`:
-
-```    
-var delta = 
-	plusButton.clicked
-		.map(function (_) return 1)
-    	.join(minusButton.clicked.map(function (_) return -1));
-    	
-$type(delta);//tink.core.Signal<Int>
-```
-
-From that we have constructed a new `Signal` that fires `1` when the `plusButton` is clicked and `-1`, when the `minusButton` is clicked. 
-
-This way we can map many input events into a single application event without extraneous noise.
-
-The `noise` method mentioned earlier is merely a shortcut to `map` any `Signal` to a `Signal<Noise>`, thus discarding any information it carries. This is useful when you want to propagate an event but not expose the original data and also have no meaningful substitute.
-
-### Gathering
-
-The concept of *gathering* is brought into existence by the unfortunate fact that building a non-leaky abstraction that can live on top of any kind of API and allows for easy composition requires sacrifying some simplicity.
-
-Still, it is very easily explained: all that *gathering* does, is to create a new `Signal` on top of a `CallbackList` and register it's `invoke` method to the original signal.
-
-But why bother, you say?
-
-Well, as we've seen **any** function that accepts a `Callback` and returns a `CallbackLink` is suitable to act as a `Signal`. But such a `Signal` needn't behave consistently with those built on `CallbackList`, i.e. invokation order might be different or duplicate registration might not be allowed or whatever. Or in some instances, the implementation might be slower or weird in some other way (e.g. [ACE's EventEmitter](https://github.com/ajaxorg/ace/blob/master/lib/ace/lib/event_emitter.js#L39) implementation that has all sorts of unexpected behavior if you add/remove handlers for an event type, while an event of the type is dispatched).
-
-As seen in the example with `IEventDispatcher`, a signal is quite easy to build. However, in the above implementation, the `Signal` will always call down to the underlying dispatcher to deal with registration. 
-
-You may have noticed that both `map` and `join` have a paremeter for diking, that is true by default. If we do not use diking, what these functions do is to return Signals that implement registration by calling down to the original signals they were constructed from.
-Thus `map` will cause the mapping function to be called **for every registered callback**, which can be very expensive. Also `join` will cause the resulting `Signal` to propagate any callback registration to both underlying signals, which can become quite expensive if you join a lot of signals together and perform many registration and deregistrations on them. However, if you create some signals only as intermediary results to be composed into a larger signal, then you should not use `gather` as this introduces unnecessary intermediary objects.
-
-The implications of using gathering or not are rather subtle. But when in doubt, do use it. Or send me an email ;)
+In essence the `CallbackList` can be seen as a basic building block for notification mechanisms.
 
 # Future
 
-As the name would suggest, futures express the idea that something is going to happen in the future. Or much rather: a future represents the result of an asynchronous operation, that will become available at some point in time. It allows you to register a `Callback` for `when` the operation is finished.
+As the name would suggest, futures express the idea that something is going to happen in the future. Or much rather: a future represents the result of a potentially asynchronous operation, that will become available at some point in time. It allows you to register a `Callback` to `handle` the operation's result once it is available.
 
 ```    
-abstract Future<T> {
-	static function ofConstant<A>(v:A):Future<A>;
-	static function ofAsyncCall<A>(f:(A->Void)->Void):Future<A>;
-	function new(f:Callback<T>->CallbackLink):Void;	
-	function when(callback:Callback<T>):CallbackLink;
-	function map<A>(f:T->A):Future<A> 
-	function flatMap<A>(next:T->Future<A>):Future<A>; 
+abstract Future<T> {	
+	function handle(callback:Callback<T>):CallbackLink;
+	
+	function map<A>(f:T->A, ?gather = true):Future<A>;
+	function flatMap<A>((:T->Future<A>, ?gather = true):Future<A>; 
+	static function flatten<A>(f:Future<Future<A>>):Future<A>;
+	
+	function or(other:Future<T>):Future<T>;
+	function merge<A, R>(other:Future<A>, how:T->A->R):Future<R>;
 	@:from static function fromMany<A>(a:Array<Future<A>>):Future<Array<A>>;
+	
+	static function sync<A>(v:A):Future<A>;
+	static function lazy<A>(f:Void->A):Future<A>;
+	static function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A>;	
+	static function create<A>():FutureTrigger<A>;//FutureTrigger is documented below
+	function new(f:Callback<T>->CallbackLink):Void;	
 }
 ```
 
+It is important to note that a future - despite its name - need not necessarily represent an operation whose result still lies in the future. Once the underlying operation has completed, the future will retain the result and if you register a callback, it will be called back *immediately*. There are claims that such behavior can cause problems. The problem is however caused by making assumptions about *when* the callback will be invoked. Do not make any such assumptions and you will be on the safe side. You can see the `Future` as a micro-framework, that inverts control.
+
 ### Why use futures?
 
-We do already have callbacks after all. The main reason is that futures are values and that has a number of advantages.
+We can already deal with asynchrony by means of plain old callbacks. Introducing futures has two advantages:
+
+- Futures are values and that allows for composition
+- Futures are very generic. They need not represent an asynchronous operation, they might just as well represent a lazy one or they may even hold a value that has been available from the very start. Writing a piece of code against futures allows you to work with and even intermix these three types of evaluation strategies.
 
 Say you have these functions, that are built on one another:
 
@@ -366,25 +324,27 @@ function loadFromParameters(params: { host: String, port: Int, url:String, param
 
 function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<String> }, callback:Array<String>->Void):Void {
     var results = [],
-    	count = params.length;
-    for (i in 0...params.length) 
+    	count = 0;
+    for (i in 0...params.length) {
+    	count++;
     	loadFromParameters(params[i], function (data) {
     		results[i] = data;
     		if (--count == 0) callback(results);
 		});
+	}
 }
 ```
 
 Now let's see that code with futures:
 
 ```    
-function loadFromURL(url:String):Future<Dynamic> { 
+function loadFromURL(url:String):Future<String> { 
 	/* load the data somehow */ 
 }
 
 function loadFromParameters(params: { host: String, port: Int, url:String, params:Map<String> }):Future<String> {
 	var url = buildURL(params);//wherever this comes from
-	return loadFromURL(url, callback);
+	return loadFromURL(url);
 }
 
 function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<String> }):Future<Array<String>> {
@@ -402,39 +362,172 @@ Note that the value that we constructed is `Array<Future<String>>` whereas what 
 
 So rather than passing callbacks along with all calls, we simply return futures and the resulting code is much closer to how we would do this with synchronous APIs.
 
+### Transformation
+
+In the example above we can see some composition of futures at work. What's equally interesting is transformation. The basic tool is `map` which works very much like it does for `Array`. For a `Array`, it constructs a new `Array` by applying a function to all elements. For a `Future` it does pretty much the same thing: it constructs a new `Future` by applying a function to the result.
+
+Say we want to load JSON instead of raw data in the example above. To expand on the example above, this is how we would accomplish it:
+
+```
+function loadJson(url:String):Future<Dynamic> 
+	return loadFromUrl(url).map(haxe.Json.parse);
+```
+
+Now let's say that we know for a fact, that all these JSONs contain arrays of strings and we actually just want the first entry, then we would do this:
+
+```
+function loadJson(url:String):Future<String>
+	return loadFromUrl(url).map(haxe.Json.parse).map(function (a) return a[0);
+```
+
+Or let's try something else. Loading information from wikipedia.
+
+```
+function loadWikiDescription(article:String):Future<Null<String>> 
+	return 
+		loadFromUrl('http://en.wikipedia.org/wiki/$article').map(function (html:String) 
+			return
+				if (html.indexOf('Wikipedia does not have an article with this exact name') != -1) null;
+				else html.split('<p>').pop().split('</p>').shift();
+		);
+```
+
+So the above will create a future that returns null if there's no article, or the contents of the first paragraph (please do not parse HTML like that in production code).
+
+Now let's assume that we want to load an article that is specified in a config, then we would try this:
+
+```
+loadJson('config.json').map(
+	function (config: { article:String }):Future<Null<String>>
+		return loadWikiDescription(config.article)
+);
+```
+
+There is only one problem. The transformation function does not return a plain value, but rather a future. Since map with a function of type `T->A` transforms a `Future<T>` to a `Future<A>`, map with a function of type `String->Future<Null<String>>`.
+so the resulting future will in fact be of type `Future<Future<Null<String>>>` whereas we would really rather want `Future<Null<String>>`. One could call this a "nested" future and we want to `flatten` it:
+
+```
+Future.flatten(loadJson('config.json').map(
+	function (config: { article:String }) 
+		return loadWikiDescription(config.article)
+));
+```
+
+Now because this is a lot to write for a rather common situation, we have `flatMap` which basically just does a `map` and `flatten`:
+
+```
+loadJson('config.json').flatMap(
+	function (config: { article:String }) 
+		return loadWikiDescription(config.article)
+);
+```
+
+And the result is a plain future.
+
+### Gathering
+
+The keen observer may have noticed the optional `gather` argument for `map` and `flatMap`. This a compromise that leaks an implementation detail to give you the possibility to reduce overhead. When in doubt, leave it untouched.
+
+Let's examine a naive implementation of `map`:
+
+```
+function map<In, Out>(future:Future<In>, transform:In->Out):Future<Out>
+	return new Future(
+		function (callback:Callback<Out>):CallbackLink
+			return f.handle(
+				function (data:In) callback.invoke(transform(data))
+			)
+	)
+```
+
+What this does is to create a future that deals with a `callback` by registering a new handle to the original `future` that will first `transform` the `data` and then `invoke` the original `callback`. This pretty much does what we want, with one problem: The transformation is executed for *every* `callback`. 
+
+Example:
+
+```
+var f = Future.sync('foo'),
+	array = [];
+
+var mapped = map(f, array.push);
+mapped.handle(function (x) trace(x));//1
+trace(array);//[foo]
+mapped.handle(function (x) trace(x));//2
+trace(array);//[foo, foo]
+```
+
+Ideally the transformation should be a [pure function](http://en.wikipedia.org/wiki/Pure_function), so you will not actually have any direct side effects. But even then it would be executed multiple times which may cause performance issues if the transformation is costly.
+
+To avoid this, we would need a mechanism that internally stores the transformed result once it becomes available and dispatches that onto all callbacks. That's what "gathering" does. 
+
+Gathering is used by default, because by default it's the sensible thing to do. However, you may build chains such as `f.map(t1).map(t2).flatMap(t3).map(t4)`. The intermediary futures will only ever have one handler. In that case the overhead introduced by gathering is not needed.
+
+If the transformations are pretty straight forward but frequent and you're dealing with synchronous code, then turning off gathering can lead to noticable performance differences.
+
 ### Rolling your own
 
-While you can create Futures with the constructor very similarly to how you would create Signals, the suggested method is to use either `ofConstant` or `ofAsyncCall`.
+While you can create Futures with the constructor, the suggested method is to use one of the static constructors.
 
-Suppose we didn't have a future based version of `loadFromURL` in the example above. In that case, we could construct one:
+In the example above, we've seen a `loadFromUrl` function. Here's a way to implement it on top of `haxe.Http` on async platforms with `Future.async`:
 
-```    
-function loadFromURL2(url:String) {
-	return Future.ofAsyncCall(loadFromURL.bind(url));
+```
+//First, let's have a plain old callback based function
+function loadAsync(url:String, callback:String->Void) {
+    var h = new haxe.Http(url);
+    h.onDone = callback;
+    h.send();
 }
+//and now, pixie dust!!!!
+function loadFromUrl(url:String) 
+	return Future.async(loadAsync.bind(url));
+
 ```
 
-And voila, we could build the other two functions on top of that and happily live in future land.
+Or if we wanted to achieve the same in one step:
 
-It may be possible that you have an operation that is sometimes synchronous and sometimes asynchronous. In that case, you can use `ofConstant`. Example:
-
-```    
-function loadFromURL2(url:String) {
-	return 
-		if (url == 'default') 
-			Future.ofConstant('Default Data');
-		else 
-			Future.ofAsyncCall(loadFromURL.bind(url));
-}
+```
+function loadFromUrl(url:String)
+	return Future.async(function (handler:String->Void) {
+		var h = new haxe.Http(url);
+		h.onDone = handler;
+		h.send();
+	});
 ```
 
-### Registering callbacks
+A fair question to ask would be, how to deal with errors. Quite simply, we will use our old friend the `Outcome`:
 
-As with `Signal` you use `when` to register a `Callback` and get a `CallbackLink` in return.
+```
+function loadFromUrl(url:String):Future<Outcome<String, String>>
+	return Future.async(function (handler:Outcome<String, String>->Void) {
+		var h = new haxe.Http(url);
+		h.onDone = function (data:String) handler(Success(data));
+		h.onError = function (error:String) handler(Error(error));
+		h.send();
+	});
+```
 
-Futures are usually created by `Future.ofAsyncCall` which is implemented on top of `CallbackList`. Thus [the same rules](#registering-callbacks) apply. Please note that if you register a callback *after* the `Future` has completed, it will be called immediately.
+Now suppose we wanted the code to run on PHP that's synchronous. For one, the implementation above would already happen to work. But typically most APIs that you would want to deal with are purely synchronous and you'd have to deal with that. This is how:
 
-Dissolving links after the corresponding callbacks have been invoked simply has no effect.
+```
+function loadFromUrl(url:String)
+	return Future.sync(haxe.Http.requestUrl(url));
+	
+function loadFromUrl(url:String)
+	return Future.lazy(haxe.Http.requestUrl.bind(url));
+```
+
+The first version just gets the data synchronously and then "lifts" it to become a `Future`. The second version constructs a lazy future, i.e. the operation is executed when you register the first callback. Example:
+
+```
+var load = loadFromUrl('http://example.com/');//no requests have been made yet
+load.handle(function (data) {});//now the request is made
+load.handle(function (data) {});//the data is already available, so no request is made
+```
+
+Lazyness of course is something that you may want in async scenarios. For that reason `Future.async` has a `lazy` parameter that you can set to `true`.
+
+Please note that lazyness is not always preferable. In the context of HTTP for example, it might make sense to have `GET` requests be lazy, because there's no point in loading the data if you're not going to `handle` it. As opposed to that, `POST` requests should not be lazy. You want the request to be sent of to the server, whether or not you're going to `handle` the response.
+
+For any more complex scenarios, you can use [`FutureTrigger`](#futuretrigger) to complete the future by hand.
 
 ## Surprise
 
@@ -448,50 +541,33 @@ This type thus represents an operation that will finish at some point in time an
 
 ## FutureTrigger
 
-You often want to roll your own future. The simplest way to do this is by using a helper class:
+In an above section we've seen ways to construct futures on top of other APIs. However, you may need to build your own future yourself from scratch. The simplest way to do this is by using a helper class:
 
 ```    
 class FutureTrigger<T> {
-	function new():Void;
+	function new();
 	function asFuture():Future<T>;
-	function invoke(result:T):Bool;
+	function trigger(result:T):Bool;
 }
 ```
 
-Here is how you would use such a trigger:
+Typically you would construct a trigger with `Future.trigger()` instead of `new FutureTrigger()`. One advantage is that the former works with `import tink.core.*;` and the other one requires you to `import tink.core.Future;` explicitly.
+
+Here is how you would use such a trigger (as an alternative to the example above):
 
 ```    
 class Http {
 	static public function requestURL(url:String):Surprise<String, String> {
 	   var req = new haxe.Http(url),
-		   trigger = new FutureTrigger();
-	   req.onData = function (data) trigger.invoke(Success(data));
-	   req.onError = function (error) trigger.invoke(Failure(error));
-	   return trigger.asFuture();
+		   f = Future.trigger();
+	   req.onData = function (data) f.trigger(Success(data));
+	   req.onError = function (error) f.trigger(Failure(error));
+	   return f.asFuture();
 	}
 }
 ```
 
-And then client code can simply do this:
-
-```    
-Http.requestURL('http://example.com').when(function (result) switch result {
-	case Success(data): //...
-	case Failure(data): //...
-});
-```
-
 Looks pretty neat already. And it forces client code to consider failure.
-
-Also, in `tink_lang` we have sugars to write the same piece of code as:
-
-```    
-@when(Http.requestURL('http://example.com'))
-	@do switch _ {
-		case Success(data): //...
-		case Failure(data): //...
-	}
-```
 
 # Either
 
@@ -538,4 +614,134 @@ var r:Ref<Int> = 4;
 var i:Int = r;
 ```
 
-The current implementation is built over `haxe.ds.Vector` and should thus perform decently across most platforms.
+The current implementation is built over `haxe.ds.Vector` and should thus perform quite decently across most platforms.
+
+# Signal
+
+Despite an overabundance of signal implementations, `tink_core` does provide its own flavour of signals. One that aims at utmost simplicity and full integration with the rest of tink. Here it is:
+
+```    
+abstract Signal<T> {
+	function new(f:Callback<T>->CallbackLink):Void;
+
+	function handle(calback:Callback<T>):CallbackLink;
+	
+	function map<A>(f:T->A, ?gather:Bool = true):Signal<A>;
+	function join(other:Signal<T>, ?gather:Bool = true):Signal<T>;
+	function noise():Signal<Noise>;
+	
+	function gather():Signal<T>;
+	
+	function next():Future<T>;	
+	
+	static function trigger<A>():SignalTrigger<A>;
+	static function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather = true):Signal<A>;
+}
+```
+
+A `Signal` quite simply invokes `Callback`s that are registered using `handle` whenever an event occurs.
+
+There is significant similarity between `Signal` and `Future`. It's best to read up on futures if you haven't done so yet. You may also notice `next`, which at any time will create a future corresponding to the *next* occurence of the signal. So if you only want to do something on the next occurence, you would do `someSignal.next().handle(function (data) {})`.
+
+### Why use signals?
+
+When compared to mechanisms like flash's `EventDispatcher` or the DOM's `EventTarget` or nodejs's `EventEmitter`, the critical advantage is type safety.
+
+Say you have the following class:
+
+```    
+class Button {
+	public var pressed(default, null):Signal<MouseEvent>;
+	public var clicked(default, null):Signal<MouseEvent>;
+	public var released(default, null):Signal<MouseEvent>;
+}
+```
+
+You know exactly which events to expect and what type they will have. Also, an interface can define signals that an implementor must thus provide. And lastly, the fact that a signal itself is a value, you can pass it around rather then the whole object owning it. Similarly to futures, this allows for composition.
+
+### Wrapping 3rd party APIs
+
+It is quite easy to take an arbitrary API and wrap it in signals. Let's take the beloved `IEventDispatcher`.
+
+```    
+function makeSignal<A:Event>(dispatcher:IEventDispatcher, type:String):Signal<A> 
+    return Signal.ofClassical(
+    	dispatcher.addEventListener.bind(type),
+    	dispatcher.removeEventListener.bind(type)
+    );
+
+var keydown:Signal<KeyboardEvent> = makeSignal(stage, 'keydown');//yay!!!
+```
+
+As far as just `tink.core.Signal` and interoperability with other APIs is concerned, the primary goal is to make it extremely simple to represent any kind of API with signals. And as shown above, there's really not much to it.
+
+### Rolling your own
+
+As the constructor indicates, a signal can be constructed from any function that consumes a callback and returns a link. Therefore `CallbackList` is pretty much a perfect fit. However, for the sake of consistency with `Future`, the intended usage is to create a `SignalTrigger` that you use internally to - well - trigger the `Signal`.
+
+### No way to dispatch from outside
+
+Unlike many other signal flavors, tink's signals do not allow client code to invoke the signal. When exposing a signal that you trigger yourself, typically you will expose only a `Signal` while internally knowing the `SignalTrigger`.
+Here's an example of just that:
+
+```    
+class Clock {
+	public var tick(default, null):Signal<Noise>;
+	var tickHandlers:SignalTrigger<Noise>;
+	public function new() {
+		var s = Signal.create();
+		var t = new Timer(1000);
+		t.run = function () s.trigger(Noise);
+		this.tick = s;
+	}
+}
+```
+
+That being said, if you wish to provide means to dispatch a signal from outside, you can of course do so by exposing this functionality in whatever way you see fit.
+
+### Composing
+
+Now let's have a look at the `map` and `join` and `noise` methods. The `gather` parameter has a very similar role to the counterpart for `Future`. We'll examine that later.
+
+First of all, `map` comes from the functional term of mapping. The idea is to use a function that maps values of one type onto other values (possibly of another type) and give that to a more complex data structure that also deals with values of that type, creating a similar data structure, where the function has been applied to every value. In Haxe `Lambda.map` does this for all iterable data structures. Also `Array` and `List` have built in support for this. So if you want to understand this concept, that's probably the best place to look for an easy example.
+
+Secondly, we have `join` that allows us to join two signals of the same type into one. Here's an example of what that might look like, where we assume that we have a `plusButton` and a `minusButton` on our GUI and they each have a signal called `clicked`:
+
+```    
+var delta = 
+	plusButton.clicked
+		.map(function (_) return 1)
+    	.join(minusButton.clicked.map(function (_) return -1));
+    	
+$type(delta);//tink.core.Signal<Int>
+```
+
+From that we have constructed a new `Signal` that fires `1` when the `plusButton` is clicked and `-1`, when the `minusButton` is clicked. 
+
+This way we can map many input events into a single application event without extraneous noise.
+
+The `noise` method mentioned earlier is merely a shortcut to `map` any `Signal` to a `Signal<Noise>`, thus discarding any information it carries. This is useful when you want to propagate an event but not expose the original data and also have no meaningful substitute.
+
+### Gathering
+
+Similar to `Future`, we have *gathering* for `Signal` as well - for pretty much the same reasons. But it also has another role - normalizing behavior:
+
+As we've seen **any** function that accepts a `Callback` and returns a `CallbackLink` is suitable to act as a `Signal`. But such a `Signal` needn't behave consistently with those built on `CallbackList`, i.e. invokation order might be different or duplicate registration might not be allowed or whatever. Or in some instances, the implementation might be slower or weird in some other way (e.g. [ACE's EventEmitter](https://github.com/ajaxorg/ace/blob/master/lib/ace/lib/event_emitter.js#L39) implementation that has all sorts of unexpected behavior if you add/remove handlers for an event type, while an event of the type is dispatched).
+
+What gathering does for signals is quite easily explained. It creates a new `SignalTrigger` and registers that with the original signal. Then the signal derived from the trigger is returned. Therefore behavioral oddities of the original implementation are hidden.
+
+If we look at `Signal.ofClassical` as used in the example with `IEventDispatcher`, we've used gathering (by default). We could choose not to use it. In that case, the callbacks registration would be delegated to the dispatcher in a relatively direct fashion - with all the advantages and problems this may lead to (usually the problems outweigh any advantages).
+
+## SignalTrigger
+
+A `SignalTrigger` is what permits you to build a signal that you can trigger yourself:
+
+```    
+abstract SignalTrigger<T> {
+	function new();
+	@:to function asSignal():Signal<T>;
+	function invoke(result:T):Bool;
+}
+```
+
+The "clock" example above demonstrates how to do that.
