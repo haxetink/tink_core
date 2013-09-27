@@ -338,7 +338,7 @@ abstract Future<T> {
 	function flatMap<A>((:T->Future<A>, ?gather = true):Future<A>; 
 	static function flatten<A>(f:Future<Future<A>>):Future<A>;
 	
-	function or(other:Future<T>):Future<T>;
+	function first(other:Future<T>):Future<T>;
 	function merge<A, R>(other:Future<A>, how:T->A->R):Future<R>;
 	@:from static function fromMany<A>(a:Array<Future<A>>):Future<Array<A>>;
 	
@@ -473,6 +473,23 @@ loadJson('config.json').flatMap(
 
 And the result is a plain future.
 
+### Composition
+
+To compose futures, you have three basic options:
+
+1. `first` - take two futures of the same type and construct one that yields the result of whichever future finishes first. Example: `loadFrom(source1).first(loadFrom(source2))`
+2. `fromMany` - take an array of futures and transform it to a single future of an array of the results. In fact you've seen this in action in "Why use futures?"
+3. `merge` - take two futures and merge them together by means of a function. Example: `loadFrom(source1).merge(loadFrom(source2), function (r1, r2) return r1 + r2)`
+
+Now you may want to use `first` on futures of different types. Here's how that would work:
+
+```
+var x:Future<X> = ...; 
+var y:Future<Y> = ...; 
+
+$type(x.map(Either.Left).first(y.map(Either.Right)));//Future<Either<X, Y>>
+``` 
+
 ### Gathering
 
 The keen observer may have noticed the optional `gather` argument for `map` and `flatMap`. This a compromise that leaks an implementation detail to give you the possibility to reduce overhead. When in doubt, leave it untouched.
@@ -578,6 +595,43 @@ Please note that lazyness is not always preferable. In the context of HTTP for e
 
 For any more complex scenarios, you can use [`FutureTrigger`](#futuretrigger) to complete the future by hand.
 
+### Operators
+
+Because `Future` is an abstract, we can do some neat tricks with operator overloading. Before looking at those, you might want to peek at the next section to see what a `Surprise` is.
+
+1. `||`
+ 1. If futures are of the same type, will use `first`
+ 2. If futures are of different type, will collapse the type by means of `Either` and then use `first` (as seen above)
+2. `&&` - will combine a `Future<A>` and `Future<B>` to a `Future<Pair<A, B>>`.
+3. `>>`
+ 1. Will `flatMap` a `Surprise<A, F>` to a `Surprise<B, F>` with a `A->Surprise<B, F>`
+ 2. Will `flatMap` a `Surprise<A, F>` to a `Surprise<B, F>` with a `A->Future<B>`
+ 3. Will `map` a `Surprise<A, F>` to a `Surprise<B, F>` with a `A->Outcome<B, F>`
+ 4. Will `map` a `Surprise<A, F>` to a `Surprise<B, F>` with a `A->B`
+ 5. Will `flatMap` a `Future<A>` to a `Future<B>` with a `A->Future<B>`
+ 6. Will `map` a `Future<A>` to a `Future<B>` with a `A->B`
+
+Evidently, `>>` is quite supercharged. Let's examine an example from above once more to see why:
+
+```
+loadJson('config.json').flatMap(
+	function (config: { article:String }) 
+		return loadWikiDescription(config.article)
+);
+```
+
+We can now write it as this:
+
+```
+loadJson('config.json') >> 
+	function (config: { article:String }) 
+		return loadWikiDescription(config.article);
+```
+
+Apart from shaving off a few characters, we achieved something else entirely. This piece of code is *significantly* more flexible. If `loadJson` starts returning a `Surprise` because the maintainer added error handling, our code remains unaffected. The overloaded `>>` operator will lift the transformation to the right context. The same applies for `loadWikiDescription`. With this syntax it no longer matters whether it returns a `Surprise` or just a `Future` or even just a plain value. 
+
+Handle the future like a boss ;)
+
 ## Surprise
 
 For all those who love surprises and for all those who hate them, `tink_core` provides a neat way of expressing them. Simply put, a surprise is nothing but a future outcome. Literally:
@@ -586,7 +640,7 @@ For all those who love surprises and for all those who hate them, `tink_core` pr
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
 ```
 
-This type thus represents an operation that will finish at some point in time and can end in failure. Perfect for representing asynchronous I/O and such.
+This type thus represents an operation that will finish at some point in time and can end in failure. Perfect for representing asynchronous I/O and such. We've seen it in the examples above, we just didn't call it that way.
 
 ## FutureTrigger
 
