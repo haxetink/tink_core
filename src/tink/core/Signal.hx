@@ -60,7 +60,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	}
 	
 	static public function trigger<T>():SignalTrigger<T>
-		return new CallbackList();
+		return new SignalTrigger();
 		
 	static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather = true) {
 		var ret = new Signal(function (cb:Callback<A>) {
@@ -75,6 +75,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 }
 
 abstract SignalTrigger<T>(CallbackList<T>) from CallbackList<T> {
+	public inline function new() this = new CallbackList();
 	public inline function trigger(event:T)
 		this.invoke(event);
 	public inline function getLength()
