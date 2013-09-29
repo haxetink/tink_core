@@ -7,7 +7,7 @@ abstract Lazy<T>(Void->T) {
 	@:to public inline function get():T
 		return (this)();
 			
-	@:from static function ofFunc<T>(f:Void->T) {
+	@:from static public function ofFunc<T>(f:Void->T) {
 		var result = null;
 		return new Lazy(function () {
 			if (f != null) {
