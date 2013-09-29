@@ -78,7 +78,7 @@ The `Outcome` type is quite similar to [`haxe.ds.Option`](http://haxe.org/api/ha
 ```    
 enum Outcome<Data, Failure> {
 	Success(data:Data);
-	Failure(?failure:Failure);
+	Failure(failure:Failure);
 }
 ```
 
