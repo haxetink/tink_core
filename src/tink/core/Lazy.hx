@@ -22,10 +22,10 @@ abstract Lazy<T>(Void->T) {
 		});
 	}
 	
-	public function map<A>(f:T->A):Lazy<A> 
+	public inline function map<A>(f:T->A):Lazy<A> 
 		return Lazy.ofFunc(function () return f(get(this)));
 		
-	public function flatMap<A>(f:T->Lazy<A>):Lazy<A> 
+	public inline function flatMap<A>(f:T->Lazy<A>):Lazy<A> 
 		return Lazy.ofFunc(function () return f(get(this)).get());
 	
 	@:from static inline function ofConst<T>(c:T) 

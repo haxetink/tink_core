@@ -67,9 +67,9 @@ The `Lazy` type is a primitive for [lazy evaluation](http://en.wikipedia.org/wik
 
 ```
 abstract Lazy<T> {	
-	@:to function get():T;
+	@:to function get():T;	
 	@:from static function ofFunc<T>(f:Void->T):Lazy<T>;
-	@:from static function ofConst<T>(c:T):Lazy<T>;
+	@:from static private function ofConst<T>(c:T):Lazy<T>;
 }
 ```
 
