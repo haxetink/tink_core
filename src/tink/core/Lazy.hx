@@ -9,15 +9,24 @@ abstract Lazy<T>(Void->T) {
 			
 	@:from static public function ofFunc<T>(f:Void->T) {
 		var result = null;
+		#if debug var busy = false; #end
 		return new Lazy(function () {
+			#if debug if (busy) throw new Error('circular lazyness');#end
 			if (f != null) {
-				var f2 = f;
+				#if debug busy = true;#end
+				result = f();
 				f = null;
-				result = f2();
+				#if debug busy = false;#end
 			}
 			return result;
 		});
 	}
+	
+	public function map<A>(f:T->A):Lazy<A> 
+		return Lazy.ofFunc(function () return f(get(this)));
+		
+	public function flatMap<A>(f:T->Lazy<A>):Lazy<A> 
+		return Lazy.ofFunc(function () return f(get(this)).get());
 	
 	@:from static inline function ofConst<T>(c:T) 
 		return new Lazy(function () return c);
