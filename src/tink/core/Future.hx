@@ -90,8 +90,8 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 			var op = trigger();
 			f(op.trigger);
 			return op;			
-		}
-	
+		}		
+		
 	@:noCompletion @:op(a || b) static public function or<A>(a:Future<A>, b:Future<A>):Future<A>
 		return a.first(b);
 		
@@ -134,43 +134,38 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 	@:noUsing static public inline function trigger<A>():FutureTrigger<A> 
 		return new FutureTrigger();
 	
-	@:to public function toSurprise<F>():Surprise<T, F> 
-		return map(Success);
-	
 }
 
+
 class FutureTrigger<T> {
-	var state:State<T>;
+	var result:T;
+	var list:CallbackList<T>;
 	var future:Future<T>;
 	public function new() {
-		state = Left(new CallbackList());
+		this.list = new CallbackList();
 		future = new Future(
 			function (callback)
 				return 
-					switch (state) {
-						case Left(callbacks):
-							callbacks.add(callback);
-						case Right(result): 
-							callback.invoke(result);
-							null;
+					if (list == null) {
+						callback.invoke(result);
+						null;												
 					}
+					else list.add(callback)
 		);
 	}
 	public inline function asFuture() return future;
 	
-	public function trigger(result:T):Bool
+	public inline function trigger(result:T):Bool
 		return
-			switch (state) {
-				case Left(callbacks):
-					state = Right(result);
-					callbacks.invoke(result);
-					callbacks.clear();//free callback links
-					true;
-				case Right(_):
-					false;
+			if (list == null) false;
+			else {
+				var list = this.list;
+				this.list = null;
+				this.result = result;
+				list.invoke(result);
+				list.clear();//free callback links
+				true;
 			}
 }
-
-private typedef State<T> = Either<CallbackList<T>, T>;
 
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
