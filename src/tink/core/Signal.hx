@@ -56,7 +56,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	public function gather():Signal<T> {
 		var ret = trigger();
 		handle(ret.trigger);
-		return ret;
+		return ret.asSignal();
 	}
 	
 	static public function trigger<T>():SignalTrigger<T>
