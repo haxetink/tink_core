@@ -4,8 +4,8 @@
 	"license": "MIT",
 	"tags": ["tink", "cross", "utility"],
 	"description": "Tinkerbell Core",
-	"version": "1.0.0-beta.2",
-	"releasenote": "Minor enhancements",
+	"version": "1.0.0-beta.3",
+	"releasenote": "Added facade",
 	"contributors": ["back2dos"], 
 	"classPath": "src" 
 }

@@ -5,6 +5,8 @@ The `tink_core` lib contains a set of lightweight tools for robust programming.
 
 All modules are situated in `tink.core.*`. Some contain more than a single type. Generally, it is advisable to import the modules of this package through `using` rather than `import`. 
 
+In addition, you can import all modules at once with `using tink.Core;`.
+
 ### Overview
 
 - [`Pair`](#pair)
@@ -24,7 +26,7 @@ All modules are situated in `tink.core.*`. Some contain more than a single type.
 - [`Signal`](#signal)
  - [`SignalTrigger`](#signaltrigger)
 
-Despite the rather long documentation here, `tink_core` does not exceed 1KLOC. And while it primarily serves as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
+Despite the rather long documentation here, `tink_core` does not exceed 1KLOC. And while was primarily drafted as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
 
 # Pair
 

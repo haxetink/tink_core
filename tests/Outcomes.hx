@@ -1,7 +1,6 @@
 package ;
 
-using tink.core.Outcome;
-using tink.core.Error;
+using tink.CoreApi;
 
 class Outcomes extends Base {
 	function testSure() {

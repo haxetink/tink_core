@@ -1,8 +1,6 @@
 package ;
 
-using tink.core.Signal;
-using tink.core.Future;
-using tink.core.Callback;
+using tink.CoreApi;
 
 class Signals extends Base {
 	var signal1:Signal<String>;

@@ -1,7 +1,6 @@
 package ;
 
-using tink.core.Future;
-using tink.core.Outcome;
+using tink.CoreApi;
 
 class Futures extends Base {
 	

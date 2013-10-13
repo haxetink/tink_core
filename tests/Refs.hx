@@ -1,6 +1,6 @@
 package ;
 
-using tink.core.Ref;
+using tink.CoreApi;
 
 class Refs extends Base {
 	function testImplicit() {

@@ -1,8 +1,6 @@
 package ;
 
-import tink.core.Pair;
-import tink.core.Future;
-import haxe.ds.Option;
+using tink.CoreApi;
 
 class Pairs extends Base {
 	function test() {

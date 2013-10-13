@@ -1,6 +1,6 @@
 package ;
 
-using tink.core.Callback;
+using tink.CoreApi;
 
 class Callbacks extends Base {
 	
