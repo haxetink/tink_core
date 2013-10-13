@@ -38,11 +38,13 @@
 -java bin/java
 -cmd java -jar bin/java/java.jar
 
+#cpp
+--next
+-cpp bin/cpp
+-cmd bin/cpp/Run
+
 #as3
 --next
 -as3 bin/as3
 -cmd mxmlc -static-link-runtime-shared-libraries=true -debug bin/as3/__main__.as --output bin/unit9_as3.swf
 
-#cpp
---next
--cpp bin/cpp
