@@ -24,12 +24,10 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 	}
 	
 	public function first(other:Future<T>):Future<T>
-		return new Future(function (cb):CallbackLink
-			return [
-				handle(this, cb),
-				other.handle(cb)
-			]
-		).gather();
+		return Future.async(function (cb:T->Void) {
+			handle(this, cb);
+			other.handle(cb);
+		});
 	
 	public function map<A>(f:T->A, ?gather = true):Future<A> {
 		var ret = new Future(function (callback) return (this)(function (result) callback.invoke(f(result))));
