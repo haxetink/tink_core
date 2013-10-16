@@ -350,6 +350,7 @@ abstract Future<T> {
 	static function lazy<A>(f:Void->A):Future<A>;
 	static function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A>;	
 	static function create<A>():FutureTrigger<A>;//FutureTrigger is documented below
+	static function ofMany<A>(futures:Array<Future<A>>, ?gather = true):Future<Array<A>>;
 	function new(f:Callback<T>->CallbackLink):Void;	
 }
 ```

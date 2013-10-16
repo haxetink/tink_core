@@ -90,11 +90,51 @@ class Futures extends Base {
 			assertEquals(p.b, 2);	
 		});
 	}
+	
+	function testMany() {
+		var triggers = [for (i in 0...10) Future.trigger()];
+		var futures = [for (t in triggers) t.asFuture()];
+		
+		var read1 = false,
+			read2 = false;
+		
+		var lazy1 = Future.lazy(function () {
+			read1 = true;
+			return 10;
+		});
+		
+		var lazy2 = Future.lazy(function () {
+			read2 = true;
+			return 10;
+		});
+		
+		futures.unshift(lazy1);
+		futures.push(lazy2);
+		
+		function sum(a:Array<Int>, ?index = 0)
+			return 
+				if (index < a.length) a[index] + sum(a, index + 1);
+				else 0;
+		
+		var f = Future.ofMany(futures).map(sum.bind(_, 0)),
+			f2 = Future.ofMany(futures, false).map(sum.bind(_, 0));
+			
+		assertFalse(read1);
+		assertFalse(read2);
+		
+		f.handle(assertEquals.bind(65));
+		f2.handle(assertEquals.bind(65));
+		
+		var handled = false;
+		f.handle(function () handled = true);
+		
+		assertFalse(handled);
+		assertTrue(read1);
+		assertFalse(read2);
+		
+		for (i in 0...triggers.length)
+			triggers[i].trigger(i);
+			
+		assertTrue(handled);
+	}
 }
-
-
-
-
-
-
-

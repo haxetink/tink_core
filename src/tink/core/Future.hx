@@ -60,19 +60,25 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 	@:from static inline function fromTrigger<A>(trigger:FutureTrigger<A>):Future<A> 
 		return trigger.asFuture();
 	
-	@:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>> {
-		//TODO: consider addying lazyness here
+	static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
 		var ret = sync([]);
 		for (f in futures)
 			ret = ret.flatMap(
 				function (results:Array<A>) 
 					return f.map(
 						function (result) 
-							return results.concat([result])
-					)
+							return results.concat([result]),
+						false
+					),
+				false
 			);
-		return ret;
+		return 
+			if (gather) ret.gather();
+			else ret;
 	}
+	
+	@:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>> 
+		return ofMany(futures);
 	
 	//TODO: use this as `sync` when Haxe stops upcasting ints
 	@:noUsing static public function lazy<A>(l:Lazy<A>):Future<A>

@@ -2,6 +2,8 @@ package ;
 
 import haxe.unit.*;
 
+using tink.CoreApi;
+
 class Run {
 	static var tests:Array<TestCase> = [
 		new Base.TestBase(),
