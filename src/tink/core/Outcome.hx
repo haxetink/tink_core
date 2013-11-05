@@ -66,6 +66,15 @@ class OutcomeTools {
 					Failure(f);
 			}
 	
+	static public inline function flatMap<A, B, F>(outcome:Outcome<A, F>, transform: A->Outcome<B,F>) 
+		return 
+			switch (outcome) {
+				case Success(a): 
+					transform(a);
+				case Failure(f): 
+					Failure(f);
+			}
+	
 	static public inline function isSuccess<D, F>(outcome:Outcome<D, F>):Bool 
 		return 
 			switch outcome {
