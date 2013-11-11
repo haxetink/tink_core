@@ -28,7 +28,7 @@ class Error {
 	@:keep public function toString() {
 		var ret = 'Error: $message';
 		if (pos != null)
-			ret += printPos();
+			ret += " "+printPos();
 		return ret;
 	}
 	
