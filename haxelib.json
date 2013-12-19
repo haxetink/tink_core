@@ -4,8 +4,8 @@
 	"license": "MIT",
 	"tags": ["tink", "cross", "utility"],
 	"description": "Tinkerbell Core",
-	"version": "1.0.0-beta.5",
-	"releasenote": "Added Outcome.flatMap",
+	"version": "1.0.0-rc.1",
+	"releasenote": "AS3 and Java support",
 	"contributors": ["back2dos"], 
 	"classPath": "src" 
 }
