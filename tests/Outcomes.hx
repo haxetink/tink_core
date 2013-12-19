@@ -24,19 +24,19 @@ class Outcomes extends Base {
 		assertFalse(Failure(4).equals(4));
 	}
 	
+	function eq<A>(exp:A, found:A) 
+		assertTrue(Type.enumEq(exp, found));
+	
 	function testFlatMap() {
 		var outcomes = [
 			Success(5), 
-			Failure('error')
+			Failure(true)
 		];
-		function eq<A>(exp:A, found:A)
-			assertTrue(Type.enumEq(exp, found));
-			
-		
+				
 		eq(Success(3), outcomes[0].flatMap(function (x) return Success(x - 2)));
-		eq(Failure('error'), outcomes[1].flatMap(function (x) return Success(x - 2)));
+		eq(Failure(true), outcomes[1].flatMap(function (x) return Success(x - 2)));
 		
 		eq(Failure(Right(7)), outcomes[0].flatMap(function (x) return Failure(x + 2)));
-		eq(Failure(Left('error')), outcomes[1].flatMap(function (x) return Failure(x + 2)));
+		eq(Failure(Left(true)), outcomes[1].flatMap(function (x) return Failure(x + 2)));
 	}
 }
