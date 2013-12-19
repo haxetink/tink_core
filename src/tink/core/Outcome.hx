@@ -85,7 +85,7 @@ private abstract OutcomeMap<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Outcom
 	public function apply(o) 
 		return this.f(o);
 		
-	@:from static function withSameError<In, Out, Error>(f:In->Outcome<Out, Error>):OutcomeMap<In, Error, Out, Error> {
+	@:from #if as3 public #end static function withSameError<In, Out, Error>(f:In->Outcome<Out, Error>):OutcomeMap<In, Error, Out, Error> {
 		return new OutcomeMap(function (o)
 			return switch o {
 				case Success(d): f(d);
@@ -94,7 +94,7 @@ private abstract OutcomeMap<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Outcom
 		);
 	}
 	
-	@:from static function withEitherError<DIn, FIn, DOut, FOut>(f:DIn->Outcome<DOut, FOut>):OutcomeMap<DIn, FIn, DOut, Either<FIn, FOut>> {
+	@:from #if as3 public #end static function withEitherError<DIn, FIn, DOut, FOut>(f:DIn->Outcome<DOut, FOut>):OutcomeMap<DIn, FIn, DOut, Either<FIn, FOut>> {
 		return new OutcomeMap(function (o)
 			return switch o {
 				case Success(d): 

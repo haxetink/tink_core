@@ -5,9 +5,9 @@ import tink.core.Noise;
 
 abstract Signal<T>(Callback<T>->CallbackLink) {
 	
-	public inline function new(f:Callback<T>->CallbackLink) this = f;	
+	public #if !as3 inline #end function new(f:Callback<T>->CallbackLink) this = f;	
 	
-	public inline function handle(handler:Callback<T>):CallbackLink 
+	public #if !as3 inline #end function handle(handler:Callback<T>):CallbackLink 
 		return (this)(handler);
 	
 	public function map<A>(f:T->A, ?gather = true):Signal<A> {
@@ -75,8 +75,8 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 }
 
 abstract SignalTrigger<T>(CallbackList<T>) from CallbackList<T> {
-	public inline function new() this = new CallbackList();
-	public inline function trigger(event:T)
+	public #if !as3 inline #end function new() this = new CallbackList();
+	public #if !as3 inline #end function trigger(event:T)
 		this.invoke(event);
 	public inline function getLength()
 		return this.length;

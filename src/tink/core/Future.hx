@@ -6,9 +6,9 @@ import haxe.ds.Option;
 
 abstract Future<T>(Callback<T>->CallbackLink) {
 
-	public inline function new(f:Callback<T>->CallbackLink) this = f;	
+	public #if !as3 inline #end function new(f:Callback<T>->CallbackLink) this = f;	
 		
-	public inline function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
+	public #if !as3 inline #end function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
 		return (this)(callback);
 	
 	public function gather():Future<T> {
@@ -57,7 +57,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 			return ret;
 		});
 	
-	@:from static inline function fromTrigger<A>(trigger:FutureTrigger<A>):Future<A> 
+	@:from  #if as3 @:noCompletion public #else inline #end static function fromTrigger<A>(trigger:FutureTrigger<A>):Future<A> 
 		return trigger.asFuture();
 	
 	static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
@@ -77,7 +77,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 			else ret;
 	}
 	
-	@:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>> 
+	@:from #if as3 @:noCompletion public #end static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>> 
 		return ofMany(futures);
 	
 	//TODO: use this as `sync` when Haxe stops upcasting ints

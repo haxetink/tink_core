@@ -2,7 +2,7 @@ package tink.core;
 
 abstract Lazy<T>(Void->T) {
 	
-	inline function new(r) this = r;
+	#if !as3 inline #end function new(r) this = r;
 	
 	@:to public inline function get():T
 		return (this)();

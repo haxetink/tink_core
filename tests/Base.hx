@@ -21,10 +21,10 @@ abstract PhysicalType<T>(Either<Class<T>, Enum<T>>) {
 		return 
 			Std.is(v, this.getParameters()[0]);
 	
-	@:from static function ofClass<C>(c:Class<C>) 
+	@:from static public function ofClass<C>(c:Class<C>) 
 		return new PhysicalType(Left(c));
 		
-	@:from static function ofEnum<E>(e:Enum<E>) 
+	@:from static public function ofEnum<E>(e:Enum<E>) 
 		return new PhysicalType(Right(e));
 }
 //TODO: this helper should go somewhere
