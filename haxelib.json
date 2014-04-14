@@ -4,8 +4,8 @@
 	"license": "MIT",
 	"tags": ["tink", "cross", "utility"],
 	"description": "Tinkerbell Core",
-	"version": "1.0.0-rc.1",
-	"releasenote": "AS3 and Java support",
+	"version": "1.0.0-rc.2",
+	"releasenote": "Haxe 3.1.3 compatibility",
 	"contributors": ["back2dos"], 
 	"classPath": "src" 
 }
