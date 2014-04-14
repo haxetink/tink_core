@@ -1,6 +1,8 @@
 package tink.core;
 
-abstract Callback<T>(T->Void) from (T->Void) {
+//TODO: To work around #2881 the abstracts are declared over Null. Remove this when no longer necessary.
+
+abstract Callback<T>(Null<T->Void>) from (T->Void) {
 	
 	inline function new(f) 
 		this = f;
@@ -18,7 +20,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
 					callback.invoke(v);
 }
 
-abstract CallbackLink(Void->Void) {
+abstract CallbackLink(Null<Void->Void>) {
 	
 	inline function new(link:Void->Void) 
 		this = link;
