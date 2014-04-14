@@ -40,7 +40,7 @@ class Error {
 				throw this;
 			#end
 		
-	static public function withData(message, data:Dynamic, ?pos) {
+	static public function withData(message:String, data:Dynamic, ?pos:Pos) {
 		var ret = new Error(message, pos);
 		ret.data = data;
 		return ret;
