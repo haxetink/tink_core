@@ -6,9 +6,9 @@ import haxe.ds.Option;
 
 abstract Future<T>(Callback<T>->CallbackLink) {
 
-	public #if !as3 inline #end function new(f:Callback<T>->CallbackLink) this = f;	
+	public function new(f:Callback<T>->CallbackLink) this = f;	
 		
-	public #if !as3 inline #end function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
+	public function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
 		return (this)(callback);
 	
 	public function gather():Future<T> {
@@ -16,7 +16,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 			self = this;
 		return new Future(function (cb:Callback<T>) {
 			if (self != null) {
-				handle(self, op.trigger);
+				handle(op.trigger);
 				self = null;				
 			}
 			return op.asFuture().handle(cb);
@@ -25,7 +25,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 	
 	public function first(other:Future<T>):Future<T>
 		return Future.async(function (cb:T->Void) {
-			handle(this, cb);
+			handle(cb);
 			other.handle(cb);
 		});
 	
@@ -57,7 +57,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 			return ret;
 		});
 	
-	@:from  #if as3 @:noCompletion public #else inline #end static function fromTrigger<A>(trigger:FutureTrigger<A>):Future<A> 
+	@:from inline static function fromTrigger<A>(trigger:FutureTrigger<A>):Future<A> 
 		return trigger.asFuture();
 	
 	static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
@@ -77,7 +77,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 			else ret;
 	}
 	
-	@:from #if as3 @:noCompletion public #end static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>> 
+	@:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>> 
 		return ofMany(futures);
 	
 	//TODO: use this as `sync` when Haxe stops upcasting ints

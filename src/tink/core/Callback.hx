@@ -2,16 +2,16 @@ package tink.core;
 
 abstract Callback<T>(T->Void) from (T->Void) {
 	
-	#if !as3 inline #end function new(f) 
+	inline function new(f) 
 		this = f;
 		
 	public function invoke(data:T):Void //TODO: consider swallowing null here
 		(this)(data);
 		
-	@:from #if as3 public #end static inline function fromNiladic<A>(f:Void->Void):Callback<A> 
+	@:from static inline function fromNiladic<A>(f:Void->Void):Callback<A> 
 		return new Callback(function (r) f());
 	
-	@:from #if as3 public #end static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A> 
+	@:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A> 
 		return
 			function (v:A) 
 				for (callback in callbacks)
@@ -20,19 +20,19 @@ abstract Callback<T>(T->Void) from (T->Void) {
 
 abstract CallbackLink(Void->Void) {
 	
-	#if !as3 inline #end function new(link:Void->Void) 
+	inline function new(link:Void->Void) 
 		this = link;
 		
 	public inline function dissolve():Void 
 		if (this != null) (this)();
 		
-	@:to #if as3 public #end function toCallback<A>():Callback<A> 
+	@:to function toCallback<A>():Callback<A> 
 		return this;
 		
-	@:from #if as3 public #end static inline function fromFunction(f:Void->Void) 
+	@:from static inline function fromFunction(f:Void->Void) 
 		return new CallbackLink(f);
 		
-	@:from #if as3 public #end static function fromMany(callbacks:Array<CallbackLink>)
+	@:from static function fromMany(callbacks:Array<CallbackLink>)
 		return fromFunction(function () for (cb in callbacks) cb.dissolve());
 }
 
@@ -59,8 +59,7 @@ abstract CallbackList<T>(Array<Cell<T>>) {
 	
 	public var length(get, never):Int;
 	
-	#if !as3 inline #end 
-	public function new():Void
+	inline public function new():Void
 		this = [];
 	
 	inline function get_length():Int 

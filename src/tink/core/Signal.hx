@@ -11,21 +11,21 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 		return (this)(handler);
 	
 	public function map<A>(f:T->A, ?gather = true):Signal<A> {
-		var ret = new Signal(function (cb) return handle(this, function (result) cb.invoke(f(result))));
+		var ret = new Signal(function (cb) return handle(function (result) cb.invoke(f(result))));
 		return
 			if (gather) ret.gather();
 			else ret;
 	}
 	
 	public function flatMap<A>(f:T->Future<A>, ?gather = true):Signal<A> {
-		var ret = new Signal(function (cb) return handle(this, function (result) f(result).handle(cb)));
+		var ret = new Signal(function (cb) return handle(function (result) f(result).handle(cb)));
 		return 
 			if (gather) ret.gather() 
 			else ret;
 	}
 	
 	public function filter(f:T->Bool, ?gather = true):Signal<T> {
-		var ret = new Signal(function (cb) return handle(this, function (result) if (f(result)) cb.invoke(result)));
+		var ret = new Signal(function (cb) return handle(function (result) if (f(result)) cb.invoke(result)));
 		return
 			if (gather) ret.gather();
 			else ret;
@@ -35,7 +35,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 		var ret = new Signal(
 			function (cb:Callback<T>):CallbackLink 
 				return [
-					handle(this, cb),
+					handle(cb),
 					other.handle(cb)
 				]
 		);
@@ -55,7 +55,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 	
 	public function gather():Signal<T> {
 		var ret = trigger();
-		handle(ret.trigger);
+		handle(function (x) ret.trigger(x));
 		return ret.asSignal();
 	}
 	

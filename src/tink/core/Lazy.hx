@@ -2,7 +2,7 @@ package tink.core;
 
 abstract Lazy<T>(Void->T) {
 	
-	#if !as3 inline #end function new(r) this = r;
+	inline function new(r) this = r;
 	
 	@:to public inline function get():T
 		return (this)();
@@ -23,10 +23,10 @@ abstract Lazy<T>(Void->T) {
 	}
 	
 	public inline function map<A>(f:T->A):Lazy<A> 
-		return Lazy.ofFunc(function () return f(get(this)));
+		return Lazy.ofFunc(function () return f(get()));
 		
 	public inline function flatMap<A>(f:T->Lazy<A>):Lazy<A> 
-		return Lazy.ofFunc(function () return f(get(this)).get());
+		return Lazy.ofFunc(function () return f(get()).get());
 	
 	@:from static inline function ofConst<T>(c:T) 
 		return new Lazy(function () return c);
