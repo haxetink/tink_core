@@ -35,7 +35,11 @@ class Error {
 	@:keep public function throwSelf():Dynamic
 		return
 			#if macro
-				haxe.macro.Context.error(message, if (pos == null) haxe.macro.Context.currentPos() else pos);
+				#if tink_macro
+					tink.macro.Positions.error(pos, message);
+				#else
+					haxe.macro.Context.error(message, if (pos == null) haxe.macro.Context.currentPos() else pos);
+				#end
 			#else
 				throw this;
 			#end
