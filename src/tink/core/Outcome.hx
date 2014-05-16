@@ -75,18 +75,18 @@ class OutcomeTools {
 				default: false;
 			}
 	
-	static public function flatMap<DIn, FIn, DOut, FOut>(o:Outcome<DIn, FIn>, mapper:OutcomeMap<DIn, FIn, DOut, FOut>):Outcome<DOut, FOut> {
+	static public function flatMap<DIn, FIn, DOut, FOut>(o:Outcome<DIn, FIn>, mapper:OutcomeMapper<DIn, FIn, DOut, FOut>):Outcome<DOut, FOut> {
 		return mapper.apply(o);
 	}
 }
 
-private abstract OutcomeMap<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Outcome<DOut, FOut> }) {
+private abstract OutcomeMapper<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Outcome<DOut, FOut> }) {
 	function new(f) this = { f: f };
 	public function apply(o) 
 		return this.f(o);
 		
-	@:from static function withSameError<In, Out, Error>(f:In->Outcome<Out, Error>):OutcomeMap<In, Error, Out, Error> {
-		return new OutcomeMap(function (o)
+	@:from static function withSameError<In, Out, Error>(f:In->Outcome<Out, Error>):OutcomeMapper<In, Error, Out, Error> {
+		return new OutcomeMapper(function (o)
 			return switch o {
 				case Success(d): f(d);
 				case Failure(f): Failure(f);
@@ -94,8 +94,8 @@ private abstract OutcomeMap<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Outcom
 		);
 	}
 	
-	@:from static function withEitherError<DIn, FIn, DOut, FOut>(f:DIn->Outcome<DOut, FOut>):OutcomeMap<DIn, FIn, DOut, Either<FIn, FOut>> {
-		return new OutcomeMap(function (o)
+	@:from static function withEitherError<DIn, FIn, DOut, FOut>(f:DIn->Outcome<DOut, FOut>):OutcomeMapper<DIn, FIn, DOut, Either<FIn, FOut>> {
+		return new OutcomeMapper(function (o)
 			return switch o {
 				case Success(d): 
 					switch f(d) {
