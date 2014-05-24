@@ -24,7 +24,7 @@ class Outcomes extends Base {
 		assertFalse(Failure(4).equals(4));
 	}
 	
-	function eq<A>(exp:A, found:A) 
+	function eq<A:EnumValue>(exp:A, found:A) 
 		assertTrue(Type.enumEq(exp, found));
 	
 	function testFlatMap() {
