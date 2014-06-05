@@ -9,6 +9,8 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 
 ### Overview
 
+<!-- START INDEX -->
+
 - [`Pair`](#pair)
  - [`MPair`](#mpair)
 - [`Lazy`](#lazy)
@@ -25,6 +27,8 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
  - [`FutureTrigger`](#futuretrigger)
 - [`Signal`](#signal)
  - [`SignalTrigger`](#signaltrigger)
+
+<!-- END INDEX -->
 
 Despite the rather long documentation here, `tink_core` does not exceed 1KLOC. And while was primarily drafted as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
 
