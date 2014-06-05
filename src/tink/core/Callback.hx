@@ -7,7 +7,7 @@ abstract Callback<T>(Null<T->Void>) from (T->Void) {
 	inline function new(f) 
 		this = f;
 		
-	public function invoke(data:T):Void //TODO: consider swallowing null here
+	public inline function invoke(data:T):Void //TODO: consider swallowing null here
 		(this)(data);
 		
 	@:from static inline function fromNiladic<A>(f:Void->Void):Callback<A> 

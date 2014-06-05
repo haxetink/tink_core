@@ -1,12 +1,6 @@
 -cp src
--lib promhx
--lib monax
 -cp tests
-#-cp .
 -dce full
 -main Run
-#-main Main
-#-neko bin/tests.n
--js bin/tests.js
-#-swf bin/unit9.swf
+-neko bin/tests.n
 #iota start Run.bat
