@@ -9,7 +9,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 
 	public function new(f:Callback<T>->CallbackLink) this = f;	
 		
-	public function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
+	public inline function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
 		return (this)(callback);
 	
 	public function gather():Future<T> {
