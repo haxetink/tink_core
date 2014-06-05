@@ -1,11 +1,1 @@
-{
-	"name": "tink_core",
-	"url" : "http://haxetink.org/tink_core",
-	"license": "MIT",
-	"tags": ["tink", "cross", "utility", "reactive", "functional", "async", "lazy", "signal", "event"],
-	"description": "Tinkerbell Core",
-	"version": "1.0.0-rc.3",
-	"releasenote": "Minor update",
-	"contributors": ["back2dos"], 
-	"classPath": "src" 
-}
+{"name":"tink_core","license":"MIT","tags":["tink","cross","utility","reactive","functional","async","lazy","signal","event"],"classPath":"src","description":"Tinkerbell Core","contributors":["back2dos"],"releasenote":"Minor improvements.","version":"1.0.0-rc.4","url":"http://haxetink.org/tink_core"}

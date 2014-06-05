@@ -10,24 +10,39 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 ### Overview
 
 <!-- START INDEX -->
-
-- [`Pair`](#pair)
- - [`MPair`](#mpair)
-- [`Lazy`](#lazy)
-- [`Outcome`](#outcome)
-- [`Error`](#error)
-- [`Noise`](#noise)
-- [`Either`](#either)
-- [`Ref`](#ref)
-- [`Callback`](#callback)
- - [`CallbackLink`](#callbacklink)
- - [`CallbackList`](#callbacklist)
-- [`Future`](#future)
- - [`Surprise`](#surprise)
- - [`FutureTrigger`](#futuretrigger)
-- [`Signal`](#signal)
- - [`SignalTrigger`](#signaltrigger)
-
+- [Pair](#pair)
+	- 
+		- [Nullness](#nullness)
+	- [MPair](#mpair)
+- [Lazy](#lazy)
+- [Outcome](#outcome)
+- [Error](#error)
+- [Noise](#noise)
+- [Either](#either)
+- [Ref](#ref)
+- [Callback](#callback)
+	- [CallbackLink](#callbacklink)
+	- [CallbackList](#callbacklist)
+		- [Registering callbacks](#registering-callbacks)
+- [Future](#future)
+	- 
+		- [Why use futures?](#why-use-futures?)
+		- [Transformation](#transformation)
+		- [Composition](#composition)
+		- [Gathering](#gathering)
+		- [Rolling your own](#rolling-your-own)
+		- [Operators](#operators)
+	- [Surprise](#surprise)
+	- [FutureTrigger](#futuretrigger)
+- [Signal](#signal)
+	- 
+		- [Why use signals?](#why-use-signals?)
+		- [Wrapping 3rd party APIs](#wrapping-3rd-party-apis)
+		- [Rolling your own](#rolling-your-own)
+		- [No way to dispatch from outside](#no-way-to-dispatch-from-outside)
+		- [Composing](#composing)
+		- [Gathering](#gathering)
+	- [SignalTrigger](#signaltrigger)
 <!-- END INDEX -->
 
 Despite the rather long documentation here, `tink_core` does not exceed 1KLOC. And while was primarily drafted as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
