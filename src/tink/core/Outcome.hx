@@ -28,24 +28,23 @@ class OutcomeTools {
 				case Failure(_): Option.None;
 			}
 	
-	static public function toOutcome<D>(option:Option<D>, ?pos:haxe.PosInfos):Outcome<D, String>
+	static public function toOutcome<D>(option:Option<D>, ?pos:haxe.PosInfos):Outcome<D, Error>
 		return
 			switch (option) {
 				case Some(value): 
 					Success(value);
 				case None: 
-					Failure('Some value expected but none found in ' + pos.fileName + '@line ' + pos.lineNumber);
+					Failure(new Error(NotFound, 'Some value expected but none found in ' + pos.fileName + '@line ' + pos.lineNumber));
 			}
 	
-	//TODO: orTry and orUse should probably become Lazy to allow for short-circuit evaluation
-	static public inline function orUse<D, F>(outcome: Outcome<D, F>, fallback: D) 
+	static public inline function orUse<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>) 
 		return
 			switch (outcome) {
 				case Success(data): data;
 				case Failure(_): fallback;
 			}		
 			
-	static public inline function orTry<D, F>(outcome: Outcome<D, F>, fallback: Outcome<D, F>) 
+	static public inline function orTry<D, F>(outcome: Outcome<D, F>, fallback: Lazy<Outcome<D, F>>) 
 		return
 			switch (outcome) {
 				case Success(_): outcome;
