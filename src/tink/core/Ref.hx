@@ -10,7 +10,7 @@ abstract Ref<T>(haxe.ds.Vector<T>) {
 	
 	public function toString():String return '@[' + Std.string(value)+']';
 	
-	@:from static inline public function to<A>(v:A):Ref<A> {
+	@:noUsing @:from static inline public function to<A>(v:A):Ref<A> {
 		var ret = new Ref();
 		ret.value = v;
 		return ret;
