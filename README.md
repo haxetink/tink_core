@@ -369,7 +369,7 @@ abstract Future<T> {
 	static function sync<A>(v:A):Future<A>;
 	static function lazy<A>(f:Void->A):Future<A>;
 	static function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A>;	
-	static function create<A>():FutureTrigger<A>;//FutureTrigger is documented below
+	static function trigger<A>():FutureTrigger<A>;//FutureTrigger is documented below
 	static function ofMany<A>(futures:Array<Future<A>>, ?gather = true):Future<Array<A>>;
 	function new(f:Callback<T>->CallbackLink):Void;	
 }
@@ -770,7 +770,7 @@ class Clock {
 	public var tick(default, null):Signal<Noise>;
 	var tickHandlers:SignalTrigger<Noise>;
 	public function new() {
-		var s = Signal.create();
+		var s = Signal.trigger();
 		var t = new Timer(1000);
 		t.run = function () s.trigger(Noise);
 		this.tick = s;
