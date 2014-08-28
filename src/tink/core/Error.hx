@@ -36,7 +36,7 @@ typedef Error = TypedError<Dynamic>;
 
 class TypedError<T> {
 	public var message(default, null):String;//It might make sense for the message to be lazy
-	public var code(default, null):Int;
+	public var code(default, null):ErrorCode;
 	public var data(default, null):T;
 	public var pos(default, null):Null<Pos>;
 	
@@ -72,7 +72,7 @@ class TypedError<T> {
 				throw this;
 			#end
 		
-	static public function withData(?code:Int = 500, message:String, data:Dynamic, ?pos:Pos) {
+	static public function withData(?code:ErrorCode = 500, message:String, data:Dynamic, ?pos:Pos) {
 		var ret = new Error(code, message, pos);
 		ret.data = data;
 		return ret;
