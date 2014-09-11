@@ -25,6 +25,7 @@ typedef Error = TypedError<Dynamic>;
 	var ExpectationFailed = 417;
 	var I_am_a_Teapot = 418;
 	var AuthenticationTimeout = 419;
+	var UnprocessableEntity = 422;
 
 	var InternalError = 500;
 	var NotImplemented = 501;
