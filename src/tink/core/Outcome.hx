@@ -41,7 +41,7 @@ class OutcomeTools {
 		return
 			switch (outcome) {
 				case Success(data): data;
-				case Failure(_): fallback;
+				case Failure(_): fallback.get();
 			}		
 			
 	static public inline function orTry<D, F>(outcome: Outcome<D, F>, fallback: Lazy<Outcome<D, F>>) 
