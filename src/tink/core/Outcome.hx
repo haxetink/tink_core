@@ -37,14 +37,14 @@ class OutcomeTools {
 					Failure(new Error(NotFound, 'Some value expected but none found in ' + pos.fileName + '@line ' + pos.lineNumber));
 			}
 	
-	static public inline function orUse<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>) 
+	static public inline function orUse<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>):D 
 		return
 			switch (outcome) {
 				case Success(data): data;
-				case Failure(_): fallback.get();
+				case Failure(_): fallback;
 			}		
 			
-	static public inline function orTry<D, F>(outcome: Outcome<D, F>, fallback: Lazy<Outcome<D, F>>) 
+	static public inline function orTry<D, F>(outcome: Outcome<D, F>, fallback: Lazy<Outcome<D, F>>):Outcome<D, F> 
 		return
 			switch (outcome) {
 				case Success(_): outcome;
