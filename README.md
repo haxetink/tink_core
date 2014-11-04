@@ -54,9 +54,9 @@ The `Pair` represents an [ordered pair](http://en.wikipedia.org/wiki/Ordered_pai
 
 ```
 abstract Pair<A, B> {
-    function new(a:A, b:B);
-    var a(get, never):A;
-    var b(get, never):B;
+	function new(a:A, b:B);
+	var a(get, never):A;
+	var b(get, never):B;
 }
 ```
 
@@ -355,7 +355,7 @@ In essence the `CallbackList` can be seen as a basic building block for notifica
 As the name would suggest, futures express the idea that something is going to happen in the future. Or much rather: a future represents the result of a potentially asynchronous operation, that will become available at some point in time. It allows you to register a `Callback` to `handle` the operation's result once it is available.
 
 ```    
-abstract Future<T> {	
+abstract Future<T> {
 	function handle(callback:Callback<T>):CallbackLink;
 	
 	function map<A>(f:T->A, ?gather = true):Future<A>;
@@ -397,13 +397,13 @@ function loadFromParameters(params: { host: String, port: Int, url:String, param
 }
 
 function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<String> }, callback:Array<String>->Void):Void {
-    var results = [],
-    	count = 0;
-    for (i in 0...params.length) {
-    	count++;
-    	loadFromParameters(params[i], function (data) {
-    		results[i] = data;
-    		if (--count == 0) callback(results);
+	var results = [],
+		count = 0;
+	for (i in 0...params.length) {
+		count++;
+		loadFromParameters(params[i], function (data) {
+			results[i] = data;
+			if (--count == 0) callback(results);
 		});
 	}
 }
@@ -422,9 +422,9 @@ function loadFromParameters(params: { host: String, port: Int, url:String, param
 }
 
 function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<String> }):Future<Array<String>> {
-    return [for (p in params) 
-    	loadFromParameters(params)
-    ];
+	return [for (p in params)
+		loadFromParameters(params)
+	];
 }
 ```
 
@@ -563,9 +563,9 @@ In the example above, we've seen a `loadFromUrl` function. Here's a way to imple
 ```
 //First, let's have a plain old callback based function
 function loadAsync(url:String, callback:String->Void) {
-    var h = new haxe.Http(url);
-    h.onDone = callback;
-    h.send();
+	var h = new haxe.Http(url);
+	h.onDone = callback;
+	h.send();
 }
 //and now, pixie dust!!!!
 function loadFromUrl(url:String) 
@@ -686,11 +686,11 @@ Here is how you would use such a trigger (as an alternative to the example above
 ```    
 class Http {
 	static public function requestURL(url:String):Surprise<String, String> {
-	   var req = new haxe.Http(url),
-		   f = Future.trigger();
-	   req.onData = function (data) f.trigger(Success(data));
-	   req.onError = function (error) f.trigger(Failure(error));
-	   return f.asFuture();
+		var req = new haxe.Http(url),
+			f = Future.trigger();
+		req.onData = function (data) f.trigger(Success(data));
+		req.onError = function (error) f.trigger(Failure(error));
+		return f.asFuture();
 	}
 }
 ```
@@ -746,10 +746,10 @@ It is quite easy to take an arbitrary API and wrap it in signals. Let's take the
 
 ```    
 function makeSignal<A:Event>(dispatcher:IEventDispatcher, type:String):Signal<A> 
-    return Signal.ofClassical(
-    	dispatcher.addEventListener.bind(type),
-    	dispatcher.removeEventListener.bind(type)
-    );
+	return Signal.ofClassical(
+		dispatcher.addEventListener.bind(type),
+		dispatcher.removeEventListener.bind(type)
+	);
 
 var keydown:Signal<KeyboardEvent> = makeSignal(stage, 'keydown');//yay!!!
 ```
@@ -792,8 +792,8 @@ Secondly, we have `join` that allows us to join two signals of the same type int
 var delta = 
 	plusButton.clicked
 		.map(function (_) return 1)
-    	.join(minusButton.clicked.map(function (_) return -1));
-    	
+		.join(minusButton.clicked.map(function (_) return -1));
+
 $type(delta);//tink.core.Signal<Int>
 ```
 
@@ -820,8 +820,9 @@ A `SignalTrigger` is what permits you to build a signal that you can trigger you
 ```    
 abstract SignalTrigger<T> {
 	function new();
+	function trigger(result:T):Void;
+	function clear():Void
 	@:to function asSignal():Signal<T>;
-	function invoke(result:T):Bool;
 }
 ```
 
