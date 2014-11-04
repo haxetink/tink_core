@@ -5,7 +5,7 @@ import tink.core.Noise;
 
 abstract Signal<T>(Callback<T>->CallbackLink) {
 	
-	public inline function new(f:Callback<T>->CallbackLink) this = f;	
+	public inline function new(f:Callback<T>->CallbackLink) this = f;
 	
 	public inline function handle(handler:Callback<T>):CallbackLink 
 		return (this)(handler);
@@ -81,6 +81,8 @@ abstract SignalTrigger<T>(CallbackList<T>) from CallbackList<T> {
 		this.invoke(event);
 	public inline function getLength()
 		return this.length;
+	public inline function clear()
+		this.clear();
 	@:to public function asSignal():Signal<T> 
 		return new Signal(this.add);
 }
