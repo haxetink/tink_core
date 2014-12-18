@@ -690,6 +690,7 @@ class Http {
 			f = Future.trigger();
 		req.onData = function (data) f.trigger(Success(data));
 		req.onError = function (error) f.trigger(Failure(error));
+		req.request();
 		return f.asFuture();
 	}
 }
