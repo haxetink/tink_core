@@ -73,8 +73,12 @@ class TypedError<T> {
 				throw this;
 			#end
 		
-	static public function withData(?code:ErrorCode = 500, message:String, data:Dynamic, ?pos:Pos) {
-		var ret = new Error(code, message, pos);
+	static public function withData(?code:ErrorCode, message:String, data:Dynamic, ?pos:Pos):Error {
+		return typed(code, message, data, pos);
+	}
+	
+	static public function typed<A>(?code:ErrorCode, message:String, data:A, ?pos:Pos):TypedError<A> {
+		var ret = new TypedError(code, message, pos);
 		ret.data = data;
 		return ret;
 	}
