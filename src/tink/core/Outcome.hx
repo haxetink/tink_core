@@ -88,7 +88,7 @@ class OutcomeTools {
 	
 	static public function attempt<D, F>(f:Void->D, report:Dynamic->F) 
 		return
-			try Success(f());
+			try Success(f())
 			catch (e:Dynamic) 
 				Failure(report(e));
 }
