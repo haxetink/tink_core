@@ -37,7 +37,7 @@ class OutcomeTools {
 					Failure(new Error(NotFound, 'Some value expected but none found in ' + pos.fileName + '@line ' + pos.lineNumber));
 			}
 	
-	static public inline function orNull<D, F>(outcome: Outcome<D, F>):D 
+	static public inline function orNull<D, F>(outcome: Outcome<D, F>):Null<D> 
 		return
 			switch (outcome) {
 				case Success(data): data;
@@ -85,6 +85,12 @@ class OutcomeTools {
 	static public function flatMap<DIn, FIn, DOut, FOut>(o:Outcome<DIn, FIn>, mapper:OutcomeMapper<DIn, FIn, DOut, FOut>):Outcome<DOut, FOut> {
 		return mapper.apply(o);
 	}
+	
+	static public function attempt<D, F>(f:Void->D, report:Dynamic->F) 
+		return
+			try Success(f());
+			catch (e:Dynamic) 
+				Failure(report(e));
 }
 
 private abstract OutcomeMapper<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Outcome<DOut, FOut> }) {

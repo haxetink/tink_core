@@ -82,4 +82,8 @@ class TypedError<T> {
 		ret.data = data;
 		return ret;
 	}
+	
+	static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error 
+		return 
+			function (e:Dynamic) return Error.withData(code, message, e, pos);
 }
