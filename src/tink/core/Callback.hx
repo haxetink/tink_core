@@ -1,8 +1,6 @@
 package tink.core;
 
-//TODO: To work around #2881 the abstracts are declared over Null. Remove this when no longer necessary.
-
-abstract Callback<T>(Null<T->Void>) from (T->Void) {
+abstract Callback<T>(T->Void) from (T->Void) {
 	
 	inline function new(f) 
 		this = f;
@@ -20,7 +18,7 @@ abstract Callback<T>(Null<T->Void>) from (T->Void) {
 					callback.invoke(v);
 }
 
-abstract CallbackLink(Null<Void->Void>) {
+abstract CallbackLink(Void->Void) {
 	
 	inline function new(link:Void->Void) 
 		this = link;
@@ -80,7 +78,7 @@ abstract CallbackList<T>(Array<Cell<T>>) {
 		
 	public function invoke(data:T) 
 		for (cell in this.copy()) 
-			if (cell.cb != null) //This occurs when an earlier cell in this run dissolves the link for a later cell - usually a sign of convoluted code, but who am I to judge
+			if (cell.cb != null) //This occurs when an earlier cell in this run dissolves the link for a later cell
 				cell.cb.invoke(data);
 			
 	public function clear():Void 

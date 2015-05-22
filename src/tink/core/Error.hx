@@ -1,5 +1,7 @@
 package tink.core;
 
+import tink.core.Outcome;
+
 typedef Pos = 
 	#if macro
 		haxe.macro.Expr.Position;
@@ -82,6 +84,20 @@ class TypedError<T> {
 		ret.data = data;
 		return ret;
 	}
+	
+	static public function catchExceptions<A>(f:Void->A, ?report:Dynamic->Error)
+		return
+			try 
+				Success(f())
+			catch (e:Error)
+				Failure(e)
+			catch (e:Dynamic)
+				Failure(
+					if (report == null)
+						Error.withData('Unexpected Error', e)
+					else
+						report(e)
+				);		
 	
 	static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error 
 		return 
