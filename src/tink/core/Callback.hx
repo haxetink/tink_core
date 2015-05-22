@@ -47,8 +47,7 @@ abstract CallbackList<T>(Array<Ref<Callback<T>>>) {
 		return this.length;	
 	
 	public function add(cb:Callback<T>):CallbackLink {
-		var cell = new Ref();
-		cell.value = cb;		
+		var cell = Ref.to(cb);
 		this.push(cell);
 		return function () {
 			if (this.remove(cell))

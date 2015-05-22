@@ -25,3 +25,4 @@ typedef CallbackList<T> = tink.core.Callback.CallbackList<T>;
 
 typedef Ref<T> = tink.core.Ref<T>;
 typedef Lazy<T> = tink.core.Lazy<T>;
+typedef Any = tink.core.Any;
