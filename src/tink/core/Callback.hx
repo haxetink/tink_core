@@ -36,26 +36,7 @@ abstract CallbackLink(Void->Void) {
 		return fromFunction(function () for (cb in callbacks) cb.dissolve());
 }
 
-private class Cell<T> {
-	//TODO: the cell (or some super class of it) could just as easily act as callback link
-	public var cb:Callback<T>;
-	
-	function new() {}
-	
-	public inline function free():Void {
-		this.cb = null;
-		pool.push(this);
-	}
-	
-	static var pool:Array<Cell<Dynamic>> = [];
-	
-	static public inline function get<A>():Cell<A> 
-		return
-			if (pool.length > 0) cast pool.pop();
-			else new Cell();
-}
-
-abstract CallbackList<T>(Array<Cell<T>>) {
+abstract CallbackList<T>(Array<Ref<Callback<T>>>) {
 	
 	public var length(get, never):Int;
 	
@@ -66,22 +47,22 @@ abstract CallbackList<T>(Array<Cell<T>>) {
 		return this.length;	
 	
 	public function add(cb:Callback<T>):CallbackLink {
-		var cell = Cell.get();
-		cell.cb = cb;
+		var cell = new Ref();
+		cell.value = cb;		
 		this.push(cell);
 		return function () {
 			if (this.remove(cell))
-				cell.free();
+				cell.value = null;
 			cell = null;
 		}
 	}
 		
 	public function invoke(data:T) 
 		for (cell in this.copy()) 
-			if (cell.cb != null) //This occurs when an earlier cell in this run dissolves the link for a later cell
-				cell.cb.invoke(data);
+			if (cell.value != null) //This occurs when an earlier cell in this run dissolves the link for a later cell
+				cell.value.invoke(data);
 			
 	public function clear():Void 
 		for (cell in this.splice(0, this.length)) 
-			cell.free();
+			cell.value = null;
 }
