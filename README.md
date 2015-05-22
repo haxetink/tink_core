@@ -10,6 +10,7 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 ### Overview
 
 <!-- START INDEX -->
+- [Any](#any)
 - [Pair](#pair)
 	- 
 		- [Nullness](#nullness)
