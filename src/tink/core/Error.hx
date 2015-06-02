@@ -72,7 +72,7 @@ class TypedError<T> {
 					haxe.macro.Context.error(message, if (pos == null) haxe.macro.Context.currentPos() else pos);
 				#end
 			#else
-				throw this;
+				rethrow(this);
 			#end
 		
 	static public function withData(?code:ErrorCode, message:String, data:Dynamic, ?pos:Pos):Error {
@@ -102,4 +102,17 @@ class TypedError<T> {
 	static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error 
 		return 
 			function (e:Dynamic) return Error.withData(code, message, e, pos);
+			
+	static public inline function rethrow(any:Dynamic):Dynamic {
+		#if neko
+			neko.Lib.rethrow(any);
+		#elseif php
+			php.Lib.rethrow(any);
+		#elseif cpp
+			cpp.Lib.rethrow(any);
+		#else
+			throw any;
+		#end
+		return any;
+	}
 }
