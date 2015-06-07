@@ -1,0 +1,4 @@
+-lib tink_core
+-cp src
+-cp tests
+-main RunTests

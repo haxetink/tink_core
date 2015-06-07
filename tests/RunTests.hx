@@ -4,7 +4,7 @@ import haxe.unit.*;
 
 using tink.CoreApi;
 
-class Run {
+class RunTests {
 	static var tests:Array<TestCase> = [
 		new Base.TestBase(),
 		new Callbacks(),
@@ -31,6 +31,7 @@ class Run {
 		var r = new TestRunner();
 		for (c in tests)
 			r.add(c);
-		r.run();
+		if (!r.run())
+			throw 'Failed!';
 	}
 }

@@ -1,0 +1,4 @@
+tests/common.hxml
+-cpp bin/cpp/
+-D concurrent
+-D workaround_1234
