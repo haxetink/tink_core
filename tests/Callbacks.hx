@@ -4,7 +4,7 @@ using tink.CoreApi;
 
 class Callbacks extends Base {
 	
-	function testInvoke() {
+	function _testInvoke() {
 		var calls = 0;
 		var cbs:Array<Callback<Int>> = [
 			function () calls++,

@@ -13,7 +13,7 @@ addons:
   # http://docs.travis-ci.com/user/apt/#Adding-APT-Packages
   apt:
     packages:
-      #- php5-cli
+      - php5-cli
       #- python3
       #- mono-devel
       #- mono-mcs  
