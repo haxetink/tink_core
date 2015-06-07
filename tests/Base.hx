@@ -37,7 +37,7 @@ class Base extends TestCase {
 		currentTest.posInfos = c;
 		throw currentTest;
 	}
-	function throws<A>(f:Void->Void, t:PhysicalType<A>, ?check:A->Bool, ?pos:PosInfos):Void {
+	function throws<T>(f:Void->Void, t:PhysicalType<T>, ?check:T->Bool, ?pos:PosInfos):Void {
 		try f()
 		catch (e:Dynamic) {
 			if (!t.check(e)) fail('Exception $e not of type $t', pos);

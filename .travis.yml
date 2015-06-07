@@ -25,6 +25,7 @@ install:
   - haxelib install hxjava
   - haxelib install hxcs
   - haxelib list
+  - php --version
 
 script:
   - haxe tests/build-interp.hxml
