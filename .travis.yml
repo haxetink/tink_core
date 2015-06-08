@@ -14,26 +14,26 @@ addons:
   apt:
     packages:
       - php5-cli
-      #- python3
-      #- mono-devel
-      #- mono-mcs  
+      - python3
+      - mono-devel
+      - mono-mcs  
 
 install:
   # Install project dependencies
   - haxelib install tink_core
-  #- haxelib install hxcpp
-  #- haxelib install hxjava
-  #- haxelib install hxcs
+  - haxelib install hxcpp
+  - haxelib install hxjava
+  - haxelib install hxcs
   - haxelib list
   - php --version
 
 script:
-  #- haxe tests/build-interp.hxml
-  #- haxe tests/build-neko.hxml && neko bin/RunTests.n
-  #- haxe tests/build-js.hxml && node bin/RunTests.js
-  #- haxe tests/build-java.hxml && java -jar bin/java/RunTests.jar
-  - haxe tests/build-php.hxml && php bin/php/index.php
-  #- haxe tests/build-cs.hxml && mono bin/cs/bin/RunTests.exe
-  #- haxe tests/build-flash.hxml # Flash testing is hard to setup. Just run the haxe compiler for now
-  #- haxe tests/build-cpp.hxml && ./bin/cpp/RunTests
-  #- haxe tests/build-python.hxml && python3 bin/RunTests.py;
+  - haxe tests/build-interp.hxml
+  - haxe tests/build-neko.hxml && neko bin/RunTests.n
+  - haxe tests/build-js.hxml && node bin/RunTests.js
+  - haxe tests/build-java.hxml && java -jar bin/java/RunTests.jar
+  #- haxe tests/build-php.hxml && php bin/php/index.php
+  - haxe tests/build-cs.hxml && mono bin/cs/bin/RunTests.exe
+  - haxe tests/build-flash.hxml # Flash testing is hard to setup. Just run the haxe compiler for now
+  - haxe tests/build-cpp.hxml && ./bin/cpp/RunTests
+  - haxe tests/build-python.hxml && python3 bin/RunTests.py;
