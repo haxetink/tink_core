@@ -515,7 +515,7 @@ Now let's say that we know for a fact, that all these JSONs contain arrays of st
 
 ```
 function loadJson(url:String):Future<String>
-	return loadFromUrl(url).map(haxe.Json.parse).map(function (a) return a[0);
+	return loadFromUrl(url).map(haxe.Json.parse).map(function (a) return a[0]);
 ```
 
 Or let's try something else. Loading information from wikipedia.
