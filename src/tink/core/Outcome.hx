@@ -37,7 +37,7 @@ class OutcomeTools {
 					Failure(new Error(NotFound, 'Some value expected but none found in ' + pos.fileName + '@line ' + pos.lineNumber));
 			}
 	
-	static public inline function orNull<D, F>(outcome: Outcome<D, F>):Null<D> 
+	static public function orNull<D, F>(outcome: Outcome<D, F>):Null<D> 
 		return
 			switch (outcome) {
 				case Success(data): data;
@@ -45,28 +45,28 @@ class OutcomeTools {
 			}		
 
 			
-	static public inline function orUse<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>):D 
+	static public function orUse<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>):D 
 		return
 			switch (outcome) {
 				case Success(data): data;
 				case Failure(_): fallback.get();
 			}		
 			
-	static public inline function orTry<D, F>(outcome: Outcome<D, F>, fallback: Lazy<Outcome<D, F>>):Outcome<D, F> 
+	static public function orTry<D, F>(outcome: Outcome<D, F>, fallback: Lazy<Outcome<D, F>>):Outcome<D, F> 
 		return
 			switch (outcome) {
 				case Success(_): outcome;
 				case Failure(_): fallback.get();
 			}
 	
-	static public inline function equals<D, F>(outcome:Outcome<D, F>, to: D):Bool 
+	static public function equals<D, F>(outcome:Outcome<D, F>, to: D):Bool 
 		return 
 			switch (outcome) {
 				case Success(data): data == to;
 				case Failure(_): false;
 			}
 	
-	static public inline function map<A, B, F>(outcome:Outcome<A, F>, transform: A->B) 
+	static public function map<A, B, F>(outcome:Outcome<A, F>, transform: A->B) 
 		return 
 			switch (outcome) {
 				case Success(a): 
@@ -75,7 +75,7 @@ class OutcomeTools {
 					Failure(f);
 			}
 	
-	static public inline function isSuccess<D, F>(outcome:Outcome<D, F>):Bool 
+	static public function isSuccess<D, F>(outcome:Outcome<D, F>):Bool 
 		return 
 			switch outcome {
 				case Success(_): true;
