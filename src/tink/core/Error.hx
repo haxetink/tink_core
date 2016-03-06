@@ -57,7 +57,7 @@ class TypedError<T> {
 			#end
 			
 	@:keep public function toString() {
-		var ret = 'Error: $message';
+		var ret = 'Error#$code: $message';
 		if (pos != null)
 			ret += " "+printPos();
 		return ret;
