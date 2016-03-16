@@ -35,7 +35,7 @@ script:
   - haxe tests/build-neko.hxml && neko bin/RunTests.n
   - haxe tests/build-js.hxml && node bin/RunTests.js
   - haxe tests/build-java.hxml && java -jar bin/java/RunTests.jar
-  #- haxe tests/build-php.hxml && php bin/php/index.php
+  - haxe tests/build-php.hxml && php bin/php/index.php
   - haxe tests/build-cs.hxml && mono bin/cs/bin/RunTests.exe
   - haxe tests/build-flash.hxml # Flash testing is hard to setup. Just run the haxe compiler for now
   - haxe tests/build-cpp.hxml && ./bin/cpp/RunTests
