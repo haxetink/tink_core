@@ -1,3 +1,2 @@
 tests/common.hxml
---macro addMetadata("@:native('tink.core.TinkNoise')", 'tink.core.Noise')
 -cs bin/cs/
