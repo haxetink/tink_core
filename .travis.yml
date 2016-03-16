@@ -6,10 +6,9 @@ haxe:
   - development
 
 matrix:
-  # Allow Haxe development to fail.
   allow_failures:
     - haxe: development
-	
+
 addons:
   # This is the preferred way to install apt packages.
   # However, it only allow some but not all packages.
