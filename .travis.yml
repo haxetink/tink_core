@@ -3,8 +3,6 @@ dist: trusty
 
 language: haxe
 
-
-# Test with Haxe 3.2.0, and Haxe development.
 haxe:
   - "3.2.1"
   - development
@@ -14,13 +12,8 @@ matrix:
     - haxe: development
 
 addons:
-  # This is the preferred way to install apt packages.
-  # However, it only allow some but not all packages.
-  # Alternatively, we can use `sudo apt-get install ...` in the `install:` section.
-  # http://docs.travis-ci.com/user/apt/#Adding-APT-Packages
   apt:
     packages:
-      - php5-cli
       - python3
       - mono-devel
       - mono-mcs  
@@ -32,8 +25,6 @@ install:
   - haxelib install hxcpp
   - haxelib install hxjava
   - haxelib install hxcs
-  - haxelib list
-  - php --version
 
 script:
   - haxe tests/build-interp.hxml
