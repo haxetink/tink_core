@@ -1,6 +1,4 @@
 -cp src
 -cp tests
--dce full
--main Run
 -neko bin/tests.n
-#iota start Run.bat
+-main RunTests
