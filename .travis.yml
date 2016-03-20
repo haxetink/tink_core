@@ -12,7 +12,7 @@ matrix:
     - haxe: development
     
 install:
-  - haxelib git https://github.com/back2dos/travix
+  - haxelib git travix https://github.com/back2dos/travix
   - haxelib run travix install
 
 script:
