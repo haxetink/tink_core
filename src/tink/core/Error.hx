@@ -1,6 +1,7 @@
 package tink.core;
 
 import tink.core.Outcome;
+import haxe.CallStack;
 
 typedef Pos = 
 	#if macro
@@ -42,11 +43,15 @@ class TypedError<T> {
 	public var code(default, null):ErrorCode;
 	public var data(default, null):T;
 	public var pos(default, null):Null<Pos>;
+	public var callStack(default, null):Array<StackItem>;
+	public var exceptionStack(default, null):Array<StackItem>;
 	
 	public function new(?code:ErrorCode = InternalError, message, ?pos) {
 		this.code = code;
 		this.message = message;
 		this.pos = pos;
+		this.callStack = try CallStack.callStack() catch(e:Dynamic) [];
+		this.exceptionStack = try CallStack.exceptionStack() catch(e:Dynamic) [];
 	}
 	function printPos()
 		return
@@ -60,6 +65,9 @@ class TypedError<T> {
 		var ret = 'Error#$code: $message';
 		if (pos != null)
 			ret += " "+printPos();
+			
+		if(callStack != null) ret += '\nCall Stack:' + CallStack.toString(callStack);
+		if(exceptionStack != null) ret += '\nException Stack:' + CallStack.toString(exceptionStack);
 		return ret;
 	}
 	
