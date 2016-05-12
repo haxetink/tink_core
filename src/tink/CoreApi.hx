@@ -18,6 +18,7 @@ typedef SignalTrigger<T> = tink.core.Signal.SignalTrigger<T>;
 typedef Noise = tink.core.Noise;
 
 typedef Error = tink.core.Error;
+typedef TypedError<T> = tink.core.Error.TypedError<T>;
 
 typedef Callback<T> = tink.core.Callback<T>;
 typedef CallbackLink = tink.core.Callback.CallbackLink;
