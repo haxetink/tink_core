@@ -14,7 +14,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
   
   public function gather():Future<T> {
     var op = Future.trigger(),
-      self = this;
+        self = this;
     return new Future(function (cb:Callback<T>) {
       if (self != null) {
         handle(op.trigger);
