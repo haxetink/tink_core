@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Some more polish.",
-	"version": "1.0.0-rc.13",
+	"releasenote": "The big stable.",
+	"version": "1.0.0",
 	"url": "http://haxetink.org/tink_core"
 }
