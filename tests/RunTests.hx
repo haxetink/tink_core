@@ -4,6 +4,10 @@ import haxe.unit.*;
 
 using tink.CoreApi;
 
+#if flash
+typedef Sys = flash.system.System;
+#end
+
 class RunTests {
   static var tests:Array<TestCase> = [
     new Base.TestBase(),
@@ -31,7 +35,9 @@ class RunTests {
     var r = new TestRunner();
     for (c in tests)
       r.add(c);
-    if (!r.run())
-      throw 'Failed!';
+    Sys.exit(
+      if (r.run()) 0
+      else 500
+    );
   }
 }
