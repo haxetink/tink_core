@@ -50,8 +50,8 @@ class TypedError<T> {
 		this.code = code;
 		this.message = message;
 		this.pos = pos;
-		this.callStack = try CallStack.callStack() catch(e:Dynamic) [];
 		this.exceptionStack = try CallStack.exceptionStack() catch(e:Dynamic) [];
+		this.callStack = try CallStack.callStack() catch(e:Dynamic) [];
 	}
 	function printPos()
 		return
