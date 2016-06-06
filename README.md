@@ -50,11 +50,33 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 
 Despite the rather long documentation here, `tink_core` does not exceed 1KLOC. And while was primarily drafted as the basis for the rest of tink, it can be used in isolation or for other libs to build on.
 
+# Named
+
+This is a very basic helper type, defined over its generalization:
+
+```haxe
+typedef Named<V> = NamedWith<String, V>;
+
+class NamedWith<N, V> {
+  
+  public var name(default, null):N;
+  public var value(default, null):V;
+  
+  public function new(name, value) {
+    this.name = name;
+    this.value = value;
+  }
+  
+}
+```
+
+This just formalizes a notion of something being named.
+
 # Any
 
 The `Any` type is an alternative to Haxe's `Dynamic` defined like so:
 
-```
+```haxe
 abstract Any from Dynamic {
 	@:to private inline function __promote<A>():A;
 }
