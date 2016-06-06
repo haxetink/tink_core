@@ -11,6 +11,7 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 ### Overview
 
 <!-- START INDEX -->
+- [Named](#named)
 - [Any](#any)
 - [Pair](#pair)
 	- 

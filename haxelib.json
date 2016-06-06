@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "The big stable.",
-	"version": "1.0.0",
+	"releasenote": "Add stack information in errors and base type for named items.",
+	"version": "1.1.0",
 	"url": "http://haxetink.org/tink_core"
 }
