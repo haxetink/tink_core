@@ -43,15 +43,15 @@ class TypedError<T> {
   public var code(default, null):ErrorCode;
   public var data(default, null):T;
   public var pos(default, null):Null<Pos>;
-  public var callStack(default, null):Array<StackItem>;
-  public var exceptionStack(default, null):Array<StackItem>;
+  public var callStack(default, null):Stack;
+  public var exceptionStack(default, null):Stack;
   
   public function new(?code:ErrorCode = InternalError, message, ?pos) {
     this.code = code;
     this.message = message;
     this.pos = pos;
-    this.exceptionStack = try CallStack.exceptionStack() catch(e:Dynamic) [];
-    this.callStack = try CallStack.callStack() catch(e:Dynamic) [];
+    this.exceptionStack = #if error_stack try CallStack.exceptionStack() catch(e:Dynamic) #end [];
+    this.callStack = #if error_stack try CallStack.callStack() catch(e:Dynamic) #end [];
   }
   function printPos()
     return
@@ -64,11 +64,8 @@ class TypedError<T> {
   @:keep public function toString() {
     var ret = 'Error#$code: $message';
     if (pos != null)
-      ret += " "+printPos();
-    if(callStack != null)
-      ret += '\nCall Stack:' + CallStack.toString(callStack);
-    if(exceptionStack != null)
-      ret += '\nException Stack:' + CallStack.toString(exceptionStack);
+      ret += " @ "+printPos();
+    
     return ret;
   }
   
@@ -124,4 +121,11 @@ class TypedError<T> {
     #end
     return any;
   }
+}
+
+@:forward
+abstract Stack(Array<StackItem>) from Array<StackItem> to Array<StackItem> {
+  @:to
+  public inline function toString():String
+    return CallStack.toString(this);
 }
