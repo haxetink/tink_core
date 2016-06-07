@@ -27,3 +27,6 @@ typedef CallbackList<T> = tink.core.Callback.CallbackList<T>;
 typedef Ref<T> = tink.core.Ref<T>;
 typedef Lazy<T> = tink.core.Lazy<T>;
 typedef Any = tink.core.Any;
+
+typedef Named<V> = tink.core.Named<V>;
+typedef NamedWith<N, V> = tink.core.Named.NamedWith<N, V>;
