@@ -18,7 +18,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
           callback.invoke(v);
 }
 
-abstract CallbackLink(Void->Void) {
+abstract CallbackLink(Void->Void) to Void->Void {
   
   inline function new(link:Void->Void) 
     this = link;
