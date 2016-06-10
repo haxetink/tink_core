@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Expand facade to include Named.",
-	"version": "1.1.1",
+	"releasenote": "Allow CallbackLink to be cast to Void->Void.",
+	"version": "1.1.2",
 	"url": "http://haxetink.org/tink_core"
 }
