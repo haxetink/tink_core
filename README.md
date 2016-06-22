@@ -1,6 +1,7 @@
 # Tinkerbell Core Library
 
 [![Build Status](https://travis-ci.org/haxetink/tink_core.svg)](https://travis-ci.org/haxetink/tink_core)
+[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg?maxAge=2592000)](https://gitter.im/haxetink/public)
 
 The `tink_core` lib contains a set of lightweight tools for robust programming. The `tink_core` package is [separately available on haxelib](http://lib.haxe.org/p/tink_core) and contains a set of lightweight tools for robust programming.
 
