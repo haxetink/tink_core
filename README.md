@@ -679,7 +679,7 @@ function loadFromUrl(url:String):Future<Outcome<String, String>>
 	return Future.async(function (handler:Outcome<String, String>->Void) {
 		var h = new haxe.Http(url);
 		h.onDone = function (data:String) handler(Success(data));
-		h.onError = function (error:String) handler(Error(error));
+		h.onError = function (error:String) handler(Failure(error));
 		h.send();
 	});
 ```
