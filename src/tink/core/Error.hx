@@ -91,7 +91,7 @@ class TypedError<T> {
     return ret;
   }
   
-  static public function catchExceptions<A>(f:Void->A, ?report:Dynamic->Error)
+  static public function catchExceptions<A>(f:Void->A, ?report:Dynamic->Error, ?pos:Pos)
     return
       try 
         Success(f())
@@ -100,7 +100,7 @@ class TypedError<T> {
       catch (e:Dynamic)
         Failure(
           if (report == null)
-            Error.withData('Unexpected Error', e)
+            Error.withData('Unexpected Error', e, pos)
           else
             report(e)
         );    
