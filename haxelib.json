@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Allow CallbackLink to be cast to Void->Void.",
-	"version": "1.1.2",
+	"releasenote": "Add promises.",
+	"version": "1.2.0",
 	"url": "http://haxetink.org/tink_core"
 }
