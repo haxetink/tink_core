@@ -132,9 +132,8 @@ abstract Future<T>(Callback<T>->CallbackLink) {
 
   @:noUsing static public inline function trigger<A>():FutureTrigger<A> 
     return new FutureTrigger();
-  
+    
 }
-
 
 class FutureTrigger<T> {
   var result:T;

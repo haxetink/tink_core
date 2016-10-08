@@ -4,6 +4,9 @@ abstract Callback<T>(T->Void) from (T->Void) {
   
   inline function new(f) 
     this = f;
+  
+  @:to function toFunction()
+    return this;
     
   public inline function invoke(data:T):Void //TODO: consider swallowing null here
     (this)(data);

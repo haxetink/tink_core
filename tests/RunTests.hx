@@ -16,7 +16,8 @@ class RunTests {
     new Outcomes(),
     new Signals(),
     new Refs(),
-    new Pairs()
+    new Pairs(),
+    new Promises(),
   ];
   static function main() {  
     #if js//works for nodejs and browsers alike

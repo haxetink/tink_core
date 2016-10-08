@@ -1,5 +1,6 @@
 package tink;
 
+typedef Promise<T> = tink.core.Promise<T>;
 typedef Future<T> = tink.core.Future<T>;
 typedef Surprise<D, F> = tink.core.Future.Surprise<D, F>;
 typedef FutureTrigger<T> = tink.core.Future.FutureTrigger<T>;
