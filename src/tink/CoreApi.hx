@@ -9,6 +9,7 @@ typedef Outcome<D, F> = tink.core.Outcome<D, F>;
 typedef OutcomeTools = tink.core.Outcome.OutcomeTools;
 
 typedef Either<L, R> = tink.core.Either<L, R>;
+typedef Option<T> = haxe.ds.Option<T>; 
 
 typedef Pair<A, B> = tink.core.Pair<A, B>;
 typedef MPair<A, B> = tink.core.Pair.MPair<A, B>;
