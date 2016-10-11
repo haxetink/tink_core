@@ -1,6 +1,3 @@
 package tink.core;
 
-enum Either<A,B> {
-  Left(a:A);
-  Right(b:B);
-}
+typedef Either<A,B> = haxe.ds.Either<A, B>;
