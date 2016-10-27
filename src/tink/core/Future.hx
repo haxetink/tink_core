@@ -61,6 +61,11 @@ abstract Future<T>(Callback<T>->CallbackLink) {
   @:from inline static function fromTrigger<A>(trigger:FutureTrigger<A>):Future<A> 
     return trigger.asFuture();
   
+  #if js
+  static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
+    return Future.async(function(cb) promise.then(function(a) cb(Success(a)), function(e) cb(Failure(Error.withData('Promise rejected', e)))));
+  #end
+  
   static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
     var ret = sync([]);
     for (f in futures)
@@ -167,3 +172,10 @@ class FutureTrigger<T> {
 }
 
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
+
+#if js
+class JsPromiseTools {
+  static inline public function toSurprise<A>(promise:js.Promise<A>):Surprise<A, Error>
+    return Future.ofJsPromise(promise);
+}
+#end
