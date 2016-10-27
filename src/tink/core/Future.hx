@@ -172,3 +172,10 @@ class FutureTrigger<T> {
 }
 
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
+
+#if js
+class JsPromiseTools {
+  static inline public function toSurprise<A>(promise:js.Promise<A>):Surprise<A, Error>
+    return Future.ofJsPromise(promise);
+}
+#end
