@@ -19,20 +19,20 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public inline function next<R>(f:Next<T, R>):Promise<R> 
     return this >> function (result:T) return (f(result) : Surprise<R, Error>);
   
-  @:from static function ofFuture<T>(f:Future<T>):Promise<T>
+  @:from static inline function ofFuture<T>(f:Future<T>):Promise<T>
     return f.map(Success);
     
-  @:from static function ofOutcome<T>(o:Outcome<T, Error>):Promise<T>
+  @:from static inline function ofOutcome<T>(o:Outcome<T, Error>):Promise<T>
     return Future.sync(o);
     
-  @:from static function ofError<T>(e:Error):Promise<T>
+  @:from static inline function ofError<T>(e:Error):Promise<T>
     return ofOutcome(Failure(e));
 
-  @:from static function ofData<T>(d:T):Promise<T>
+  @:from static inline function ofData<T>(d:T):Promise<T>
     return ofOutcome(Success(d));
     
   @:noCompletion @:noUsing 
-  static public function lift<T>(p:Promise<T>)
+  static public inline function lift<T>(p:Promise<T>)
     return p;
 }
 
