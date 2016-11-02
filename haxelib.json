@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Add Option and Either from stdlib to CoreApi.",
-	"version": "1.3.0",
+	"releasenote": "Integration with js.Promise",
+	"version": "1.4.0",
 	"url": "http://haxetink.org/tink_core"
 }
