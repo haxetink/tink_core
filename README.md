@@ -90,7 +90,7 @@ Behaviors of `Dynamic` that `Any` does not exhibit:
 
 1. `Dynamic` gives you the raw native runtime behavior - example with haxe/js:
 
-  ```
+  ```haxe
   var s = '';
   var d:Dynamic = s;
   
@@ -100,7 +100,7 @@ Behaviors of `Dynamic` that `Any` does not exhibit:
 
 2. `Dynamic` is erased during inference. Example:
 
-  ```
+  ```haxe
   var x = Reflect.field({ foo: [4] }, 'foo');//x is Unknown<?>
   if (x.length == 1)//x is now {+ length : Int }
 	trace(x[0]);//Compiler error: Array access is not allowed on {+ length : Int }
@@ -114,7 +114,7 @@ Compared to `Dynamic`, the `Any` type has a very specific meaning: it means the 
 
 Notice how in the first example, the compiler will force you to choose a type.
 
-  ```
+  ```haxe
   var s = '';
   var a:Any = s;
   
@@ -140,7 +140,7 @@ This should go toward clarifying what exactly is going on in a specific piece of
 
 The `Pair` represents an [ordered pair](http://en.wikipedia.org/wiki/Ordered_pair):
 
-```
+```haxe
 abstract Pair<A, B> {
 	function new(a:A, b:B);
 	var a(get, never):A;
@@ -175,7 +175,7 @@ The `MPair` is the mutable counterpart to `Pair`. Formerly optimized for speed, 
 
 The `Lazy` type is a primitive for [lazy evaluation](http://en.wikipedia.org/wiki/Lazy_evaluation):
 
-```
+```haxe
 abstract Lazy<T> {	
 	@:to function get():T;	
 	@:from static function ofFunc<T>(f:Void->T):Lazy<T>;
@@ -187,7 +187,7 @@ abstract Lazy<T> {
 
 The `Outcome` type is quite similar to [`haxe.ds.Option`](http://haxe.org/api/haxe/ds/option), but is different in that it is tailored specifically to represent the result of an operation that either fails or succeeds.
 
-```    
+```haxe
 enum Outcome<Data, Failure> {
 	Success(data:Data);
 	Failure(failure:Failure);
@@ -220,7 +220,7 @@ Tells whether an outcome was successful.
 
 Here is some example code of what neko file access might look like:
 
-```    
+```haxe
 using tink.core.Outcome;
 enum FileAccessError {
 	NoSuchFile(path:String);
@@ -268,7 +268,7 @@ The `Error` class is meant as a standard class for errors.
 
 This is its API:
 
-```
+```haxe
 class Error {
 	var message(default, null):String;
 	var data(default, null):Null<Dynamic>;
@@ -293,7 +293,7 @@ There are a couple of interesting things to point out:
 
 Because in Haxe 3 `Void` can no longer have values, i.e. values of a type that always holds nothing, `tink_core` introduces `Noise`.
 
-```    
+```haxe
 enum Noise { Noise; }
 ```
 
@@ -301,7 +301,7 @@ Technically, `null` is also a valid value for `Noise`. In any case, there is no 
 
 An example where using `Noise` makes sense is when you have an operation that succeeds without any result to speak of:
 
-```    
+```haxe
 function writeToFile(content:String):Outcome<Noise, IoError>;
 ```
 
@@ -309,7 +309,7 @@ function writeToFile(content:String):Outcome<Noise, IoError>;
 
 Represents a value that can have either of two types:
 
-```    
+```haxe
 enum Either<A,B> {
 	Left(a:A);
 	Right(b:B);
@@ -318,7 +318,7 @@ enum Either<A,B> {
 
 For example the following can represent a physical type in Haxe: 
 
-```    
+```haxe
 typedef PhysicalType<T> = Either<Class<T>, Enum<T>>`
 
 function name(t:PhysicalType<Dynamic>) 
@@ -334,7 +334,7 @@ At times you wish to share the same reference (and therefore changes to it) amon
 
 The `Ref` type does just that, but in an abstract:
 
-```    
+```haxe
 abstract Ref<T> {
 	var value(get, set):T;
 	function toString():String;
@@ -345,7 +345,7 @@ abstract Ref<T> {
 
 It is worth noting that `Ref` defines implicit conversion in both ways. The following code will thus compile:
 
-```    
+```haxe
 var r:Ref<Int> = 4;
 var i:Int = r;
 ```
@@ -356,7 +356,7 @@ The current implementation is built over `haxe.ds.Vector` and should thus perfor
 
 To denote callbacks, `tink_core` introduces a special type:
 
-```    
+```haxe
 abstract Callback<T> from T->Void {
 	function invoke(data:T):Void;
 	@:from static function fromNiladic<A>(f:Void->Void):Callback<A> 
@@ -374,7 +374,7 @@ The obvious question to ask here is why to complicate a simple concept as callba
 
 Beyond that, one might ask what to do if you don't have any data to pass to the callback, or more than a single value. In that case, you could use these respectively:
 
-```    
+```haxe
 Callback<Noise>
 Callback<Pair<A, B>>
 Callback<{ a: A, b: B, c: C }>
@@ -392,7 +392,7 @@ When you register a callback to a caller, you often want to be able to undo this
 
 As opposed to that, tink adheres to a different approach, where the registration returns a "callback link", i.e. a value representing the link between the caller and the callback. It looks as follows:
 
-```    
+```haxe
 abstract CallbackLink {
 	function dissolve():Void;
 	@:to function toCallback<A>():Callback<A>;
@@ -404,7 +404,7 @@ Calling `dissolve` will dissolve the link, as suggested by the name. Ain't no ro
 
 The link itself can be promoted to become a callback, so that you can in fact register it as a handler elsewhere:
 
-```    
+```haxe
 button.onPress(function () {
 	var stop = button.onMouseMove(function () trace('move!');
 	button.onRelease(stop);
@@ -415,7 +415,7 @@ button.onPress(function () {
 
 While the `Callback` and `CallbackLink` are pretty nice in theory, on their own, they have no application. For that reasons `tink_core` defines a basic infrastructure to provide callback registration and link dissolving:
 
-```    
+```haxe
 abstract CallbackList<T> {
 	var length(get, never):Int;
 	function new():Void;
@@ -442,7 +442,7 @@ In essence the `CallbackList` can be seen as a basic building block for notifica
 
 As the name would suggest, futures express the idea that something is going to happen in the future. Or much rather: a future represents the result of a potentially asynchronous operation, that will become available at some point in time. It allows you to register a `Callback` to `handle` the operation's result once it is available.
 
-```    
+```haxe
 abstract Future<T> {
 	function handle(callback:Callback<T>):CallbackLink;
 	
@@ -474,7 +474,7 @@ We can already deal with asynchrony by means of plain old callbacks. Introducing
 
 Say you have these functions, that are built on one another:
 
-```    
+```haxe
 function loadFromURL(url:String, callback:String->Void):Void { 
 	/* load data somehow */ 
 }
@@ -499,7 +499,7 @@ function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<St
 
 Now let's see that code with futures:
 
-```    
+```haxe
 function loadFromURL(url:String):Future<String> { 
 	/* load the data somehow */ 
 }
@@ -530,21 +530,21 @@ In the example above we can see some composition of futures at work. What's equa
 
 Say we want to load JSON instead of raw data in the example above. To expand on the example above, this is how we would accomplish it:
 
-```
+```haxe
 function loadJson(url:String):Future<Dynamic> 
 	return loadFromUrl(url).map(haxe.Json.parse);
 ```
 
 Now let's say that we know for a fact, that all these JSONs contain arrays of strings and we actually just want the first entry, then we would do this:
 
-```
+```haxe
 function loadJson(url:String):Future<String>
 	return loadFromUrl(url).map(haxe.Json.parse).map(function (a) return a[0]);
 ```
 
 Or let's try something else. Loading information from wikipedia.
 
-```
+```haxe
 function loadWikiDescription(article:String):Future<Null<String>> 
 	return 
 		loadFromUrl('http://en.wikipedia.org/wiki/$article').map(function (html:String) 
@@ -558,7 +558,7 @@ So the above will create a future that returns null if there's no article, or th
 
 Now let's assume that we want to load an article that is specified in a config, then we would try this:
 
-```
+```haxe
 loadJson('config.json').map(
 	function (config: { article:String }):Future<Null<String>>
 		return loadWikiDescription(config.article)
@@ -568,7 +568,7 @@ loadJson('config.json').map(
 There is only one problem. The transformation function does not return a plain value, but rather a future. Since map with a function of type `T->A` transforms a `Future<T>` to a `Future<A>`, map with a function of type `String->Future<Null<String>>`.
 so the resulting future will in fact be of type `Future<Future<Null<String>>>` whereas we would really rather want `Future<Null<String>>`. One could call this a "nested" future and we want to `flatten` it:
 
-```
+```haxe
 Future.flatten(loadJson('config.json').map(
 	function (config: { article:String }) 
 		return loadWikiDescription(config.article)
@@ -577,7 +577,7 @@ Future.flatten(loadJson('config.json').map(
 
 Now because this is a lot to write for a rather common situation, we have `flatMap` which basically just does a `map` and `flatten`:
 
-```
+```haxe
 loadJson('config.json').flatMap(
 	function (config: { article:String }) 
 		return loadWikiDescription(config.article)
@@ -596,7 +596,7 @@ To compose futures, you have three basic options:
 
 Now you may want to use `first` on futures of different types. Here's how that would work:
 
-```
+```haxe
 var x:Future<X> = ...; 
 var y:Future<Y> = ...; 
 
@@ -609,7 +609,7 @@ The keen observer may have noticed the optional `gather` argument for `map` and 
 
 Let's examine a naive implementation of `map`:
 
-```
+```haxe
 function map<In, Out>(future:Future<In>, transform:In->Out):Future<Out>
 	return new Future(
 		function (callback:Callback<Out>):CallbackLink
@@ -623,7 +623,7 @@ What this does is to create a future that deals with a `callback` by registering
 
 Example:
 
-```
+```haxe
 var f = Future.sync('foo'),
 	array = [];
 
@@ -648,7 +648,7 @@ While you can create Futures with the constructor, the suggested method is to us
 
 In the example above, we've seen a `loadFromUrl` function. Here's a way to implement it on top of `haxe.Http` on async platforms with `Future.async`:
 
-```
+```haxe
 //First, let's have a plain old callback based function
 function loadAsync(url:String, callback:String->Void) {
 	var h = new haxe.Http(url);
@@ -663,7 +663,7 @@ function loadFromUrl(url:String)
 
 Or if we wanted to achieve the same in one step:
 
-```
+```haxe
 function loadFromUrl(url:String)
 	return Future.async(function (handler:String->Void) {
 		var h = new haxe.Http(url);
@@ -674,7 +674,7 @@ function loadFromUrl(url:String)
 
 A fair question to ask would be, how to deal with errors. Quite simply, we will use our old friend the `Outcome`:
 
-```
+```haxe
 function loadFromUrl(url:String):Future<Outcome<String, String>>
 	return Future.async(function (handler:Outcome<String, String>->Void) {
 		var h = new haxe.Http(url);
@@ -686,7 +686,7 @@ function loadFromUrl(url:String):Future<Outcome<String, String>>
 
 Now suppose we wanted the code to run on PHP that's synchronous. For one, the implementation above would already happen to work. But typically most APIs that you would want to deal with are purely synchronous and you'd have to deal with that. This is how:
 
-```
+```haxe
 function loadFromUrl(url:String)
 	return Future.sync(haxe.Http.requestUrl(url));
 	
@@ -696,7 +696,7 @@ function loadFromUrl(url:String)
 
 The first version just gets the data synchronously and then "lifts" it to become a `Future`. The second version constructs a lazy future, i.e. the operation is executed when you register the first callback. Example:
 
-```
+```haxe
 var load = loadFromUrl('http://example.com/');//no requests have been made yet
 load.handle(function (data) {});//now the request is made
 load.handle(function (data) {});//the data is already available, so no request is made
@@ -726,7 +726,7 @@ Because `Future` is an abstract, we can do some neat tricks with operator overlo
 
 Evidently, `>>` is quite supercharged. Let's examine an example from above once more to see why:
 
-```
+```haxe
 loadJson('config.json').flatMap(
 	function (config: { article:String }) 
 		return loadWikiDescription(config.article)
@@ -735,7 +735,7 @@ loadJson('config.json').flatMap(
 
 We can now write it as this:
 
-```
+```haxe
 loadJson('config.json') >> 
 	function (config: { article:String }) 
 		return loadWikiDescription(config.article);
@@ -749,7 +749,7 @@ Handle the future like a boss ;)
 
 For all those who love surprises and for all those who hate them, `tink_core` provides a neat way of expressing them. Simply put, a surprise is nothing but a future outcome. Literally:
 
-```    
+```haxe
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
 ```
 
@@ -759,7 +759,7 @@ This type thus represents an operation that will finish at some point in time an
 
 In an above section we've seen ways to construct futures on top of other APIs. However, you may need to build your own future yourself from scratch. The simplest way to do this is by using a helper class:
 
-```    
+```haxe
 class FutureTrigger<T> {
 	function new();
 	function asFuture():Future<T>;
@@ -771,7 +771,7 @@ Typically you would construct a trigger with `Future.trigger()` instead of `new 
 
 Here is how you would use such a trigger (as an alternative to the example above):
 
-```    
+```haxe
 class Http {
 	static public function requestURL(url:String):Surprise<String, String> {
 		var req = new haxe.Http(url),
@@ -790,7 +790,7 @@ Looks pretty neat already. And it forces client code to consider failure.
 
 Despite an overabundance of signal implementations, `tink_core` does provide its own flavour of signals. One that aims at utmost simplicity and full integration with the rest of tink. Here it is:
 
-```    
+```haxe
 abstract Signal<T> {
 	function new(f:Callback<T>->CallbackLink):Void;
 
@@ -819,7 +819,7 @@ When compared to mechanisms like flash's `EventDispatcher` or the DOM's `EventTa
 
 Say you have the following class:
 
-```    
+```haxe
 class Button {
 	public var pressed(default, null):Signal<MouseEvent>;
 	public var clicked(default, null):Signal<MouseEvent>;
@@ -833,7 +833,7 @@ You know exactly which events to expect and what type they will have. Also, an i
 
 It is quite easy to take an arbitrary API and wrap it in signals. Let's take the beloved `IEventDispatcher`.
 
-```    
+```haxe
 function makeSignal<A:Event>(dispatcher:IEventDispatcher, type:String):Signal<A> 
 	return Signal.ofClassical(
 		dispatcher.addEventListener.bind(type),
@@ -854,7 +854,7 @@ As the constructor indicates, a signal can be constructed from any function that
 Unlike many other signal flavors, tink's signals do not allow client code to invoke the signal. When exposing a signal that you trigger yourself, typically you will expose only a `Signal` while internally knowing the `SignalTrigger`.
 Here's an example of just that:
 
-```    
+```haxe
 class Clock {
 	public var tick(default, null):Signal<Noise>;
 	var tickHandlers:SignalTrigger<Noise>;
@@ -877,7 +877,7 @@ First of all, `map` comes from the functional term of mapping. The idea is to us
 
 Secondly, we have `join` that allows us to join two signals of the same type into one. Here's an example of what that might look like, where we assume that we have a `plusButton` and a `minusButton` on our GUI and they each have a signal called `clicked`:
 
-```    
+```haxe
 var delta = 
 	plusButton.clicked
 		.map(function (_) return 1)
@@ -906,7 +906,7 @@ If we look at `Signal.ofClassical` as used in the example with `IEventDispatcher
 
 A `SignalTrigger` is what permits you to build a signal that you can trigger yourself:
 
-```    
+```haxe
 abstract SignalTrigger<T> {
 	function new();
 	function trigger(result:T):Void;
