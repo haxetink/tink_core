@@ -24,6 +24,7 @@ typedef Error = TypedError<Dynamic>;
   var NotAcceptable = 406;
   var Timeout = 408;
   var Conflict = 409;
+  var UnsupportedMediaType = 415;
   var OutOfRange = 416;
   var ExpectationFailed = 417;
   var I_am_a_Teapot = 418;

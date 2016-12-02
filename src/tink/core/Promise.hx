@@ -7,7 +7,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   function pseudoResult():T
     return cast null;
   
-  public inline function recover(f:Error->Future<T>):Future<T>
+  public inline function recover(f:Recover<T>):Future<T>
     return this.flatMap(function (o) return switch o {
       case Success(d): Future.sync(d);
       case Failure(e): f(e);
@@ -48,4 +48,10 @@ private abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
   @:from static function ofSafeSync<In, Out>(f:In->Out):Next<In, Out> 
     return function (x) return f(x);
     
+}
+
+@:callable
+private abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
+  @:from static function ofSync<T>(f:Error->T):Recover<T>
+    return function (e) return Future.sync(f(e));
 }

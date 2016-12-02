@@ -28,7 +28,7 @@ class OutcomeTools {
         case Failure(_): Option.None;
       }
   
-  static public function toOutcome<D>(option:Option<D>, ?pos:haxe.PosInfos):Outcome<D, Error>
+  static public function toOutcome<D>(option:Option<D>, ?pos:haxe.PosInfos):Outcome<D, Error>//TODO: this should go into OptionTools in the next major release
     return
       switch (option) {
         case Some(value): 
