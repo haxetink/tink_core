@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Integration with js.Promise",
-	"version": "1.4.0",
+	"releasenote": "Add OptionTools. Tweak Promise.",
+	"version": "1.5.0",
 	"url": "http://haxetink.org/tink_core"
 }
