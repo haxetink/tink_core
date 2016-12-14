@@ -63,7 +63,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
   
   #if js
   static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
-    return Future.async(function(cb) promise.then(function(a) cb(Success(a)), function(e) cb(Failure(Error.withData('Promise rejected', e)))));
+    return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
   #end
   
   static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
@@ -176,6 +176,8 @@ typedef Surprise<D, F> = Future<Outcome<D, F>>;
 #if js
 class JsPromiseTools {
   static inline public function toSurprise<A>(promise:js.Promise<A>):Surprise<A, Error>
+    return Future.ofJsPromise(promise);
+  static inline public function toPromise<A>(promise:js.Promise<A>):Promise<A>
     return Future.ofJsPromise(promise);
 }
 #end
