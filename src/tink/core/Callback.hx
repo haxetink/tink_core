@@ -5,7 +5,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
   inline function new(f) 
     this = f;
   
-  @:to function toFunction()
+  @:to inline function toFunction()
     return this;
     
   public inline function invoke(data:T):Void //TODO: consider swallowing null here
@@ -29,7 +29,7 @@ abstract CallbackLink(Void->Void) to Void->Void {
   public inline function dissolve():Void 
     if (this != null) (this)();
     
-  @:to function toCallback<A>():Callback<A> 
+  @:to inline function toCallback<A>():Callback<A> 
     return this;
     
   @:from static inline function fromFunction(f:Void->Void) 
