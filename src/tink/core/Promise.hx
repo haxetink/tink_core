@@ -15,6 +15,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     
   public inline function handle(cb)
     return this.handle(cb);
+  
+  public inline function handleError(f:Callback<Error>)
+    return this.handle(function(o) switch o {
+      case Failure(e): f.invoke(e);
+      default:
+    });
     
   public inline function next<R>(f:Next<T, R>):Promise<R> 
     return this >> function (result:T) return (f(result) : Surprise<R, Error>);
