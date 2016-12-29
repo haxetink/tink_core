@@ -65,6 +65,9 @@ abstract Future<T>(Callback<T>->CallbackLink) {
   static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
     return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
   #end
+    
+  static inline public function asPromise<T>(s:Surprise<T, Error>):Promise<T>
+    return s;
   
   static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
     var ret = sync([]);
