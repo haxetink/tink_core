@@ -2,23 +2,24 @@ package tink.core;
 
 using tink.CoreApi;
 
+@:forward(map, flatMap)
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
-  
-  function pseudoResult():T
-    return cast null;
   
   public inline function recover(f:Recover<T>):Future<T>
     return this.flatMap(function (o) return switch o {
       case Success(d): Future.sync(d);
       case Failure(e): f(e);
     });
-    
+        
   public inline function handle(cb)
     return this.handle(cb);
     
   public inline function next<R>(f:Next<T, R>):Promise<R> 
     return this >> function (result:T) return (f(result) : Surprise<R, Error>);
   
+  @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
+    return (s : Surprise<T, Error>);
+    
   @:from static inline function ofFuture<T>(f:Future<T>):Promise<T>
     return f.map(Success);
     
@@ -37,7 +38,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 }
 
 @:callable
-private abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
+abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
       
   @:from static function ofSafe<In, Out>(f:In->Outcome<Out, Error>):Next<In, Out> 
     return function (x) return f(x);
@@ -48,6 +49,9 @@ private abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
   @:from static function ofSafeSync<In, Out>(f:In->Out):Next<In, Out> 
     return function (x) return f(x);
     
+  @:op(a * b) static function _chain<A, B, C>(a:Next<A, B>, b:Next<B, C>):Next<A, C>
+    return function (v) return a(v).next(b);
+  
 }
 
 @:callable
