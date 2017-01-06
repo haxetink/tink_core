@@ -46,7 +46,18 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
   
   public function next():Future<T> {
     var ret = Future.trigger();
-    handle(handle(ret.trigger));
+    var link:CallbackLink = null,
+        immediate = false;
+        
+    link = handle(function (v) {
+      ret.trigger(v);
+      if (link == null) immediate = true;
+      else link.dissolve();
+    });
+    
+    if (immediate) 
+      link.dissolve();
+    
     return ret.asFuture();
   }
   
@@ -76,13 +87,18 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
 }
 
 abstract SignalTrigger<T>(CallbackList<T>) from CallbackList<T> {
-  public inline function new() this = new CallbackList();
+  public inline function new() 
+    this = new CallbackList();
+    
   public inline function trigger(event:T)
     this.invoke(event);
+    
   public inline function getLength()
     return this.length;
+    
   public inline function clear()
     this.clear();
+    
   @:to public function asSignal():Signal<T> 
     return new Signal(this.add);
 }

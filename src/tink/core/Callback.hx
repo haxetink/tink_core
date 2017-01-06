@@ -11,6 +11,9 @@ abstract Callback<T>(T->Void) from (T->Void) {
   public inline function invoke(data:T):Void //TODO: consider swallowing null here
     (this)(data);
     
+  @:to static function ignore<T>(cb:Callback<Noise>):Callback<T>
+    return function () cb.invoke(Noise);
+    
   @:from static inline function fromNiladic<A>(f:Void->Void):Callback<A> 
     return new Callback(function (r) f());
   
@@ -51,7 +54,9 @@ abstract CallbackList<T>(Array<Ref<Callback<T>>>) {
   
   public function add(cb:Callback<T>):CallbackLink {
     var cell = Ref.to(cb);
+    
     this.push(cell);
+        
     return function () {
       if (this.remove(cell))
         cell.value = null;
