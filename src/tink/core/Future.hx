@@ -24,11 +24,17 @@ abstract Future<T>(Callback<T>->CallbackLink) {
     });
   }
   
-  public function first(other:Future<T>):Future<T>
-    return Future.async(function (cb:T->Void) {
-      handle(cb);
-      other.handle(cb);
-    });
+  public function first(other:Future<T>):Future<T> { // <-- consider making it lazy by default
+    var ret = Future.trigger();
+    var l1 = handle(ret.trigger);
+    var l2 = other.handle(ret.trigger);
+    var ret = ret.asFuture();
+    if (l1 != null)
+      ret.handle(l1);
+    if (l2 != null)
+      ret.handle(l2);
+    return ret;
+  }
   
   public function map<A>(f:T->A, ?gather = true):Future<A> {
     var ret = new Future(function (callback) return (this)(function (result) callback.invoke(f(result))));
@@ -161,6 +167,7 @@ class FutureTrigger<T> {
   }
   public inline function asFuture() return future;
   
+  static var depth = 0;
   public inline function trigger(result:T):Bool
     return
       if (list == null) false;
@@ -168,8 +175,16 @@ class FutureTrigger<T> {
         var list = this.list;
         this.list = null;
         this.result = result;
-        list.invoke(result);
-        list.clear();//free callback links
+        inline function dispatch() {
+          depth++;
+          list.invoke(result);
+          list.clear();//free callback links          
+          depth--;
+        }
+        if (depth >= 1000)
+          Callback.defer(function () dispatch());
+        else
+          dispatch();
         true;
       }
 }

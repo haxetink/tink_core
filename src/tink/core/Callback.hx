@@ -14,7 +14,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
   @:to static function ignore<T>(cb:Callback<Noise>):Callback<T>
     return function () cb.invoke(Noise);
     
-  @:from static inline function fromNiladic<A>(f:Void->Void):Callback<A> 
+  @:from static function fromNiladic<A>(f:Void->Void):Callback<A> //inlining this seems to cause recursive implicit casts
     return new Callback(function (r) f());
   
   @:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A> 
@@ -22,6 +22,20 @@ abstract Callback<T>(T->Void) from (T->Void) {
       function (v:A) 
         for (callback in callbacks)
           callback.invoke(v);
+          
+  @:noUsing static public function defer(f:Void->Void) {    
+    #if macro
+      f();
+    #elseif tink_runloop
+      tink.RunLoop.current.work(f);
+    #elseif nodejs
+      js.Node.process.nextTick(f);
+    #elseif ((haxe_ver >= 3.3) || js || flash || openfl)
+      haxe.Timer.delay(f, 0);
+    #else
+      f();
+    #end
+  }
 }
 
 abstract CallbackLink(Void->Void) to Void->Void {

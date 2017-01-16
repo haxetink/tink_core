@@ -3,8 +3,7 @@ package ;
 using tink.CoreApi;
 
 class Callbacks extends Base {
-  
-  function _testInvoke() {
+  function testInvoke() {
     var calls = 0;
     var cbs:Array<Callback<Int>> = [
       function () calls++,
@@ -17,6 +16,23 @@ class Callbacks extends Base {
       
     assertEquals(4, calls);
   }
+  
+  #if (js || flash || haxeVer >= 3.3)
+  function testDefer() {
+    
+    var counter = 0;
+    function count() 
+      counter++;
+    
+    Callback.defer(count);
+    Callback.defer(count);
+    Callback.defer(function () { 
+      assertEquals(2, counter); 
+    } );
+    
+    assertEquals(0, counter);
+  }
+  #end
   
   function testList() {
     var cb = new CallbackList();
