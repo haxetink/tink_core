@@ -14,7 +14,10 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public inline function handle(cb)
     return this.handle(cb);
     
-  public inline function next<R>(f:Next<T, R>):Promise<R> 
+  @:to public function noise():Promise<Noise>
+    return (this:Promise<T>).next(function (v) return Noise);
+    
+  public function next<R>(f:Next<T, R>):Promise<R> 
     return this >> function (result:T) return (f(result) : Surprise<R, Error>);
   
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
