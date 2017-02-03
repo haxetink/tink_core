@@ -28,7 +28,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
       f();
     #elseif tink_runloop
       tink.RunLoop.current.work(f);
-    #elseif nodejs
+    #elseif hxnodejs
       js.Node.process.nextTick(f);
     #elseif ((haxe_ver >= 3.3) || js || flash || openfl)
       haxe.Timer.delay(f, 0);
