@@ -2,8 +2,6 @@ package ;
 
 import haxe.unit.*;
 
-using tink.CoreApi;
-
 #if flash
 typedef Sys = flash.system.System;
 #end

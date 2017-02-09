@@ -1,16 +1,16 @@
 package tink.core;
 
 import tink.core.Callback;
-import haxe.ds.Option;
 
 using tink.core.Outcome;
 
-abstract Future<T>(Callback<T>->CallbackLink) {
+abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
-  public function new(f:Callback<T>->CallbackLink) this = f;  
+  public inline function new(f:Callback<T>->CallbackLink) 
+    this = new SimpleFuture(f);  
     
   public inline function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
-    return (this)(callback);
+    return this.handle(callback);
   
   public function gather():Future<T> {
     var op = Future.trigger(),
@@ -37,7 +37,7 @@ abstract Future<T>(Callback<T>->CallbackLink) {
   }
   
   public function map<A>(f:T->A, ?gather = true):Future<A> {
-    var ret = new Future(function (callback) return (this)(function (result) callback.invoke(f(result))));
+    var ret = new Future(function (callback) return this.handle(function (result) callback.invoke(f(result))));
     return
       if (gather) ret.gather();
       else ret;
@@ -149,26 +149,38 @@ abstract Future<T>(Callback<T>->CallbackLink) {
     
 }
 
-class FutureTrigger<T> {
+interface FutureObject<T> {
+  function handle(callback:Callback<T>):CallbackLink;
+}
+
+class SimpleFuture<T> implements FutureObject<T> {
+  var f:Callback<T>->CallbackLink;
+  public inline function new(f) this.f = f;
+  public inline function handle(callback:Callback<T>):CallbackLink
+    return f(callback);
+}
+
+class FutureTrigger<T> implements FutureObject<T> {
   var result:T;
   var list:CallbackList<T>;
-  var future:Future<T>;
-  public function new() {
+
+  public function new() 
     this.list = new CallbackList();
-    future = new Future(
-      function (callback)
-        return 
-          if (list == null) {
-            callback.invoke(result);
-            null;                        
-          }
-          else list.add(callback)
-    );
-  }
-  public inline function asFuture() return future;
+  
+  public function handle(callback:Callback<T>):CallbackLink
+    return switch list {
+      case null: 
+        callback.invoke(result);
+        null;
+      case v:
+        v.add(callback);
+    }
+
+  public inline function asFuture():Future<T>
+    return this;
   
   static var depth = 0;
-  public inline function trigger(result:T):Bool
+  public function trigger(result:T):Bool
     return
       if (list == null) false;
       else {
