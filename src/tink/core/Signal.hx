@@ -34,10 +34,7 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
   public function join(other:Signal<T>, ?gather = true):Signal<T> {
     var ret = new Signal(
       function (cb:Callback<T>):CallbackLink 
-        return [
-          handle(cb),
-          other.handle(cb)
-        ]
+        return handle(cb) & other.handle(cb)
     );
     return
       if (gather) ret.gather();
