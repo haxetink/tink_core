@@ -130,36 +130,6 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:noUsing static public inline function trigger<A>():FutureTrigger<A> 
     return new FutureTrigger();  
 
-  @:impl @:to static public function noise<T>(p:FutureObject<Outcome<T, Error>>):Promise<Noise>
-    return lift(p).next(function (v) return Noise);
-
-  @:impl public inline function recover<T>(p:FutureObject<Outcome<T, Error>>, f:Recover<T>):Future<T>
-    return lift(p).flatMap(function (o) return switch o {
-      case Success(d): Future.sync(d);
-      case Failure(e): f(e);
-    });    
-
-  @:impl static public function next<T, R>(o:FutureObject<Outcome<T, Error>>, f:Next<T, R>):Promise<R> 
-    return _tryFailingFlatMap(o, f.unwrap());
-
-  @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
-    return (cast s : Surprise<T, Error>);
-    
-  @:from static inline function ofFuture<T>(f:Future<T>):Promise<T>
-    return f.map(Success);
-    
-  @:from static inline function ofOutcome<T>(o:Outcome<T, Error>):Promise<T>
-    return Future.sync(o);
-    
-  @:from static inline function ofError<T>(e:Error):Promise<T>
-    return ofOutcome(Failure(e));
-
-  @:from static inline function ofData<T>(d:T):Promise<T>
-    return ofOutcome(Success(d));
-    
-  @:noCompletion @:noUsing 
-  static public inline function lift<T>(p:Promise<T>)
-    return p;    
 }
 
 private interface FutureObject<T> {
@@ -230,7 +200,7 @@ private class SimpleFuture<T> implements FutureObject<T> {
     return Future.flatten(map(f));
 
   public inline function gather():Future<T> 
-    return FutureTrigger.gatherFuture((this:Future<T>));//<-- without this cast, weird things happen
+    return FutureTrigger.gatherFuture(this);
 }
 
 private class NestedFuture<T> implements FutureObject<T> {
@@ -246,7 +216,7 @@ private class NestedFuture<T> implements FutureObject<T> {
     return outer.flatMap(function (inner) return inner.flatMap(f));
   
   public inline function gather()
-    return FutureTrigger.gatherFuture((this:Future<T>));//<-- without this cast, weird things happen
+    return FutureTrigger.gatherFuture(this);
 
   public function handle(cb:Callback<T>) {
     var ret = null;
@@ -332,12 +302,6 @@ class FutureTrigger<T> implements FutureObject<T> {
 }
 
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
-
-@:callable
-private abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
-  @:from static function ofSync<T>(f:Error->T):Recover<T>
-    return function (e) return Future.sync(f(e));
-}
 
 #if js
 class JsPromiseTools {
