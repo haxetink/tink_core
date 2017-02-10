@@ -163,6 +163,8 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 }
 
 private interface FutureObject<T> {
+  function map<R>(f:T->R):Future<R>;
+  function flatMap<R>(f:T->Future<R>):Future<R>;
   function handle(callback:Callback<T>):CallbackLink;
   function gather():Future<T>;
 }
@@ -269,6 +271,24 @@ class FutureTrigger<T> implements FutureObject<T> {
         null;
       case v:
         v.add(callback);
+    }
+
+  public function map<R>(f:T->R):Future<R>
+    return switch list {
+      case null: Future.sync(f(result));
+      case v:
+        var ret = new FutureTrigger();
+        list.add(function (v) ret.trigger(f(v)));
+        ret;
+    }
+
+  public function flatMap<R>(f:T->Future<R>):Future<R>
+    return switch list {
+      case null: f(result);
+      case v:
+        var ret = new FutureTrigger();
+        list.add(function (v) f(v).handle(ret.trigger));
+        ret;
     }
 
   public inline function gather()
