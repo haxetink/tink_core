@@ -263,44 +263,48 @@ Tells whether an outcome was successful.
 Here is some example code of what neko file access might look like:
 
 ```haxe
-using tink.core.Outcome;
 enum FileAccessError {
-	NoSuchFile(path:String);
-	CannotOpen(path:String, reason:Dynamic);
+  NoSuchFile(path:String);
+  CannotOpen(path:String, reason:Dynamic);
 }
 class MyFS {
-	static public function getContent(path:String) {
-		return
-			if (sys.FileSystem.exists(path)) 
-				try {
-					sys.io.File.getContent(path).asSuccess();
-				}
-				catch (e:Dynamic) {
-					CannotOpen(path, e).asFailure();
-				}
-			else
-				NoSuchFile(path).asFailure();
-	}
+  static public function getContent(path:String) 
+    return
+      if (sys.FileSystem.exists(path)) 
+        try {
+          Success(sys.io.File.getContent(path));
+        }
+        catch (e:Dynamic) {
+          Failure(CannotOpen(path, e));
+        }
+      else
+        Failure(NoSuchFile(path));
 }
 class Main {
-	static function main() {
-		switch (MyFS.getContent('path/to/file')) {
-			case Success(s): trace('file content: ' + s);
-			case Failure(f):
-				switch (f) {
-					case NoSuchFile(path): 
-						trace('file not found: $path');
-					case CannotOpen(path, reason): 
-						trace('failed to open file $path because $reason');
-				}
-		}
-		
-		trace('other file content: ' + MyFile.getContent('path/to/other_file').sure());
-		//will throw an exception if the file content can not be read
-		
-		var equal = MyFile.getContent('path/to/file').map(haxe.Md5.encode).equals(otherMd5Sig);
-		//will be true, if the file could be openend and its content's Md5 signature is equal to `otherMd5Sig`
-	}
+  static function main() {
+
+    //First, let's process outcomes by hand it by hand:
+
+      switch MyFS.getContent('path/to/file') {
+        case Success(s): 
+          trace('file content: ' + s);
+        case Failure(f):
+          switch f {
+            case NoSuchFile(path): 
+              trace('file not found: $path');
+            case CannotOpen(path, reason): 
+              trace('failed to open file $path because $reason');
+          }
+      }
+    
+    //Now, using OutcomeTools:
+
+      trace('other file content: ' + MyFile.getContent('path/to/other_file').sure());
+      //will throw an exception if the file content can not be read
+    
+      var equal = MyFile.getContent('path/to/file').map(haxe.Md5.encode).equals(otherMd5Sig);
+      //will be true, if the file could be openend and its content's Md5 signature is equal to `otherMd5Sig`
+  }
 }	
 ```
 
