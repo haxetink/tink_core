@@ -267,6 +267,7 @@ enum FileAccessError {
   NoSuchFile(path:String);
   CannotOpen(path:String, reason:Dynamic);
 }
+
 class MyFS {
   static public function getContent(path:String) 
     return
@@ -280,6 +281,7 @@ class MyFS {
       else
         Failure(NoSuchFile(path));
 }
+
 class Main {
   static function main() {
 
