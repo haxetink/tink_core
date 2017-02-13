@@ -21,9 +21,7 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 - [Lazy](#lazy)
 - [Outcome](#outcome)
 - [Error](#error)
-	- 
-		- 
-			- [ErrorCode](#errorcode)
+	- [ErrorCode](#errorcode)
 - [Noise](#noise)
 - [Either](#either)
 - [Ref](#ref)
@@ -355,9 +353,9 @@ There are a couple of interesting things to point out:
 - By default errors are constructed without data. Use `withData` or `typed` to construct them with `Dynamic` or specific data.
 - the `catchExceptions` function is a nice way to call functions that might throw like so: `sys.io.File.getContent.bind('path/to/file').catchExceptions()`
 
-#### ErrorCode
+## ErrorCode
 
-The `ErrorCode` type is mentioned a lot. Here is how it is actually defined:
+The `ErrorCode` type is mentioned a lot in the `TypedError` class above. Here is how it is actually defined:
 
 ```haxe
 @:enum abstract ErrorCode(Int) from Int to Int {
