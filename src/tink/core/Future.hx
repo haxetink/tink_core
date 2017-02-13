@@ -10,6 +10,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   public inline function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
     return this.handle(callback);
   
+  public inline function eager():Future<T>
+    return this.eager();
+
   public inline function gather():Future<T> 
     return this.gather();
   
@@ -137,6 +140,7 @@ private interface FutureObject<T> {
   function flatMap<R>(f:T->Future<R>):Future<R>;
   function handle(callback:Callback<T>):CallbackLink;
   function gather():Future<T>;
+  function eager():Future<T>;
 }
 
 private class SyncFuture<T> implements FutureObject<T> {
@@ -156,6 +160,9 @@ private class SyncFuture<T> implements FutureObject<T> {
     cb.invoke(value);
     return null;
   }
+
+  public function eager()
+    return this;
 
   public function gather()
     return this;
@@ -178,12 +185,17 @@ private class LazyFuture<T> implements FutureObject<T> {
 
   public function gather():Future<T>
     return new LazyFuture(l.map(function (f) return f.gather()));
+
+  public function eager() 
+    return l.get().eager();
+  
     
 }
 
 private class SimpleFuture<T> implements FutureObject<T> {
   
   var f:Callback<T>->CallbackLink;
+  var gathered:Future<T>;
 
   public inline function new(f) 
     this.f = f;
@@ -201,6 +213,12 @@ private class SimpleFuture<T> implements FutureObject<T> {
 
   public inline function gather():Future<T> 
     return FutureTrigger.gatherFuture(this);
+
+  public inline function eager():Future<T> {
+    var ret = gather();
+    ret.handle(function () {});
+    return ret;
+  }
 }
 
 private class NestedFuture<T> implements FutureObject<T> {
@@ -215,9 +233,15 @@ private class NestedFuture<T> implements FutureObject<T> {
   public inline function flatMap<R>(f:T->Future<R>):Future<R>
     return outer.flatMap(function (inner) return inner.flatMap(f));
   
-  public inline function gather()
+  public inline function gather():Future<T> 
     return FutureTrigger.gatherFuture(this);
 
+  public inline function eager():Future<T> {
+    var ret = gather();
+    ret.handle(function () {});
+    return ret;
+  }
+  
   public function handle(cb:Callback<T>) {
     var ret = null;
     ret = outer.handle(function (inner:Future<T>) {
@@ -262,6 +286,9 @@ class FutureTrigger<T> implements FutureObject<T> {
     }
 
   public inline function gather()
+    return this;
+
+  public inline function eager()
     return this;
 
   public inline function asFuture():Future<T>
