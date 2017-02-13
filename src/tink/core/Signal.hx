@@ -3,12 +3,12 @@ package tink.core;
 import tink.core.Callback;
 import tink.core.Noise;
 
-abstract Signal<T>(Callback<T>->CallbackLink) {
+abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   
-  public inline function new(f:Callback<T>->CallbackLink) this = f;
+  public inline function new(f:Callback<T>->CallbackLink) this = new SimpleSignal(f);
   
   public inline function handle(handler:Callback<T>):CallbackLink 
-    return (this)(handler);
+    return this.handle(handler);
   
   public function map<A>(f:T->A, ?gather = true):Signal<A> {
     var ret = new Signal(function (cb) return handle(function (result) cb.invoke(f(result))));
@@ -83,19 +83,32 @@ abstract Signal<T>(Callback<T>->CallbackLink) {
   }
 }
 
-abstract SignalTrigger<T>(CallbackList<T>) from CallbackList<T> {
-  public inline function new() 
-    this = new CallbackList();
+private class SimpleSignal<T> implements SignalObject<T> {
+  var f:Callback<T>->CallbackLink;
+  public inline function new(f) this.f = f;
+  public inline function handle(cb) return this.f(cb);
+}
+
+class SignalTrigger<T> implements SignalObject<T> {
+  var handlers = new CallbackList<T>();
+  public inline function new() {} 
     
   public inline function trigger(event:T)
-    this.invoke(event);
+    handlers.invoke(event);
     
   public inline function getLength()
-    return this.length;
-    
+    return handlers.length;
+
+  public inline function handle(cb) 
+    return handlers.add(cb);
+
   public inline function clear()
-    this.clear();
+    handlers.clear();
     
-  @:to public function asSignal():Signal<T> 
-    return new Signal(this.add);
+  @:to public inline function asSignal():Signal<T> 
+    return this;
+}
+
+interface SignalObject<T> {
+  function handle(handler:Callback<T>):CallbackLink;
 }
