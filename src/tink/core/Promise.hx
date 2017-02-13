@@ -2,16 +2,21 @@ package tink.core;
 
 using tink.CoreApi;
 
-@:forward(map, flatMap)
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
   
+  public inline function map<R>(f:Outcome<T, Error>->R):Future<R>
+    return this.map(f);
+
+  public inline function flatMap<R>(f:Outcome<T, Error>->Future<R>):Future<R>
+    return this.flatMap(f);
+
   public inline function recover(f:Recover<T>):Future<T>
     return this.flatMap(function (o) return switch o {
       case Success(d): Future.sync(d);
       case Failure(e): f(e);
     });
         
-  public inline function handle(cb)
+  public inline function handle(cb:Callback<Outcome<T, Error>>):CallbackLink
     return this.handle(cb);
     
   @:to public function noise():Promise<Noise>
@@ -35,7 +40,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:from static inline function ofData<T>(d:T):Promise<T>
     return ofOutcome(Success(d));
     
-  @:noCompletion @:noUsing 
+  @:noUsing 
   static public inline function lift<T>(p:Promise<T>)
     return p;
 }
@@ -58,7 +63,7 @@ abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
 }
 
 @:callable
-private abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
+abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
   @:from static function ofSync<T>(f:Error->T):Recover<T>
     return function (e) return Future.sync(f(e));
 }
