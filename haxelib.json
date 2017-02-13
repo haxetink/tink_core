@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Integration with js.Promise",
-	"version": "1.4.0",
+	"releasenote": "Node.js fix",
+	"version": "1.6.2",
 	"url": "http://haxetink.org/tink_core"
 }

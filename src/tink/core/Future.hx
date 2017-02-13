@@ -1,44 +1,42 @@
 package tink.core;
 
-import tink.core.Callback;
-import haxe.ds.Option;
+using tink.CoreApi;
 
-using tink.core.Outcome;
+abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
-abstract Future<T>(Callback<T>->CallbackLink) {
-
-  public function new(f:Callback<T>->CallbackLink) this = f;  
+  public inline function new(f:Callback<T>->CallbackLink) 
+    this = new SimpleFuture(f);  
     
   public inline function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
-    return (this)(callback);
+    return this.handle(callback);
   
-  public function gather():Future<T> {
-    var op = Future.trigger(),
-        self = this;
-    return new Future(function (cb:Callback<T>) {
-      if (self != null) {
-        handle(op.trigger);
-        self = null;        
-      }
-      return op.asFuture().handle(cb);
-    });
+  public inline function eager():Future<T>
+    return this.eager();
+
+  public inline function gather():Future<T> 
+    return this.gather();
+  
+  public function first(other:Future<T>):Future<T> { // <-- consider making it lazy by default ... also pull down into FutureObject
+    var ret = Future.trigger();
+    var l1 = handle(ret.trigger);
+    var l2 = other.handle(ret.trigger);
+    var ret = ret.asFuture();
+    if (l1 != null)
+      ret.handle(l1);
+    if (l2 != null)
+      ret.handle(l2);
+    return ret;
   }
   
-  public function first(other:Future<T>):Future<T>
-    return Future.async(function (cb:T->Void) {
-      handle(cb);
-      other.handle(cb);
-    });
-  
-  public function map<A>(f:T->A, ?gather = true):Future<A> {
-    var ret = new Future(function (callback) return (this)(function (result) callback.invoke(f(result))));
+  public inline function map<A>(f:T->A, ?gather = true):Future<A> {
+    var ret = this.map(f);
     return
       if (gather) ret.gather();
       else ret;
   }
   
-  public function flatMap<A>(next:T->Future<A>, ?gather = true):Future<A> {
-    var ret = flatten(map(next, gather));
+  public inline function flatMap<A>(next:T->Future<A>, ?gather = true):Future<A> {
+    var ret = this.flatMap(next);
     return
       if (gather) ret.gather();
       else ret;    
@@ -50,21 +48,18 @@ abstract Future<T>(Callback<T>->CallbackLink) {
     }, gather);
   
   static public function flatten<A>(f:Future<Future<A>>):Future<A> 
-    return new Future(function (callback) {
-      var ret = null;
-      ret = f.handle(function (next:Future<A>) {
-        ret = next.handle(function (result) callback.invoke(result));
-      });
-      return ret;
-    });
+    return new NestedFuture(f);
   
   @:from inline static function fromTrigger<A>(trigger:FutureTrigger<A>):Future<A> 
     return trigger.asFuture();
   
   #if js
   static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
-    return Future.async(function(cb) promise.then(function(a) cb(Success(a)), function(e) cb(Failure(Error.withData('Promise rejected', e)))));
+    return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
   #end
+    
+  static inline public function asPromise<T>(s:Surprise<T, Error>):Promise<T>
+    return s;
   
   static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
     var ret = sync([]);
@@ -86,12 +81,12 @@ abstract Future<T>(Callback<T>->CallbackLink) {
   @:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>> 
     return ofMany(futures);
   
-  //TODO: use this as `sync` when Haxe stops upcasting ints
-  @:noUsing static public function lazy<A>(l:Lazy<A>):Future<A>
-    return new Future(function (cb:Callback<A>) { cb.invoke(l); return null; });    
+  //TODO: use this as `sync` for 2.0
+  @:noUsing static inline public function lazy<A>(l:Lazy<A>):Future<A>
+    return new SyncFuture(l);    
   
-  @:noUsing static public function sync<A>(v:A):Future<A> 
-    return new Future(function (callback) { callback.invoke(v); return null; } );
+  @:noUsing static inline public function sync<A>(v:A):Future<A> 
+    return new SyncFuture(v); 
     
   @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A> 
     if (lazy) 
@@ -136,37 +131,199 @@ abstract Future<T>(Callback<T>->CallbackLink) {
     return f.map(map);
 
   @:noUsing static public inline function trigger<A>():FutureTrigger<A> 
-    return new FutureTrigger();
+    return new FutureTrigger();  
+
+}
+
+private interface FutureObject<T> {
+  function map<R>(f:T->R):Future<R>;
+  function flatMap<R>(f:T->Future<R>):Future<R>;
+  function handle(callback:Callback<T>):CallbackLink;
+  function gather():Future<T>;
+  function eager():Future<T>;
+}
+
+private class SyncFuture<T> implements FutureObject<T> {
+  
+  var value:Lazy<T>;
+
+  public inline function new(value)
+    this.value = value;
+
+  public inline function map<R>(f:T->R):Future<R>
+    return new SyncFuture(value.map(f));
+
+  public inline function flatMap<R>(f:T->Future<R>):Future<R>
+    return new LazyFuture(value.map(f));
+
+  public function handle(cb:Callback<T>):CallbackLink {
+    cb.invoke(value);
+    return null;
+  }
+
+  public function eager()
+    return this;
+
+  public function gather()
+    return this;
+}
+
+private class LazyFuture<T> implements FutureObject<T> {
+  var l:Lazy<Future<T>>;
+
+  public function new(l)
+    this.l = l;
+
+  public inline function map<R>(f:T->R):Future<R>
+    return new LazyFuture(l.map(function (future) return future.map(f)));
+
+  public inline function flatMap<R>(f:T->Future<R>):Future<R>
+    return new LazyFuture(l.map(function (future) return future.flatMap(f)));
+
+  public function handle(cb:Callback<T>):CallbackLink
+    return l.get().handle(cb);
+
+  public function gather():Future<T>
+    return new LazyFuture(l.map(function (f) return f.gather()));
+
+  public function eager() 
+    return l.get().eager();
+  
     
 }
 
-class FutureTrigger<T> {
+private class SimpleFuture<T> implements FutureObject<T> {
+  
+  var f:Callback<T>->CallbackLink;
+  var gathered:Future<T>;
+
+  public inline function new(f) 
+    this.f = f;
+
+  public inline function handle(callback:Callback<T>):CallbackLink
+    return f(callback);
+
+  public inline function map<R>(f:T->R):Future<R>
+    return new SimpleFuture(function (cb) {
+      return handle(function (v) cb.invoke(f(v)));
+    });
+
+  public inline function flatMap<R>(f:T->Future<R>):Future<R>
+    return Future.flatten(map(f));
+
+  public inline function gather():Future<T> 
+    return FutureTrigger.gatherFuture(this);
+
+  public inline function eager():Future<T> {
+    var ret = gather();
+    ret.handle(function () {});
+    return ret;
+  }
+}
+
+private class NestedFuture<T> implements FutureObject<T> {
+  var outer:Future<Future<T>>;
+
+  public inline function new(outer)
+    this.outer = outer;
+
+  public inline function map<R>(f:T->R):Future<R>
+    return outer.flatMap(function (inner) return inner.map(f));
+
+  public inline function flatMap<R>(f:T->Future<R>):Future<R>
+    return outer.flatMap(function (inner) return inner.flatMap(f));
+  
+  public inline function gather():Future<T> 
+    return FutureTrigger.gatherFuture(this);
+
+  public inline function eager():Future<T> {
+    var ret = gather();
+    ret.handle(function () {});
+    return ret;
+  }
+  
+  public function handle(cb:Callback<T>) {
+    var ret = null;
+    ret = outer.handle(function (inner:Future<T>) {
+      ret = inner.handle(function (result) cb.invoke(result));
+    });
+    return ret;
+  }
+}
+
+class FutureTrigger<T> implements FutureObject<T> {
   var result:T;
   var list:CallbackList<T>;
-  var future:Future<T>;
-  public function new() {
+
+  public function new() 
     this.list = new CallbackList();
-    future = new Future(
-      function (callback)
-        return 
-          if (list == null) {
-            callback.invoke(result);
-            null;                        
-          }
-          else list.add(callback)
-    );
-  }
-  public inline function asFuture() return future;
   
-  public inline function trigger(result:T):Bool
+  public function handle(callback:Callback<T>):CallbackLink
+    return switch list {
+      case null: 
+        callback.invoke(result);
+        null;
+      case v:
+        v.add(callback);
+    }
+
+  public function map<R>(f:T->R):Future<R>
+    return switch list {
+      case null: Future.sync(f(result));
+      case v:
+        var ret = new FutureTrigger();
+        list.add(function (v) ret.trigger(f(v)));
+        ret;
+    }
+
+  public function flatMap<R>(f:T->Future<R>):Future<R>
+    return switch list {
+      case null: f(result);
+      case v:
+        var ret = new FutureTrigger();
+        list.add(function (v) f(v).handle(ret.trigger));
+        ret;
+    }
+
+  public inline function gather()
+    return this;
+
+  public inline function eager()
+    return this;
+
+  public inline function asFuture():Future<T>
+    return this;
+
+  static public function gatherFuture<T>(f:Future<T>):Future<T> {
+    var op = null;
+    return new Future<T>(function (cb:Callback<T>) {
+      if (op == null) {
+        op = new FutureTrigger();
+        f.handle(op.trigger);
+        f = null;        
+      }
+      return op.handle(cb);
+    });  
+  }
+
+  static var depth = 0;
+  public function trigger(result:T):Bool
     return
       if (list == null) false;
       else {
         var list = this.list;
         this.list = null;
         this.result = result;
-        list.invoke(result);
-        list.clear();//free callback links
+        inline function dispatch() {
+          depth++;
+          list.invoke(result);
+          list.clear();//free callback links          
+          depth--;
+        }
+        if (depth >= 1000)
+          Callback.defer(function () dispatch());
+        else
+          dispatch();
         true;
       }
 }
@@ -176,6 +333,8 @@ typedef Surprise<D, F> = Future<Outcome<D, F>>;
 #if js
 class JsPromiseTools {
   static inline public function toSurprise<A>(promise:js.Promise<A>):Surprise<A, Error>
+    return Future.ofJsPromise(promise);
+  static inline public function toPromise<A>(promise:js.Promise<A>):Promise<A>
     return Future.ofJsPromise(promise);
 }
 #end

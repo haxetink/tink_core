@@ -19,6 +19,7 @@ class RunTests {
     new Pairs(),
     new Promises(),
     new Sequences(),
+    new Options(),
   ];
   static function main() {  
     #if js//works for nodejs and browsers alike
