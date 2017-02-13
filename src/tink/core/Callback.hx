@@ -65,14 +65,11 @@ abstract CallbackLink(LinkObject) from LinkObject {
 private class SimpleLink implements LinkObject {
   var f:Void->Void;
 
-  public function new(f) 
+  public inline function new(f) 
     this.f = f;
 
-  public function dissolve()
-    switch f {
-      case null:
-      case v: f = null; v();
-    }
+  public inline function dissolve()
+    if (f != null) f();
 }
 
 private class LinkPair implements LinkObject {
