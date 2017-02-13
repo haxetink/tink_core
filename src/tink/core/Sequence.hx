@@ -37,12 +37,5 @@ abstract Sequence<T>(Array<T>) from Array<T> to Array<T> {
     return if(this == null) '[]' else this.toString();
     
   public inline function iterator()
-    return if(this == null) EmptyIterator.instance else this.iterator();
-}
-
-class EmptyIterator {
-  public static var instance = new EmptyIterator();
-  inline function new() {}
-  public inline function hasNext() return false;
-  public inline function next() return null;
+    return if(this == null) [].iterator() else this.iterator();
 }
