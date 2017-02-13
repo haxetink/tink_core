@@ -50,9 +50,6 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   static public function flatten<A>(f:Future<Future<A>>):Future<A> 
     return new NestedFuture(f);
   
-  @:from inline static function fromTrigger<A>(trigger:FutureTrigger<A>):Future<A> 
-    return trigger.asFuture();
-  
   #if js
   static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
     return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
