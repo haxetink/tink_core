@@ -60,8 +60,8 @@ private class LazyFunc<T> implements LazyObject<T> {
   }
 
   public inline function map<R>(f:T->R):Lazy<R>
-    return new LazyFunc(function () return f(this.f()));
+    return new LazyFunc(function () return f(get()));
 
   public inline function flatMap<R>(f:T->Lazy<R>):Lazy<R>
-    return new LazyFunc(function () return f(this.f()).get());
+    return new LazyFunc(function () return f(get()).get());
 }
