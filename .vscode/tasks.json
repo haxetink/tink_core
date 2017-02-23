@@ -1,7 +1,7 @@
 {
     "version": "0.1.0",
-    "command": "haxe",
-    "args": ["dev.hxml", "--times"],
+    "command": "haxelib",
+    "args": ["run", "travix", "node"],
     "problemMatcher": {
         "owner": "haxe",
         "pattern": {

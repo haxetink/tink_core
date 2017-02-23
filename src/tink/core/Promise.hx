@@ -40,6 +40,21 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:from static inline function ofData<T>(d:T):Promise<T>
     return ofOutcome(Success(d));
     
+  @:from static public function ofMany<T>(a:Array<Promise<T>>):Promise<Array<T>> {
+    
+    function loop(index:Int):Promise<Array<T>>
+      return 
+        if (index == a.length) [];
+        else
+          a[index].next(
+            function (head) return loop(index+1).next(
+              function (tail) return [head].concat(tail)
+            )
+          );
+
+    return loop(0);
+  }
+
   @:noUsing 
   static public inline function lift<T>(p:Promise<T>)
     return p;
