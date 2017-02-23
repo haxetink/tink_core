@@ -3,7 +3,8 @@ package;
 using tink.CoreApi;
 
 class Promises extends Base {
-  function testMany() {
+  function testInParallel() {
+    
     var counter = 0;
     function make(fail:Bool) 
       return Future.async(function (cb) {
@@ -12,14 +13,44 @@ class Promises extends Base {
       }, true);
 
     counter = 0;
-    var p = Promise.ofMany([for (i in 0...10) make(i > 5)]);
+    var p = Promise.inParallel([for (i in 0...10) make(i > 5)], true);
+    assertEquals(0, counter);
+    p.handle(function (o) {
+      assertFalse(o.isSuccess());
+    });
+    assertEquals(7, counter);   
+     
+    counter = 0;
+    var t = Future.trigger();
+    var p = Promise.inParallel([t, make(false), make(false)], true);
+    assertEquals(0, counter);
+    var done = false;
+    p.handle(function (o) {
+      done = true;
+      assertFalse(o.isSuccess());
+    });
+    assertEquals(2, counter);    
+    assertFalse(done);
+    t.trigger(Failure(new Error('test')));
+    assertTrue(done);
+  }
+  function testInSequence() {
+    var counter = 0;
+    function make(fail:Bool) 
+      return Future.async(function (cb) {
+        var id = counter++;
+        cb(if (fail) Failure(new Error('error')) else Success(id));
+      }, true);
+
+    counter = 0;
+    var p = Promise.inSequence([for (i in 0...10) make(i > 5)]);
     assertEquals(0, counter);
     p.handle(function (o) {
       assertFalse(o.isSuccess());
     });
     assertEquals(7, counter);
     counter = 0;
-    var p = Promise.ofMany([for (i in 0...10) make(false)]);
+    var p = Promise.inSequence([for (i in 0...10) make(false)]);
     assertEquals(0, counter);
     p.handle(function (o) {
       assertEquals('0,1,2,3,4,5,6,7,8,9', o.sure().join(','));

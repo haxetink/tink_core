@@ -39,8 +39,40 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
   @:from static inline function ofData<T>(d:T):Promise<T>
     return ofOutcome(Success(d));
-    
-  @:from static public function ofMany<T>(a:Array<Promise<T>>):Promise<Array<T>> {
+
+  static public function inParallel<T>(a:Array<Promise<T>>, ?lazy:Bool):Promise<Array<T>> 
+    return Future.async(function (cb) {
+      var result = [], 
+          pending = a.length,
+          links:CallbackLink = null,
+          sync = false;
+
+      function done(o) {
+        if (links == null) sync = true;
+        else links.dissolve();
+        cb(o);
+      }
+
+      function fail(e:Error) {
+        done(Failure(e));
+      }
+      function set(index, value) {
+        result[index] = value;
+        if (--pending == 0) 
+          done(Success(result));
+      }
+      links = [for (i in 0...a.length) {
+        if (sync) break;
+        a[i].handle(function (o) switch o {
+          case Success(v): set(i, v);
+          case Failure(e): fail(e);
+        });
+      }];
+      if (sync) 
+        links.dissolve();
+    }, lazy);
+  
+  static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>> {
     
     function loop(index:Int):Promise<Array<T>>
       return 
