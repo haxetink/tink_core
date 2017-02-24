@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Add Promise.inSequence and Promise.inParallel.",
-	"version": "1.8.0",
+	"releasenote": "Fix for 3.2.1",
+	"version": "1.8.1",
 	"url": "http://haxetink.org/tink_core"
 }
