@@ -61,13 +61,19 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
         if (--pending == 0) 
           done(Success(result));
       }
-      links = [for (i in 0...a.length) {
+      
+      var linkArray = [];
+      
+      for (i in 0...a.length) {
         if (sync) break;
-        a[i].handle(function (o) switch o {
+        linkArray.push(a[i].handle(function (o) switch o {
           case Success(v): set(i, v);
           case Failure(e): fail(e);
-        });
-      }];
+        }));
+      };
+
+      links = linkArray;
+
       if (sync) 
         links.dissolve();
     }, lazy);
