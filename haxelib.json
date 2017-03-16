@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Fix for 3.2.1",
-	"version": "1.8.1",
+	"releasenote": "Add Promise.tryRecover and Future.next",
+	"version": "1.9.0",
 	"url": "http://haxetink.org/tink_core"
 }
