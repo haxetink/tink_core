@@ -154,7 +154,10 @@ private class SyncFuture<T> implements FutureObject<T> {
     return new SyncFuture(value.map(f));
 
   public inline function flatMap<R>(f:T->Future<R>):Future<R>
-    return new LazyFuture(value.map(f));
+    return new SimpleFuture({
+      var l = value.map(f);
+      function (cb) return l.get().handle(cb);
+    });
 
   public function handle(cb:Callback<T>):CallbackLink {
     cb.invoke(value);
@@ -166,30 +169,6 @@ private class SyncFuture<T> implements FutureObject<T> {
 
   public function gather()
     return this;
-}
-
-private class LazyFuture<T> implements FutureObject<T> {
-  var l:Lazy<Future<T>>;
-
-  public function new(l)
-    this.l = l;
-
-  public inline function map<R>(f:T->R):Future<R>
-    return new LazyFuture(l.map(function (future) return future.map(f)));
-
-  public inline function flatMap<R>(f:T->Future<R>):Future<R>
-    return new LazyFuture(l.map(function (future) return future.flatMap(f)));
-
-  public function handle(cb:Callback<T>):CallbackLink
-    return l.get().handle(cb);
-
-  public function gather():Future<T>
-    return new LazyFuture(l.map(function (f) return f.gather()));
-
-  public function eager() 
-    return l.get().eager();
-  
-    
 }
 
 private class SimpleFuture<T> implements FutureObject<T> {
