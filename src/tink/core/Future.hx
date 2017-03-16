@@ -41,6 +41,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
       if (gather) ret.gather();
       else ret;    
   }  
+
+  public function next<R>(n:Next<T, R>):Promise<R>
+    return this.flatMap(function (v) return n(v));
   
   public function merge<A, R>(other:Future<A>, merger:T->A->R, ?gather = true):Future<R> 
     return flatMap(function (t:T) {

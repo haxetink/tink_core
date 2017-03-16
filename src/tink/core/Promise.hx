@@ -10,6 +10,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public inline function flatMap<R>(f:Outcome<T, Error>->Future<R>):Future<R>
     return this.flatMap(f);
 
+  public inline function tryRecover(f:Next<Error, T>):Promise<T>
+    return this.flatMap(function (o) return switch o {
+      case Success(d): Future.sync(o);
+      case Failure(e): f(e);
+    });
+
   public inline function recover(f:Recover<T>):Future<T>
     return this.flatMap(function (o) return switch o {
       case Success(d): Future.sync(d);
