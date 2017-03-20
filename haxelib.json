@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Add Promise.tryRecover and Future.next",
-	"version": "1.9.0",
+	"releasenote": "Fix odd performance issue in flatMap.",
+	"version": "1.9.1",
 	"url": "http://haxetink.org/tink_core"
 }
