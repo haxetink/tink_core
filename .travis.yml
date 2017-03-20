@@ -25,3 +25,9 @@ script:
   - haxelib run travix cpp
   - haxelib run travix cs
   - haxelib run travix php
+
+env:
+  secure: dhVtIkMcUYAyAK92oEzBiuHE2uH9MQ46PD8zdKnnky9WiH54x/Y167Wt1NvUhFxhNzfu44VpI5d1ngnSV5pwum+E/RfoJNoqIsRsy1dL/vnTwyBdGDwbBJc/RDqXYUQnF8okR3JBZKmr9FLXTl5DMKOP+mJE1IF6GLijTDR4pf8=
+
+after_success:
+- haxelib run travix release  
