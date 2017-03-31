@@ -30,6 +30,10 @@ abstract Callback<T>(T->Void) from (T->Void) {
       tink.RunLoop.current.work(f);
     #elseif hxnodejs
       js.Node.process.nextTick(f);
+    #elseif luxe
+      Luxe.timer.schedule(0, f);
+    #elseif snow
+      snow.api.Timer.delay(0, f);
     #elseif ((haxe_ver >= 3.3) || js || flash || openfl)
       haxe.Timer.delay(f, 0);
     #else
