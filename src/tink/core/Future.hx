@@ -231,6 +231,7 @@ private class NestedFuture<T> implements FutureObject<T> {
 }
 
 class FutureTrigger<T> implements FutureObject<T> {
+  public var triggered(get, never):Bool;
   var result:T;
   var list:CallbackList<T>;
 
@@ -238,13 +239,13 @@ class FutureTrigger<T> implements FutureObject<T> {
     this.list = new CallbackList();
   
   public function handle(callback:Callback<T>):CallbackLink
-    return switch list {
-      case null: 
+    return
+      if(triggered) {
         callback.invoke(result);
         null;
-      case v:
-        v.add(callback);
-    }
+      } else {
+        list.add(callback);
+      }
 
   public function map<R>(f:T->R):Future<R>
     return switch list {
@@ -288,7 +289,7 @@ class FutureTrigger<T> implements FutureObject<T> {
   static var depth = 0;
   public function trigger(result:T):Bool
     return
-      if (list == null) false;
+      if (triggered) false;
       else {
         var list = this.list;
         this.list = null;
@@ -305,6 +306,9 @@ class FutureTrigger<T> implements FutureObject<T> {
           dispatch();
         true;
       }
+      
+  inline function get_triggered():Bool
+    return list == null;
 }
 
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
