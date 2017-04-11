@@ -28,8 +28,17 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:to public function noise():Promise<Noise>
     return (this:Promise<T>).next(function (v) return Noise);
     
-  public function next<R>(f:Next<T, R>):Promise<R> 
-    return this >> function (result:T) return (f(result) : Surprise<R, Error>);
+  public function next<R>(f:Next<T, R>, ?gather = true):Promise<R> 
+    return this.flatMap(function (o) return switch o {
+        case Success(d): f(d);
+        case Failure(f): Future.sync(Failure(f));
+      }, gather);
+    
+  public function merge<A, R>(other:Promise<A>, merger:Combiner<T, A, R>, ?gather = true):Promise<R> 
+    return next(function (t) return other.next(function (a) return merger(t, a), false), gather);
+    
+  @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
+    return a.merge(b, function (a, b) return new Pair(a, b)); // TODO: a.merge(b, Pair.new); => File "src/typing/type.ml", line 555, characters 9-15: Assertion failed
   
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
     return (s : Surprise<T, Error>);
