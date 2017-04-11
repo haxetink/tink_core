@@ -126,3 +126,17 @@ abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
   @:from static function ofSync<T>(f:Error->T):Recover<T>
     return function (e) return Future.sync(f(e));
 }
+
+@:callable
+abstract Combiner<In1, In2, Out>(In1->In2->Promise<Out>) from In1->In2->Promise<Out> {
+      
+  @:from static function ofSafe<In1, In2, Out>(f:In1->In2->Outcome<Out, Error>):Combiner<In1, In2, Out> 
+    return function (x1, x2) return f(x1, x2);
+    
+  @:from static function ofSync<In1, In2, Out>(f:In1->In2->Future<Out>):Combiner<In1, In2, Out> 
+    return function (x1, x2) return f(x1, x2);
+    
+  @:from static function ofSafeSync<In1, In2, Out>(f:In1->In2->Out):Combiner<In1, In2, Out> 
+    return function (x1, x2) return f(x1, x2);
+	
+}
