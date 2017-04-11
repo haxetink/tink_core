@@ -30,6 +30,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     
   public function next<R>(f:Next<T, R>):Promise<R> 
     return this >> function (result:T) return (f(result) : Surprise<R, Error>);
+    
+  public function merge<A, R>(other:Promise<A>, merger:Combiner<T, A, R>):Promise<R> 
+    return next(function (t) return other.next(function (a) return merger(t, a)));
+    
+  @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
+    return a.merge(b, function (a, b) return new Pair(a, b));
   
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
     return (s : Surprise<T, Error>);
@@ -45,12 +51,6 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
   @:from static inline function ofData<T>(d:T):Promise<T>
     return ofOutcome(Success(d));
-    
-  @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
-    return (a:Surprise<A, Error>).merge(b, function (a, b) return switch [a, b] {
-      case [Success(a), Success(b)]: Success(new Pair(a, b));
-      case [_, Failure(e)], [Failure(e), _]: Failure(e);
-    });
 
   static public function inParallel<T>(a:Array<Promise<T>>, ?lazy:Bool):Promise<Array<T>> 
     return Future.async(function (cb) {
