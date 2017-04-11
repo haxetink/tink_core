@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Fix odd performance issue in flatMap.",
-	"version": "1.9.1",
+	"releasenote": "Promise.and()",
+	"version": "1.10.0",
 	"url": "http://haxetink.org/tink_core"
 }
