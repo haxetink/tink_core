@@ -15,7 +15,7 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 - [Named](#named)
 - [Any](#any)
 - [Pair](#pair)
-	- 
+	- <a></a>
 		- [Nullness](#nullness)
 	- [MPair](#mpair)
 - [Lazy](#lazy)
@@ -30,7 +30,7 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 	- [CallbackList](#callbacklist)
 		- [Registering callbacks](#registering-callbacks)
 - [Future](#future)
-	- 
+	- <a></a>
 		- [Why use futures?](#why-use-futures?)
 		- [Transformation](#transformation)
 		- [Composition](#composition)
@@ -44,7 +44,7 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 	- [Next](#next)
 	- [Promise vs Surprise](#promise-vs-surprise)
 - [Signal](#signal)
-	- 
+	- <a></a>
 		- [Why use signals?](#why-use-signals?)
 		- [Wrapping 3rd party APIs](#wrapping-3rd-party-apis)
 		- [Rolling your own](#rolling-your-own)
