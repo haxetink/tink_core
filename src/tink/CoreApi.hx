@@ -1,6 +1,7 @@
 package tink;
 
 typedef Next<In, Out> = tink.core.Promise.Next<In, Out>;
+typedef Combiner<In1, In2, Out> = tink.core.Promise.Combiner<In1, In2, Out>;
 typedef Promise<T> = tink.core.Promise<T>;
 typedef Future<T> = tink.core.Future<T>;
 typedef Surprise<D, F> = tink.core.Future.Surprise<D, F>;
