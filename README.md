@@ -45,7 +45,7 @@ In addition, you can import all modules at once with `using tink.CoreApi;`.
 	- [Promise vs Surprise](#promise-vs-surprise)
 - [Signal](#signal)
 	- <a></a>
-		- [Why use signals?](#why-use-signals?)
+		- [Why use signals?](#why-use-signals)
 		- [Wrapping 3rd party APIs](#wrapping-3rd-party-apis)
 		- [Rolling your own](#rolling-your-own)
 		- [No way to dispatch from outside](#no-way-to-dispatch-from-outside)
