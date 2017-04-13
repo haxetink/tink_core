@@ -18,7 +18,7 @@ class RunTests {
     new Refs(),
     new Pairs(),
     new Promises(),
-    //new Sequences(),
+    new Annexes(),
     new Options(),
   ];
   static function main() {  
