@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Promise.and()",
-	"version": "1.10.0",
+	"releasenote": "Added Annex as well as Promise.and, improved interoperability with luxe",
+	"version": "1.11.0",
 	"url": "http://haxetink.org/tink_core"
 }
