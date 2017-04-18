@@ -1,0 +1,17 @@
+- **Getting started**
+  - [Install](getting-started/install.md)
+- **Types**
+  - [Annex](types/annex.md)
+  - [Any](types/any.md)
+  - [Callback](types/callback.md)
+  - [Either](types/either.md)
+  - [Error](types/error.md)
+  - [Future](types/future.md)
+  - [Lazy](types/lazy.md)
+  - [Named](types/named.md)
+  - [Noise](types/noise.md)
+  - [Outcome](types/outcome.md)
+  - [Pair](types/pair.md)
+  - [Promise](types/promise.md)
+  - [Ref](types/ref.md)
+  - [Signal](types/signal.md)
