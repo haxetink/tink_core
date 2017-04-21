@@ -32,7 +32,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return this >> function (result:T) return (f(result) : Surprise<R, Error>);
     
   public inline function swap<R>(v:R):Promise<R> 
-    return map(function(_) return v);
+    return this >> function(_) return v;
   
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
     return (s : Surprise<T, Error>);
