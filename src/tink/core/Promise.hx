@@ -30,6 +30,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     
   public function next<R>(f:Next<T, R>):Promise<R> 
     return this >> function (result:T) return (f(result) : Surprise<R, Error>);
+    
+  public inline function swap<R>(v:R):Promise<R> 
+    return map(function(_) return v);
   
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
     return (s : Surprise<T, Error>);
@@ -115,9 +118,6 @@ abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
     
   @:from static function ofSafeSync<In, Out>(f:In->Out):Next<In, Out> 
     return function (x) return f(x);
-    
-  @:from static function ofConst<In, Out>(v:Out):Next<In, Out> 
-    return function(_) return v;
     
   @:op(a * b) static function _chain<A, B, C>(a:Next<A, B>, b:Next<B, C>):Next<A, C>
     return function (v) return a(v).next(b);
