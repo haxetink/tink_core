@@ -135,6 +135,11 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
 }
 
+abstract Futuristic<T>(Future<T>) from Future<T> to Future<T> {
+  @:from static function ofAny<T>(v:T):Futuristic<T>
+    return Future.sync(v);
+}
+
 private interface FutureObject<T> {
   function map<R>(f:T->R):Future<R>;
   function flatMap<R>(f:T->Future<R>):Future<R>;
