@@ -17,6 +17,12 @@ class OptionTools {
       case Some(v): v;
       default: l.get();
     }
+
+  static public inline function orNull<T>(o:Option<T>):Null<T>
+    return switch o {
+      case Some(v): v;
+      default: null;
+    }
     
   static public inline function filter<T>(o:Option<T>, f:T->Bool):Option<T>
     return switch o {
