@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Added Annex as well as Promise.and, improved interoperability with luxe",
-	"version": "1.11.0",
+	"releasenote": "Add Promise.swap, Option.orNull, Futuristic.",
+	"version": "1.12.0",
 	"url": "http://haxetink.org/tink_core"
 }
