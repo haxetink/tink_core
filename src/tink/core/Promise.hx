@@ -4,6 +4,9 @@ using tink.CoreApi;
 
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
   
+  public inline function eager():Promise<T>
+    return this.eager();
+
   public inline function map<R>(f:Outcome<T, Error>->R):Future<R>
     return this.map(f);
 
