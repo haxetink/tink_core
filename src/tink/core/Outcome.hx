@@ -87,7 +87,13 @@ class OutcomeTools {
   }
   
   static public function swap<A, B, F>(outcome:Outcome<A, F>, v:B)
-    return map(outcome, function(_) return v);
+    return 
+      switch (outcome) {
+        case Success(a): 
+          Success(v);
+        case Failure(f): 
+          Failure(f);
+      }
   
   static public function attempt<D, F>(f:Void->D, report:Dynamic->F) 
     return
