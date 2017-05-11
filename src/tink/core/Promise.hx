@@ -4,6 +4,8 @@ using tink.CoreApi;
 
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
   
+  public static var NOISE:Promise<Noise> = Future.sync(Success(Noise));
+  
   public inline function eager():Promise<T>
     return this.eager();
 

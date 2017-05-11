@@ -3,6 +3,8 @@ package tink.core;
 using tink.CoreApi;
 
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
+  
+  public static var NOISE:Future<Noise> = Future.sync(Noise);
 
   public inline function new(f:Callback<T>->CallbackLink) 
     this = new SimpleFuture(f);  
