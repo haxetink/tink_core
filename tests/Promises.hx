@@ -3,6 +3,13 @@ package;
 using tink.CoreApi;
 
 class Promises extends Base {
+
+  function testRecover() {
+    var p:Promise<Int> = new Error("test");
+    p.recover(function (_) return 4).handle(assertEquals.bind(4));
+    p.recover(function (_) return Future.sync(5)).handle(assertEquals.bind(5));
+  }
+
   function testInParallel() {
     
     var counter = 0;

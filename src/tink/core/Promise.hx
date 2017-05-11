@@ -6,6 +6,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   
   public static var NOISE:Promise<Noise> = Future.sync(Success(Noise));
   
+  public inline function eager():Promise<T>
+    return this.eager();
+
   public inline function map<R>(f:Outcome<T, Error>->R):Future<R>
     return this.map(f);
 
@@ -35,6 +38,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
         case Success(d): f(d);
         case Failure(f): Future.sync(Failure(f));
       }, gather);
+  
+  public inline function swap<R>(v:R):Promise<R> 
+    return this >> function(_) return v;
     
   public function merge<A, R>(other:Promise<A>, merger:Combiner<T, A, R>, ?gather = true):Promise<R> 
     return next(function (t) return other.next(function (a) return merger(t, a), false), gather);
@@ -133,7 +139,7 @@ abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
 }
 
 @:callable
-abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
+abstract Recover<T>(Error->Futuristic<T>) from Error->Futuristic<T> {
   @:from static function ofSync<T>(f:Error->T):Recover<T>
     return function (e) return Future.sync(f(e));
 }
