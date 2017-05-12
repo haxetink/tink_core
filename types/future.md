@@ -70,9 +70,9 @@ function loadFromParameters(params: { host: String, port: Int, url:String, param
 }
 
 function loadAll(params:Array<{ host:String, port:Int, url:String, params:Map<String> }):Future<Array<String>> {
-  return [for (p in params)
+  return Future.ofMany([for (p in params)
     loadFromParameters(params)
-  ];
+  ]);
 }
 ```
 
