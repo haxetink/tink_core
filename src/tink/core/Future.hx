@@ -2,6 +2,7 @@ package tink.core;
 
 using tink.CoreApi;
 
+@:forward(handle, gather, eager)
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   
   public static var NOISE:Future<Noise> = Future.sync(Noise);
@@ -9,19 +10,13 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
   public inline function new(f:Callback<T>->CallbackLink) 
     this = new SimpleFuture(f);  
-    
-  public inline function handle(callback:Callback<T>):CallbackLink //TODO: consider null-case
-    return this.handle(callback);
   
-  public inline function eager():Future<T>
-    return this.eager();
-
-  public inline function gather():Future<T> 
-    return this.gather();
-  
+  /**
+   *  Creates a future that contains the first result from `this` or `other`
+   */
   public function first(other:Future<T>):Future<T> { // <-- consider making it lazy by default ... also pull down into FutureObject
     var ret = Future.trigger();
-    var l1 = handle(ret.trigger);
+    var l1 = this.handle(ret.trigger);
     var l2 = other.handle(ret.trigger);
     var ret = ret.asFuture();
     if (l1 != null)
@@ -31,6 +26,10 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
     return ret;
   }
   
+  /**
+   *  Creates a new future by applying a transform function to the result.
+   *  Different from `flatMap`, the transform function of `map` returns a sync value
+   */
   public inline function map<A>(f:T->A, ?gather = true):Future<A> {
     var ret = this.map(f);
     return
@@ -38,32 +37,55 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
       else ret;
   }
   
+  /**
+   *  Creates a new future by applying a transform function to the result.
+   *  Different from `map`, the transform function of `flatMap` returns a `Future`
+   */
   public inline function flatMap<A>(next:T->Future<A>, ?gather = true):Future<A> {
     var ret = this.flatMap(next);
     return
       if (gather) ret.gather();
       else ret;    
   }  
-
+  
+  /**
+   *  Like `map` and `flatMap` but with a polymorphic transformer and return a `Promise`
+   *  @see `Next`
+   */
   public function next<R>(n:Next<T, R>):Promise<R>
     return this.flatMap(function (v) return n(v));
   
+  /**
+   *  Merges two futures into one by applying the merger function on the two future values
+   */
   public function merge<A, R>(other:Future<A>, merger:T->A->R, ?gather = true):Future<R> 
     return flatMap(function (t:T) {
       return other.map(function (a:A) return merger(t, a), false);
     }, gather);
   
+  /**
+   *  Flattens `Future<Future<A>>` into `Future<A>`
+   */
   static public function flatten<A>(f:Future<Future<A>>):Future<A> 
     return new NestedFuture(f);
   
   #if js
+  /**
+   *  Casts a js.Promise into a Surprise
+   */
   static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
     return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
   #end
     
+  /**
+   *  Casts a Surprise into a Promise
+   */
   static inline public function asPromise<T>(s:Surprise<T, Error>):Promise<T>
     return s;
   
+  /**
+   *  Merges multiple futures into Future<Array<A>>
+   */
   static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
     var ret = sync([]);
     for (f in futures)
@@ -88,9 +110,17 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:noUsing static inline public function lazy<A>(l:Lazy<A>):Future<A>
     return new SyncFuture(l);    
   
+  /**
+   *  Creates a sync future.
+   *  Example: `var i = Future.sync(1); // Future<Int>`
+   */
   @:noUsing static inline public function sync<A>(v:A):Future<A> 
     return new SyncFuture(v); 
     
+  /**
+   *  Creates an async future
+   *  Example: `var i = Future.async(function(cb) cb(1)); // Future<Int>`
+   */
   @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A> 
     if (lazy) 
       return flatten(Future.lazy(async.bind(f, false)));
@@ -100,12 +130,21 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
       return op;      
     }    
     
+  /**
+   *  Same as `first`
+   */
   @:noCompletion @:op(a || b) static public function or<A>(a:Future<A>, b:Future<A>):Future<A>
     return a.first(b);
     
+  /**
+   *  Same as `first`, but use `Either` to handle the two different types
+   */
   @:noCompletion @:op(a || b) static public function either<A, B>(a:Future<A>, b:Future<B>):Future<Either<A, B>>
     return a.map(Either.Left, false).first(b.map(Either.Right, false));
       
+  /**
+   *  Uses `Pair` to merge two futures
+   */
   @:noCompletion @:op(a && b) static public function and<A, B>(a:Future<A>, b:Future<B>):Future<Pair<A, B>>
     return a.merge(b, function (a, b) return new Pair(a, b));
   
@@ -133,6 +172,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:noCompletion @:op(a >> b) static public function _map<T, R>(f:Future<T>, map:T->R)
     return f.map(map);
 
+  /**
+   *  Creates a new `FutureTrigger`
+   */
   @:noUsing static public inline function trigger<A>():FutureTrigger<A> 
     return new FutureTrigger();  
 
@@ -144,10 +186,25 @@ abstract Futuristic<T>(Future<T>) from Future<T> to Future<T> {
 }
 
 private interface FutureObject<T> {
+
   function map<R>(f:T->R):Future<R>;
   function flatMap<R>(f:T->Future<R>):Future<R>;
+  /**
+   *  Registers a callback to handle the future result.
+   *  If the result is already available, the callback will be invoked immediately.
+   *  @return A `CallbackLink` instance that can be used to cancel the callback, no effect if the callback is already invoked 
+   */
   function handle(callback:Callback<T>):CallbackLink;
+  /**
+   *  Caches the result to ensure the underlying tranform is performed once only.
+   *  Useful for tranformed futures, such as product of `map` and `flatMap`
+   *  so that the transformation function will not be invoked for every callback
+   */
   function gather():Future<T>;
+  /**
+   *  Makes this future eager.
+   *  Futures are lazy by default, i.e. it does not try to fetch the result until someone `handle` it
+   */
   function eager():Future<T>;
 }
 
@@ -291,7 +348,7 @@ class FutureTrigger<T> implements FutureObject<T> {
   public inline function asFuture():Future<T>
     return this;
 
-  static public function gatherFuture<T>(f:Future<T>):Future<T> {
+  @:noUsing static public function gatherFuture<T>(f:Future<T>):Future<T> {
     var op = null;
     return new Future<T>(function (cb:Callback<T>) {
       if (op == null) {
@@ -304,6 +361,9 @@ class FutureTrigger<T> implements FutureObject<T> {
   }
 
   static var depth = 0;
+  /**
+   *  Triggers a value for this future
+   */
   public function trigger(result:T):Bool
     return
       if (list == null) false;
