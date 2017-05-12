@@ -137,4 +137,15 @@ class Futures extends Base {
       
     assertTrue(handled);
   }
+  
+  function testNever() {
+    var f:Future<Int> = cast Future.NEVER; 
+    f.handle(function () {}).dissolve();
+    function foo<A>() {
+      var f:Future<A> = cast Future.NEVER; 
+      f.handle(function () {}).dissolve();  
+    }
+    foo();
+    assertTrue(true);
+  }
 }
