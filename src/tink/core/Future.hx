@@ -5,6 +5,7 @@ using tink.CoreApi;
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   
   public static var NOISE:Future<Noise> = Future.sync(Noise);
+  public static var NEVER:Future<Dynamic> = Future.async(function(_){});
 
   public inline function new(f:Callback<T>->CallbackLink) 
     this = new SimpleFuture(f);  
