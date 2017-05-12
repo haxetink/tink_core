@@ -5,7 +5,7 @@ using tink.CoreApi;
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   
   public static var NOISE:Future<Noise> = Future.sync(Noise);
-  public static var NEVER:Future<Dynamic> = Future.async(function(_){});
+  public static var NEVER:Future<Dynamic> = NeverFuture.inst;
 
   public inline function new(f:Callback<T>->CallbackLink) 
     this = new SimpleFuture(f);  
@@ -149,6 +149,16 @@ private interface FutureObject<T> {
   function handle(callback:Callback<T>):CallbackLink;
   function gather():Future<T>;
   function eager():Future<T>;
+}
+
+private class NeverFuture<T> implements FutureObject<T> {
+  public static var inst(default, null):NeverFuture<Dynamic> = new NeverFuture();
+  function new() {}
+  public function map<R>(f:T->R):Future<R> return cast inst;
+  public function flatMap<R>(f:T->Future<R>):Future<R> return cast inst;
+  public function handle(callback:Callback<T>):CallbackLink return null;
+  public function gather():Future<T> return cast inst;
+  public function eager():Future<T> return cast inst;
 }
 
 private class SyncFuture<T> implements FutureObject<T> {
