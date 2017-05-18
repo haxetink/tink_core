@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Add Promise.eager",
-	"version": "1.13.0",
+	"releasenote": "Add Promise.NEVER, Future.NEVER",
+	"version": "1.13.1",
 	"url": "http://haxetink.org/tink_core"
 }
