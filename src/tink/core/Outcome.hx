@@ -138,6 +138,12 @@ class OutcomeTools {
       try Success(f())
       catch (e:Dynamic) 
         Failure(report(e));
+        
+  static public function flatten<D, F>(o:Outcome<Outcome<D, F>, F>):Outcome<D, F>
+    return switch o {
+      case Success(Success(d)): Success(d);
+      case Success(Failure(f)) | Failure(f): Failure(f);
+    }
 }
 
 private abstract OutcomeMapper<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Outcome<DOut, FOut> }) {
