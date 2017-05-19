@@ -29,5 +29,10 @@ script:
 env:
   secure: dhVtIkMcUYAyAK92oEzBiuHE2uH9MQ46PD8zdKnnky9WiH54x/Y167Wt1NvUhFxhNzfu44VpI5d1ngnSV5pwum+E/RfoJNoqIsRsy1dL/vnTwyBdGDwbBJc/RDqXYUQnF8okR3JBZKmr9FLXTl5DMKOP+mJE1IF6GLijTDR4pf8=
 
-after_success:
-- haxelib run travix release  
+jobs:
+  include:
+    - stage: deploy
+      os: linux
+      haxe: "3.2.1"
+      script: skip
+      after_success: haxelib run travix release
