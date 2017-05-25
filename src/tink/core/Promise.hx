@@ -27,6 +27,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
       case Success(d): Future.sync(d);
       case Failure(e): f(e);
     });
+  
+  public function mapError(f:Error->Error):Promise<T>
+    return this.map(function(o) return switch o {
+      case Success(_): o;
+      case Failure(e): Failure(f(e));
+    });
         
   public inline function handle(cb:Callback<Outcome<T, Error>>):CallbackLink
     return this.handle(cb);
