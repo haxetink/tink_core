@@ -48,6 +48,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   
   public inline function swap<R>(v:R):Promise<R> 
     return this >> function(_) return v;
+  
+  public inline function swapError(e:Error):Promise<T> 
+    return mapError(function(_) return e);
     
   public function merge<A, R>(other:Promise<A>, merger:Combiner<T, A, R>, ?gather = true):Promise<R> 
     return next(function (t) return other.next(function (a) return merger(t, a), false), gather);
