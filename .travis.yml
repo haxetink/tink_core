@@ -7,9 +7,9 @@ haxe:
   - "3.2.1"
   - development
   
-matrix:
-  allow_failures:
-    - haxe: development
+# matrix:
+#   allow_failures:
+#     - haxe: development
     
 install:
   - haxelib install travix
@@ -34,6 +34,6 @@ jobs:
     - stage: deploy
       os: linux
       haxe: "3.2.1"
-      matrix: null
+      # matrix: null
       script: skip
       after_success: haxelib run travix release
