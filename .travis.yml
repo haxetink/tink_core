@@ -34,5 +34,6 @@ jobs:
     - stage: deploy
       os: linux
       haxe: "3.2.1"
+      matrix: null
       script: skip
       after_success: haxelib run travix release
