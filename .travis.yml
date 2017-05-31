@@ -5,8 +5,10 @@ language: haxe
 
 haxe:
   - "3.2.1"
-  - development
+  - "3.4.2"
+  # - development
   
+# https://github.com/travis-ci/travis-ci/issues/7754#issuecomment-301223128
 # matrix:
 #   allow_failures:
 #     - haxe: development
@@ -33,7 +35,6 @@ jobs:
   include:
     - stage: deploy
       os: linux
-      haxe: "3.2.1"
-      # matrix: null
+      haxe: "3.4.2"
       script: skip
       after_success: haxelib run travix release
