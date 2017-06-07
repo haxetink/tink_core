@@ -75,6 +75,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
   @:from static inline function ofData<T>(d:T):Promise<T>
     return ofOutcome(Success(d));
+    
+  public static inline function lazy<T>(p:Lazy<Promise<T>>):Promise<T>
+    return Future.async(function(cb) p.get().handle(cb), true);
 
   static public function inParallel<T>(a:Array<Promise<T>>, ?lazy:Bool):Promise<Array<T>> 
     return Future.async(function (cb) {
