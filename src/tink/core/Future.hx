@@ -73,7 +73,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   /**
    *  Casts a js.Promise into a Surprise
    */
-  static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
+  @:from static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
     return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
   #end
     
