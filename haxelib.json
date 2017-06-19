@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Add swapError() and isSuccess() to Promise",
-	"version": "1.14.1",
+	"releasenote": "Fix zero-length array in Promise.inParallel, add Promise.lazy",
+	"version": "1.14.3",
 	"url": "http://haxetink.org/tink_core"
 }
