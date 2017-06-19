@@ -85,42 +85,44 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return Future.async(function(cb) p.get().handle(cb), true);
 
   static public function inParallel<T>(a:Array<Promise<T>>, ?lazy:Bool):Promise<Array<T>> 
-    return Future.async(function (cb) {
-      var result = [], 
-          pending = a.length,
-          links:CallbackLink = null,
-          sync = false;
+    return 
+      if(a.length == 0) Future.sync(Success([]))
+      else Future.async(function (cb) {
+        var result = [], 
+            pending = a.length,
+            links:CallbackLink = null,
+            sync = false;
 
-      function done(o) {
-        if (links == null) sync = true;
-        else links.dissolve();
-        cb(o);
-      }
+        function done(o) {
+          if (links == null) sync = true;
+          else links.dissolve();
+          cb(o);
+        }
 
-      function fail(e:Error) {
-        done(Failure(e));
-      }
-      function set(index, value) {
-        result[index] = value;
-        if (--pending == 0) 
-          done(Success(result));
-      }
-      
-      var linkArray = [];
-      
-      for (i in 0...a.length) {
-        if (sync) break;
-        linkArray.push(a[i].handle(function (o) switch o {
-          case Success(v): set(i, v);
-          case Failure(e): fail(e);
-        }));
-      };
+        function fail(e:Error) {
+          done(Failure(e));
+        }
+        function set(index, value) {
+          result[index] = value;
+          if (--pending == 0) 
+            done(Success(result));
+        }
+        
+        var linkArray = [];
+        
+        for (i in 0...a.length) {
+          if (sync) break;
+          linkArray.push(a[i].handle(function (o) switch o {
+            case Success(v): set(i, v);
+            case Failure(e): fail(e);
+          }));
+        };
 
-      links = linkArray;
+        links = linkArray;
 
-      if (sync) 
-        links.dissolve();
-    }, lazy);
+        if (sync) 
+          links.dissolve();
+      }, lazy);
   
   static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>> {
     

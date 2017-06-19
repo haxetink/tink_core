@@ -40,7 +40,17 @@ class Promises extends Base {
     assertFalse(done);
     t.trigger(Failure(new Error('test')));
     assertTrue(done);
+    
+    
+    counter = 0;
+    var p = Promise.inParallel([], true);
+    assertEquals(0, counter);
+    p.handle(function (o) {
+      assertTrue(o.isSuccess());
+    });
+    assertEquals(0, counter);  
   }
+  
   function testInSequence() {
     var counter = 0;
     function make(fail:Bool) 
