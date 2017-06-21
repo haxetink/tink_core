@@ -46,6 +46,7 @@ class TypedError<T> {
   public var pos(default, null):Null<Pos>;
   public var callStack(default, null):Stack;
   public var exceptionStack(default, null):Stack;
+  var isTinkError = true;
   
   public function new(?code:ErrorCode = InternalError, message, ?pos) {
     this.code = code;
@@ -96,15 +97,15 @@ class TypedError<T> {
     return
       try 
         Success(f())
-      catch (e:Error)
-        Failure(e)
       catch (e:Dynamic)
         Failure(
-          if (report == null)
+          if (e.isTinkError)
+            (e:Error));
+          else if (report == null)
             Error.withData('Unexpected Error', e, pos)
           else
             report(e)
-        );    
+        );
   
   static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error 
     return 
