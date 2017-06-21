@@ -100,7 +100,7 @@ class TypedError<T> {
       catch (e:Dynamic)
         Failure(
           if (e.isTinkError)
-            (e:Error));
+            (e:Error)
           else if (report == null)
             Error.withData('Unexpected Error', e, pos)
           else
