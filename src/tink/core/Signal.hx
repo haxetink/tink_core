@@ -91,6 +91,12 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
     return ret.asSignal();
   }
   
+  static public function generate<T>(generator:(T->Void)->Void):Signal<T> {
+    var ret = trigger();
+    generator(ret.trigger);
+    return ret;
+  }
+
   /**
    *  Creates a new `SignalTrigger`
    */
@@ -99,7 +105,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
     
   /**
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
-   *  Example: `var signal = Signal.ofClassical(classical.addListener, classical.removeListener);`
+   *  Example: `var signal = Signal.ofClassical(emitter.addListener.bind(eventType), emitter.removeListener.bind(eventType));`
    */
   static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather = true) {
     var ret = new Signal(function (cb:Callback<A>) {
@@ -141,7 +147,6 @@ class SignalTrigger<T> implements SignalObject<T> {
 
   /**
    *  Clear all handlers
-   *  @return handlers.clear()
    */
   public inline function clear()
     handlers.clear();
