@@ -20,6 +20,7 @@ class RunTests {
     new Promises(),
     new Annexes(),
     new Options(),
+    new Errors(),
   ];
   static function main() {  
     #if js//works for nodejs and browsers alike

@@ -92,6 +92,11 @@ class TypedError<T> {
     return ret;
   }
   
+  #if js
+  static public inline function ofJsError(e:js.Error, ?pos:Pos):Error 
+    return Error.withData(500, e.message, e, pos);
+  #end
+  
   static public function catchExceptions<A>(f:Void->A, ?report:Dynamic->Error, ?pos:Pos)
     return
       try 
