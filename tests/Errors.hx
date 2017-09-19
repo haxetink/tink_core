@@ -3,7 +3,7 @@ package ;
 using tink.CoreApi;
 
 class Errors extends Base {
-  
+  #if js
   function testOfJsError() {
     var message = 'whatever';
     var jsError = new js.Error(message);
@@ -12,4 +12,5 @@ class Errors extends Base {
     assertEquals(message, err.message);
     assertEquals(jsError, err.data);
   }
+  #end
 }
