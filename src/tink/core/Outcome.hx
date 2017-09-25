@@ -147,7 +147,7 @@ class OutcomeTools {
 }
 
 private abstract OutcomeMapper<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Outcome<DOut, FOut> }) {
-  function new(f) this = { f: f };
+  function new(f:Outcome<DIn, FIn>->Outcome<DOut, FOut>) this = { f: f };
   public function apply(o) 
     return this.f(o);
     
