@@ -136,3 +136,8 @@ abstract Stack(Array<StackItem>) from Array<StackItem> to Array<StackItem> {
   public inline function toString():String
     return CallStack.toString(this);
 }
+
+class ErrorTools {
+  public static inline function toPromise<T, E>(e:TypedError<E>):Promise<T>
+    return Promise.lift(e);
+}

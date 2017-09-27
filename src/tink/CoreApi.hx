@@ -29,6 +29,7 @@ typedef Noise = tink.core.Noise;
 
 typedef Error = tink.core.Error;
 typedef TypedError<T> = tink.core.Error.TypedError<T>;
+typedef ErrorTools = tink.core.Error.ErrorTools;
 
 typedef Callback<T> = tink.core.Callback<T>;
 typedef CallbackLink = tink.core.Callback.CallbackLink;
