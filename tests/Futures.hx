@@ -148,4 +148,9 @@ class Futures extends Base {
     foo();
     assertTrue(true);
   }
+
+  function testFuturistic() {
+    var f:Futuristic<Int> = 12;
+    f.map(function (v) return v * 2).handle(function (v) assertEquals(24, v));
+  }
 }

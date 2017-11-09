@@ -180,6 +180,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
 }
 
+@:forward
 abstract Futuristic<T>(Future<T>) from Future<T> to Future<T> {
   @:from static function ofAny<T>(v:T):Futuristic<T>
     return Future.sync(v);
