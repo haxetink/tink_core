@@ -212,7 +212,7 @@ In the example above, we've seen a `loadFromUrl` function. Here's a way to imple
 //First, let's have a plain old callback based function
 function loadAsync(url:String, callback:String->Void) {
   var h = new haxe.Http(url);
-  h.onDone = callback;
+  h.onData = callback;
   h.send();
 }
 //and now, pixie dust!!!!
@@ -227,7 +227,7 @@ Or if we wanted to achieve the same in one step:
 function loadFromUrl(url:String)
   return Future.async(function (handler:String->Void) {
     var h = new haxe.Http(url);
-    h.onDone = handler;
+    h.onData = handler;
     h.send();
   });
 ```
@@ -238,7 +238,7 @@ A fair question to ask would be, how to deal with errors. Quite simply, we will 
 function loadFromUrl(url:String):Future<Outcome<String, String>>
   return Future.async(function (handler:Outcome<String, String>->Void) {
     var h = new haxe.Http(url);
-    h.onDone = function (data:String) handler(Success(data));
+    h.onData = function (data:String) handler(Success(data));
     h.onError = function (error:String) handler(Failure(error));
     h.send();
   });
