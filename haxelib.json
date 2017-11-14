@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Forward methods on Futuristic.",
-	"version": "1.15.1",
+	"releasenote": "Various guards against stack overflows from synchronously resolving futures.",
+	"version": "1.15.2",
 	"url": "http://haxetink.org/tink_core"
 }
