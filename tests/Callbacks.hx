@@ -17,7 +17,7 @@ class Callbacks extends Base {
     assertEquals(4, calls);
   }
   
-  #if (js || flash || haxeVer >= 3.3)
+  #if (js || flash || haxe_ver >= 3.3)
   function testDefer() {
     
     var counter = 0;

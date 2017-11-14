@@ -8,8 +8,15 @@ abstract Callback<T>(T->Void) from (T->Void) {
   @:to inline function toFunction()
     return this;
     
-  public inline function invoke(data:T):Void //TODO: consider swallowing null here
-    (this)(data);
+  static var depth = 0;
+  static inline var MAX_DEPTH = 1000;
+  public function invoke(data:T):Void
+    if (depth < MAX_DEPTH) {
+      depth++;
+      (this)(data); //TODO: consider handling exceptions here (per opt-in?) to avoid a failing callback from taking down the whole app
+      depth--;
+    }
+    else Callback.defer(invoke.bind(data));
     
   @:to static function ignore<T>(cb:Callback<Noise>):Callback<T>
     return function () cb.invoke(Noise);
