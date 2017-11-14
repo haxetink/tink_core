@@ -123,10 +123,11 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    */
   @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A> 
     if (lazy) 
-      return flatten(Future.lazy(async.bind(f, false)));
+      return new LazyTrigger(f);
     else {
       var op = trigger();
-      f(op.trigger);
+      var wrapped:Callback<A->Void> = f;
+      wrapped.invoke(op.trigger);
       return op;      
     }    
     
@@ -343,7 +344,7 @@ class FutureTrigger<T> implements FutureObject<T> {
   public inline function gather()
     return this;
 
-  public inline function eager()
+  public function eager()
     return this;
 
   public inline function asFuture():Future<T>
@@ -384,6 +385,46 @@ class FutureTrigger<T> implements FutureObject<T> {
           dispatch();
         true;
       }
+}
+
+private class LazyTrigger<T> extends FutureTrigger<T> {
+  var op:Callback<T->Void>;
+
+  public function new(op) {
+    #if debug
+      if (op == null) throw 'invalid argument';
+    #end
+    this.op = op;
+    super();
+  }
+
+  override public function eager() {
+    if (op != null) {
+      var op = op;
+      this.op = null;
+      op.invoke(trigger);
+    }
+    return this;
+  }
+
+  override public function map<R>(f:T->R):Future<R> 
+    return 
+      if (op == null) super.map(f);
+      else Future.async(function (cb) {
+        handle(function (v) cb(f(v)));
+      }, true);
+
+  override public function flatMap<R>(f:T->Future<R>):Future<R>  
+    return 
+      if (op == null) super.flatMap(f);
+      else Future.async(function (cb) {
+        handle(function (v) f(v).handle(cb));
+      }, true);
+
+  override public function handle(cb) {
+    eager();
+    return super.handle(cb);
+  }
 }
 
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
