@@ -57,12 +57,12 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   /**
    *  Gets the next emitted value as a Future
    */
-  public function next():Future<T> {
+  public function next(?condition:T->Bool):Future<T> {
     var ret = Future.trigger();
     var link:CallbackLink = null,
         immediate = false;
         
-    link = this.handle(function (v) {
+    link = this.handle(function (v) if (condition == null || condition(v)) {
       ret.trigger(v);
       if (link == null) immediate = true;
       else link.dissolve();
