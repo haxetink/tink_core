@@ -362,7 +362,6 @@ class FutureTrigger<T> implements FutureObject<T> {
     });  
   }
 
-  static var depth = 0;
   /**
    *  Triggers a value for this future
    */
@@ -373,16 +372,8 @@ class FutureTrigger<T> implements FutureObject<T> {
         var list = this.list;
         this.list = null;
         this.result = result;
-        inline function dispatch() {
-          depth++;
-          list.invoke(result);
-          list.clear();//free callback links          
-          depth--;
-        }
-        if (depth >= 1000)
-          Callback.defer(function () dispatch());
-        else
-          dispatch();
+        list.invoke(result);
+        list.clear();//free callback links          
         true;
       }
 }

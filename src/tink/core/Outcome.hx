@@ -19,10 +19,10 @@ class OutcomeTools {
         case Success(data): 
           data;
         case Failure(failure): 
-          if (Std.is(failure, Error)) 
-            untyped failure.throwSelf();
-          else
-            throw failure;
+          switch Error.asError(failure) {
+            case null: throw failure;
+            case e: e.throwSelf();
+          }
       }
   
   /**

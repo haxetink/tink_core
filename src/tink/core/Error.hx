@@ -63,7 +63,7 @@ class TypedError<T> {
         pos.className+'.'+pos.methodName+':'+pos.lineNumber;
       #end
       
-  @:keep public function toString() {
+  public function toString() {
     var ret = 'Error#$code: $message';
     if (pos != null)
       ret += " @ "+printPos();
@@ -71,7 +71,7 @@ class TypedError<T> {
     return ret;
   }
   
-  @:keep public function throwSelf():Dynamic
+  public function throwSelf():Dynamic
     return
       #if macro
         #if tink_macro
@@ -98,18 +98,29 @@ class TypedError<T> {
     return Error.withData(500, e.message, e, pos);
   #end
   
+  @:noUsing static public function asError(v:Dynamic):Null<Error> {
+    return 
+      #if js
+        if (v != null && (cast v:Error).isTinkError) cast v;
+        else null;
+      #else
+        Std.instance(v, Error);
+      #end
+  }
   static public function catchExceptions<A>(f:Void->A, ?report:Dynamic->Error, ?pos:Pos)
     return
       try 
         Success(f())
       catch (e:Dynamic)
         Failure(
-          if (e.isTinkError)
-            (e:Error)
-          else if (report == null)
-            Error.withData('Unexpected Error', e, pos)
-          else
-            report(e)
+          switch asError(e) {
+            case null:
+              if (report == null)
+                Error.withData('Unexpected Error', e, pos)
+              else
+                report(e);
+              case e: e;
+          }
         );
   
   static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error 
@@ -134,5 +145,10 @@ class TypedError<T> {
 abstract Stack(Array<StackItem>) from Array<StackItem> to Array<StackItem> {
   @:to
   public inline function toString():String
-    return CallStack.toString(this);
+    return 
+      #if error_stack
+        CallStack.toString(this);
+      #else
+        'Error stack not available. Compile with -D error_stack.';
+      #end
 }
