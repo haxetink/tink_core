@@ -4,6 +4,7 @@ using tink.CoreApi;
 
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
   
+  public static var NULL:Promise<Dynamic> = Future.sync(Success(null));
   public static var NOISE:Promise<Noise> = Future.sync(Success(Noise));
   public static var NEVER:Promise<Dynamic> = Future.NEVER;
   
