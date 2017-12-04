@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Allow specifying condition in Signal.next. Shorthands for null futures/promised.",
-	"version": "0.15.3",
+	"releasenote": "Shorthand to create future/promise that resolves a null",
+	"version": "1.15.3",
 	"url": "http://haxetink.org/tink_core"
 }
