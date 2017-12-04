@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Various guards against stack overflows from synchronously resolving futures.",
-	"version": "1.15.2",
+	"releasenote": "Allow specifying condition in Signal.next. Shorthands for null futures/promised.",
+	"version": "0.15.3",
 	"url": "http://haxetink.org/tink_core"
 }
