@@ -41,7 +41,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   }
 
   public function select<R>(selector:T->Option<R>, ?gather = true):Signal<R> {
-    var ret = new Signal(function (cb) return this.handle(function (result) switch f(result) {
+    var ret = new Signal(function (cb) return this.handle(function (result) switch selector(result) {
       case Some(v): cb.invoke(v);
       case None:
     }));
