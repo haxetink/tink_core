@@ -39,6 +39,16 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
       if (gather) ret.gather();
       else ret;
   }
+
+  public function select<R>(selector:T->Option<R>, ?gather = true):Signal<R> {
+    var ret = new Signal(function (cb) return this.handle(function (result) switch f(result) {
+      case Some(v): cb.invoke(v);
+      case None:
+    }));
+    return
+      if (gather) ret.gather();
+      else ret;
+  }
   
   /**
    *  Creates a new signal by joining `this` and `other`,
