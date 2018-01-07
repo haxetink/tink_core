@@ -139,6 +139,23 @@ class TypedError<T> {
     #end
     return any;
   }
+
+  static public function tryFinally<T>(f:Void->T, cleanup:Void->Void):T {
+    #if js
+      untyped __js__('try { return {0} } finally { {1} }', f(), cleanup());
+      return null;
+    #else
+    try {
+      var ret = f();
+      cleanup();
+      return ret;
+    }
+    catch (e:Dynamic) {
+      cleanup();
+      return rethrow(e);
+    }
+    #end
+  }
 }
 
 @:forward
