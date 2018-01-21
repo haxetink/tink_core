@@ -142,7 +142,7 @@ class TypedError<T> {
 
   static public function tryFinally<T>(f:Void->T, cleanup:Void->Void):T {
     #if js
-      untyped __js__('try { return {0} } finally { {1} }', f(), cleanup());
+      untyped __js__('try { return f(); } finally { cleanup(); }');
       return null;
     #else
     try {
