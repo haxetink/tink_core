@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Try/finally. Signal selection.",
-	"version": "1.16.0",
+	"releasenote": "Fix for haxe 3.2.1.",
+	"version": "1.16.1",
 	"url": "http://haxetink.org/tink_core"
 }
