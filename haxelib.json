@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Shorthand to create future/promise that resolves a null",
-	"version": "1.15.3",
+	"releasenote": "Try/finally. Signal selection.",
+	"version": "1.16.0",
 	"url": "http://haxetink.org/tink_core"
 }
