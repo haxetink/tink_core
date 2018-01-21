@@ -58,9 +58,12 @@ abstract CallbackLink(LinkObject) from LinkObject {
 
   inline function new(link:Void->Void) 
     this = new SimpleLink(link);
-    
-  public inline function dissolve():Void 
+
+  public inline function cancel():Void 
     if (this != null) this.dissolve();
+
+  public inline function dissolve():Void 
+    cancel();
     
   @:to inline function toCallback<A>():Callback<A> 
     return function (_) this.dissolve();

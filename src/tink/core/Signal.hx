@@ -67,7 +67,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   /**
    *  Gets the next emitted value as a Future
    */
-  public function next(?condition:T->Bool):Future<T> {
+  public function nextTime(?condition:T->Bool):Future<T> {
     var ret = Future.trigger();
     var link:CallbackLink = null,
         immediate = false;
@@ -83,6 +83,12 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
     
     return ret.asFuture();
   }
+
+  /**
+   * Soon to be deprecated in favor of nextTime.
+   */
+  public inline function next(?condition:T->Bool):Future<T>
+    return nextTime(condition);
   
   /**
    *  Transfroms this signal and makes it emit `Noise`
