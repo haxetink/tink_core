@@ -79,6 +79,16 @@ class Promises extends Base {
       case null: Failure(new Error(422, '$s is not a valid integer'));
       case v: Success(v);
     }
+    
+  function testBoolAnd() {
+    Promise.boolAnd([true, true, true]).handle(function(o) assertTrue(o.match(Success(true))));
+    Promise.boolAnd([true, false, true]).handle(function(o) assertTrue(o.match(Success(false))));
+  }
+  
+  function testBoolOr() {
+    Promise.boolOr([false, false, false]).handle(function(o) assertTrue(o.match(Success(false))));
+    Promise.boolOr([false, false, true]).handle(function(o) assertTrue(o.match(Success(true))));
+  }
 
   function test() {
     var p:Promise<Int> = 5;

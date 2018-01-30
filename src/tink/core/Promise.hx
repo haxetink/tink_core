@@ -61,6 +61,34 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     
   @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
     return a.merge(b, function (a, b) return new Pair(a, b)); // TODO: a.merge(b, Pair.new); => File "src/typing/type.ml", line 555, characters 9-15: Assertion failed
+    
+    
+  static public inline function boolAnd(promises:Array<Promise<Bool>>, ?lazy):Promise<Bool>
+    return iterate(promises, function(v) return v ? None : Some(false), Success(true), lazy);
+    
+  static public inline function boolOr(promises:Array<Promise<Bool>>, ?lazy):Promise<Bool>
+    return iterate(promises, function(v) return v ? Some(true) : None, Success(false), lazy);
+    
+  static public function iterate<A, R>(promises:Array<Promise<A>>, yield:A->Option<R>, finally:Lazy<Outcome<R, Error>>, ?lazy):Promise<R> {
+    return Future.async(function(cb) {
+      var iter = promises.iterator();
+      function next() {
+        if(iter.hasNext())
+          iter.next().handle(function(o) switch o {
+            case Success(v):
+              switch yield(v) {
+                case Some(ret): cb(Success(ret));
+                case None: next();
+              }
+            case Failure(e):
+              cb(Failure(e));
+          })
+        else
+          cb(finally.get());
+      }
+      next();
+    }, lazy);
+  }
   
   #if js
   @:from static public inline function ofJsPromise<A>(promise:js.Promise<A>):Promise<A>
