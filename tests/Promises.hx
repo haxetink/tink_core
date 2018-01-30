@@ -98,4 +98,21 @@ class Promises extends Base {
     }
   }
   
+  function testCache() {
+    var v = 0;
+    function gen() return Promise.lift(v++);
+    var expire = Future.trigger();
+    var cache = Promise.cache(gen, function() return expire);
+    cache().handle(function(v) assertTrue(v.match(Success(0))));
+    cache().handle(function(v) assertTrue(v.match(Success(0))));
+    expire.trigger(Noise);
+    expire = Future.trigger();
+    cache().handle(function(v) assertTrue(v.match(Success(1))));
+    cache().handle(function(v) assertTrue(v.match(Success(1))));
+    expire.trigger(Noise);
+    expire = Future.trigger();
+    cache().handle(function(v) assertTrue(v.match(Success(2))));
+    cache().handle(function(v) assertTrue(v.match(Success(2))));
+  }
+  
 }
