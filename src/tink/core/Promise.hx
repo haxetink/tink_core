@@ -140,15 +140,25 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return loop(0);
   }
   
-  static public function cache<T>(gen:Void->Promise<T>, expire:Void->Future<Noise>):Void->Promise<T> {
+  static public function cache<T>(gen:Void->Promise<Pair<T, Future<Noise>>>):Void->Promise<T> {
     var p = null;
     return function() {
-      if(p == null) {
-        p = gen();
-        expire().handle(function(_) p = null);
+      var ret = p;
+      if(ret == null) {
+        var sync = false;
+        ret = gen().next(function(o) {
+          o.b.handle(function(_) {
+            sync = true;
+            p = null;
+          });
+          return o.a;
+        });
+        if(!sync) p = ret;
       }
-      #if debug if(p == null) throw 'Having a sync expire function means that you don\'t need to call Promise.cache at all'; #end
-      return p;
+      return ret.map(function(o) {
+        if(!o.isSuccess()) p = null;
+        return o;
+      });
     }
   }
 
