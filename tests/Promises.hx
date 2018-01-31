@@ -80,14 +80,17 @@ class Promises extends Base {
       case v: Success(v);
     }
     
-  function testBoolAnd() {
-    Promise.boolAnd([true, true, true]).handle(function(o) assertTrue(o.match(Success(true))));
-    Promise.boolAnd([true, false, true]).handle(function(o) assertTrue(o.match(Success(false))));
-  }
-  
-  function testBoolOr() {
-    Promise.boolOr([false, false, false]).handle(function(o) assertTrue(o.match(Success(false))));
-    Promise.boolOr([false, false, true]).handle(function(o) assertTrue(o.match(Success(true))));
+  function testIterate() {
+    inline function boolAnd(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>
+      return Promise.iterate(promises, function(v) return v ? None : Some(false), true, lazy);
+      
+    inline function boolOr(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>
+      return Promise.iterate(promises, function(v) return v ? Some(true) : None, false, lazy);
+    
+    boolAnd([true, true, true]).handle(function(o) assertTrue(o.match(Success(true))));
+    boolAnd([true, false, true]).handle(function(o) assertTrue(o.match(Success(false))));
+    boolOr([false, false, false]).handle(function(o) assertTrue(o.match(Success(false))));
+    boolOr([false, false, true]).handle(function(o) assertTrue(o.match(Success(true))));
   }
 
   function test() {

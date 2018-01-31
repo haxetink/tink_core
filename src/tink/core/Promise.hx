@@ -63,12 +63,6 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return a.merge(b, function (a, b) return new Pair(a, b)); // TODO: a.merge(b, Pair.new); => File "src/typing/type.ml", line 555, characters 9-15: Assertion failed
     
     
-  static public inline function boolAnd(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>
-    return iterate(promises, function(v) return v ? None : Some(false), Success(true), lazy);
-    
-  static public inline function boolOr(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>
-    return iterate(promises, function(v) return v ? Some(true) : None, Success(false), lazy);
-    
   static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, finally:Promise<R>, ?lazy):Promise<R> {
     return Future.async(function(cb) {
       var iter = promises.iterator();
