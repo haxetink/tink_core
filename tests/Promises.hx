@@ -79,6 +79,19 @@ class Promises extends Base {
       case null: Failure(new Error(422, '$s is not a valid integer'));
       case v: Success(v);
     }
+    
+  function testIterate() {
+    inline function boolAnd(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>
+      return Promise.iterate(promises, function(v) return v ? None : Some(false), true, lazy);
+      
+    inline function boolOr(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>
+      return Promise.iterate(promises, function(v) return v ? Some(true) : None, false, lazy);
+    
+    boolAnd([true, true, true]).handle(function(o) assertTrue(o.match(Success(true))));
+    boolAnd([true, false, true]).handle(function(o) assertTrue(o.match(Success(false))));
+    boolOr([false, false, false]).handle(function(o) assertTrue(o.match(Success(false))));
+    boolOr([false, false, true]).handle(function(o) assertTrue(o.match(Success(true))));
+  }
 
   function test() {
     var p:Promise<Int> = 5;

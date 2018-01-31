@@ -61,6 +61,29 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     
   @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
     return a.merge(b, function (a, b) return new Pair(a, b)); // TODO: a.merge(b, Pair.new); => File "src/typing/type.ml", line 555, characters 9-15: Assertion failed
+    
+    
+  static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, finally:Promise<R>, ?lazy):Promise<R> {
+    return Future.async(function(cb) {
+      var iter = promises.iterator();
+      function next() {
+        if(iter.hasNext())
+          iter.next().handle(function(o) switch o {
+            case Success(v):
+              yield(v).handle(function(o) switch o {
+                case Success(Some(ret)): cb(Success(ret));
+                case Success(None): next();
+                case Failure(e): cb(Failure(e));
+              });
+            case Failure(e):
+              cb(Failure(e));
+          })
+        else
+          finally.handle(cb);
+      }
+      next();
+    }, lazy);
+  }
   
   #if js
   @:from static public inline function ofJsPromise<A>(promise:js.Promise<A>):Promise<A>
