@@ -6,6 +6,8 @@ import haxe.CallStack;
 typedef Pos = 
   #if macro
     haxe.macro.Expr.Position;
+  #elseif tink_core_no_error_pos
+    {};
   #else
     haxe.PosInfos;
   #end
@@ -59,15 +61,18 @@ class TypedError<T> {
     return
       #if macro
         Std.string(pos);
+      #elseif tink_core_no_error_pos
+        ;
       #else
         pos.className+'.'+pos.methodName+':'+pos.lineNumber;
       #end
       
   public function toString() {
     var ret = 'Error#$code: $message';
+    #if !tink_core_no_error_pos
     if (pos != null)
       ret += " @ "+printPos();
-    
+    #end
     return ret;
   }
   
