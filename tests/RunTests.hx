@@ -21,6 +21,7 @@ class RunTests {
     new Annexes(),
     new Options(),
     new Errors(),
+    new Lazies(),
   ];
   static function main() {  
     #if js//works for nodejs and browsers alike
