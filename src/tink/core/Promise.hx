@@ -162,7 +162,8 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
     return loop(0);
   }
-  
+
+  #if !java
   static public function cache<T>(gen:Void->Promise<Pair<T, Future<Noise>>>):Void->Promise<T> {
     var p = null;
     return function() {
@@ -184,6 +185,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
       });
     }
   }
+  #end
 
   @:noUsing 
   static public inline function lift<T>(p:Promise<T>)
