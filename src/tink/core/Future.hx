@@ -269,7 +269,9 @@ private class SimpleFuture<T> implements FutureObject<T> {
     return Future.flatten(map(f));
 
   public inline function gather():Future<T> 
-    return FutureTrigger.gatherFuture(this);
+    return
+      if (gathered != null) gathered;
+      else gathered = FutureTrigger.gatherFuture(this);
 
   public inline function eager():Future<T> {
     var ret = gather();
