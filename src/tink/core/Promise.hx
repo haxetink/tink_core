@@ -210,7 +210,7 @@ abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
 }
 
 @:callable
-abstract Recover<T>(Error->Futuristic<T>) from Error->Futuristic<T> {
+abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
   @:from static function ofSync<T>(f:Error->T):Recover<T>
     return function (e) return Future.sync(f(e));
 }

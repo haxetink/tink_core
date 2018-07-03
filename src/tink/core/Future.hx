@@ -77,7 +77,14 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:from static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
     return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
   #end
-    
+  
+  // TODO: Shouldn't be necessary. @see https://github.com/HaxeFoundation/haxe/issues/7243
+  @:from static inline function ofFutureObject<T>(v:FutureObject<T>):Future<T>
+    return v;
+  
+  @:from static inline function ofAny<T>(v:T):Future<T>
+    return Future.sync(v);
+  
   /**
    *  Casts a Surprise into a Promise
    */
@@ -180,12 +187,6 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:noUsing static public inline function trigger<A>():FutureTrigger<A> 
     return new FutureTrigger();  
 
-}
-
-@:forward
-abstract Futuristic<T>(Future<T>) from Future<T> to Future<T> {
-  @:from static function ofAny<T>(v:T):Futuristic<T>
-    return Future.sync(v);
 }
 
 private interface FutureObject<T> {

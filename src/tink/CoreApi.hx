@@ -6,7 +6,6 @@ typedef Next<In, Out> = tink.core.Promise.Next<In, Out>;
 typedef Combiner<In1, In2, Out> = tink.core.Promise.Combiner<In1, In2, Out>;
 typedef Promise<T> = tink.core.Promise<T>;
 typedef Future<T> = tink.core.Future<T>;
-typedef Futuristic<T> = tink.core.Future.Futuristic<T>;
 
 typedef Surprise<D, F> = tink.core.Future.Surprise<D, F>;
 #if js typedef JsPromiseTools = tink.core.Future.JsPromiseTools; #end
@@ -16,8 +15,8 @@ typedef Outcome<D, F> = tink.core.Outcome<D, F>;
 typedef OutcomeTools = tink.core.Outcome.OutcomeTools;
 
 typedef Either<L, R> = tink.core.Either<L, R>;
-typedef Option<T> = tink.core.Option<T>; 
-typedef OptionTools<T> = tink.core.Option.OptionTools; 
+typedef Option<T> = tink.core.Option<T>;
+typedef OptionTools<T> = tink.core.Option.OptionTools;
 
 typedef Pair<A, B> = tink.core.Pair<A, B>;
 typedef MPair<A, B> = tink.core.Pair.MPair<A, B>;

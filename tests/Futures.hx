@@ -4,11 +4,13 @@ using tink.CoreApi;
 
 class Futures extends Base {
   
-  function testsync() {
+  function testSync() {
     var f = Future.sync(4);
     var x = -4;
     f.handle(function (v) x = v);
     assertEquals(4, x);
+    f = 12;
+    f.map(function (v) return v * 2).handle(function (v) assertEquals(24, v));
   }
   
   function testOfAsyncCall() {
@@ -147,10 +149,5 @@ class Futures extends Base {
     }
     foo();
     assertTrue(true);
-  }
-
-  function testFuturistic() {
-    var f:Futuristic<Int> = 12;
-    f.map(function (v) return v * 2).handle(function (v) assertEquals(24, v));
   }
 }
