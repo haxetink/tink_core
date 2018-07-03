@@ -269,7 +269,9 @@ private class SimpleFuture<T> implements FutureObject<T> {
     return Future.flatten(map(f));
 
   public inline function gather():Future<T> 
-    return FutureTrigger.gatherFuture(this);
+    return
+      if (gathered != null) gathered;
+      else gathered = FutureTrigger.gatherFuture(this);
 
   public inline function eager():Future<T> {
     var ret = gather();
@@ -280,6 +282,7 @@ private class SimpleFuture<T> implements FutureObject<T> {
 
 private class NestedFuture<T> implements FutureObject<T> {
   var outer:Future<Future<T>>;
+  var gathered:Future<T>;
 
   public inline function new(outer)
     this.outer = outer;
@@ -291,7 +294,9 @@ private class NestedFuture<T> implements FutureObject<T> {
     return outer.flatMap(function (inner) return inner.flatMap(f));
   
   public inline function gather():Future<T> 
-    return FutureTrigger.gatherFuture(this);
+    return
+      if (gathered != null) gathered;
+      else gathered = FutureTrigger.gatherFuture(this);
 
   public inline function eager():Future<T> {
     var ret = gather();
