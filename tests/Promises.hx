@@ -111,6 +111,7 @@ class Promises extends Base {
     }
   }
   
+  #if !java
   function testCache() {
     var v = 0;
     var expire = Future.trigger();
@@ -138,5 +139,6 @@ class Promises extends Base {
     cache().handle(function(o) assertTrue(getError(o) == 4));
     cache().handle(function(o) assertTrue(getError(o) == 5));
   }
+  #end
   
 }
