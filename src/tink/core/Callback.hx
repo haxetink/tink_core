@@ -103,6 +103,8 @@ private class LinkPair implements LinkObject {
       dissolved = true;
       a.dissolve();
       b.dissolve();
+      a = null;
+      b = null;
     }
 }
 
@@ -156,4 +158,9 @@ abstract CallbackList<T>(Array<ListCell<T>>) {
   public function clear():Void 
     for (cell in this.splice(0, this.length)) 
       cell.clear();
+
+  public function invokeAndClear(data:T)
+    for (cell in this.splice(0, this.length)) 
+      cell.invoke(data);
+
 }

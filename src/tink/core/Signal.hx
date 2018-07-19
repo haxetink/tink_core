@@ -118,6 +118,9 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
    */
   static public function trigger<T>():SignalTrigger<T>
     return new SignalTrigger();
+
+  static public inline function create<T>(o:{ function activate(yield:T->Void):Void; function suspend():Void; }):Signal<T>
+    return new Suspendable<T>(o.activate, o.suspend);
     
   /**
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
@@ -140,6 +143,24 @@ private class SimpleSignal<T> implements SignalObject<T> {
   var f:Callback<T>->CallbackLink;
   public inline function new(f) this.f = f;
   public inline function handle(cb) return this.f(cb);
+}
+
+private class Suspendable<T> implements SignalObject<T> {
+  var trigger:SignalTrigger<T> = new SignalTrigger();
+  var activate:(T->Void)->Void;
+  var suspend:Void->Void;
+
+  public function new(activate, suspend) {
+    this.activate = activate;
+    this.suspend = suspend;
+  }
+
+  public function handle(cb) {
+    if (trigger.getLength() == 0)
+      activate(trigger.trigger);
+    
+    return trigger.handle(cb) & function () if (trigger.getLength() == 0) suspend();
+  }
 }
 
 class SignalTrigger<T> implements SignalObject<T> {

@@ -21,6 +21,35 @@ class Signals extends Base {
     assertEquals('foo', value);
   }
   
+  function testSuspendable() {
+    
+    var active = false;
+    var s = Signal.create({
+      activate: function (_) active = true,
+      suspend: function () active = false,
+    });
+
+    assertFalse(active);
+
+    var link = s.handle(function () {});
+    assertTrue(active);
+    
+    link.dissolve();
+    assertFalse(active);
+
+    link = s.handle(function () {});
+    assertTrue(active);
+    
+    var link2 = s.handle(function () {});
+    assertTrue(active);
+
+    link.dissolve();
+    assertTrue(active);
+
+    link2.dissolve();
+    assertFalse(active);
+  }
+
   function testJoinNoGather() {
     var s = signal1.join(signal2, false);
     assertEquals(0, handlers1.getLength());
