@@ -17,9 +17,10 @@ abstract Callback<T>(T->Void) from (T->Void) {
       depth--;
     }
     else Callback.defer(invoke.bind(data));
-    
-  @:to static function ignore<T>(cb:Callback<Noise>):Callback<T>
-    return function () cb.invoke(Noise);
+  
+  // This seems useful, but most likely is not. Please create an issue if you find it useful, and don't want this cast removed.
+  @:to @:deprecated static function ignore<T>(cb:Callback<Noise>):Callback<T>
+    return function (_) cb.invoke(Noise);
     
   @:from static function fromNiladic<A>(f:Void->Void):Callback<A> //inlining this seems to cause recursive implicit casts
     return new Callback(function (r) f());
