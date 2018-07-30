@@ -12,7 +12,7 @@ class Callbacks extends Base {
     cbs.push(cbs.copy());
     
     for (c in cbs) 
-      c.invoke(4);
+      c.invoke(17);
       
     assertEquals(4, calls);
   }
@@ -33,6 +33,46 @@ class Callbacks extends Base {
     assertEquals(0, counter);
   }
   #end
+  
+  function testIgnore() {
+    var calls = 0;
+    var cbNoise:Callback<Noise> = function () calls++;
+    var cb:Callback<Int> = cbNoise;
+    cb.invoke(17);
+    assertEquals(1, calls);
+  }
+  
+  function testSimpleLink() {
+    var calls = 0;
+    var link:CallbackLink = function () calls++;
+    link.dissolve();
+    link.dissolve();
+    assertEquals(calls, 1);
+  }
+  
+  function testLinkPair() {
+    var calls = 0,
+      calls1 = 0,
+      calls2 = 0;
+    
+    var link1:CallbackLink = function () { calls++; calls1++; }
+    var link2:CallbackLink = function () { calls++; calls2++; }
+    var link = link1 & link2;
+    
+    link.dissolve();
+    assertEquals(2, calls);
+    assertEquals(1, calls1);
+    assertEquals(1, calls2);
+    
+    link.dissolve();
+    assertEquals(2, calls);
+    
+    link1.dissolve();
+    assertEquals(1, calls1);
+    
+    link2.dissolve();
+    assertEquals(1, calls2);
+  }
   
   function testList() {
     var cb = new CallbackList();
