@@ -17,12 +17,13 @@ abstract Callback<T>(T->Void) from (T->Void) {
       depth--;
     }
     else Callback.defer(invoke.bind(data));
-    
-  @:to static function ignore<T>(cb:Callback<Noise>):Callback<T>
-    return function () cb.invoke(Noise);
+  
+  // This seems useful, but most likely is not. Please create an issue if you find it useful, and don't want this cast removed.
+  @:to @:deprecated static function ignore<T>(cb:Callback<Noise>):Callback<T>
+    return function (_) cb.invoke(Noise);
     
   @:from static function fromNiladic<A>(f:Void->Void):Callback<A> //inlining this seems to cause recursive implicit casts
-    return new Callback(function (r) f());
+    return function (_) f();
   
   @:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A> 
     return
@@ -30,7 +31,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
         for (callback in callbacks)
           callback.invoke(v);
           
-  @:noUsing static public function defer(f:Void->Void) {    
+  @:noUsing static public function defer(f:Void->Void) {
     #if macro
       f();
     #elseif tink_runloop
@@ -85,7 +86,10 @@ private class SimpleLink implements LinkObject {
     this.f = f;
 
   public inline function dissolve()
-    if (f != null) f();
+    if (f != null) {
+      f();
+      f = null;
+    }
 }
 
 private class LinkPair implements LinkObject {
