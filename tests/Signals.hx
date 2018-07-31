@@ -2,26 +2,32 @@ package ;
 
 using tink.CoreApi;
 
+@:asserts
 class Signals extends Base {
   var signal1:Signal<String>;
   var handlers1:SignalTrigger<String>;
   var signal2:Signal<String>;
   var handlers2:SignalTrigger<String>;
-  override function setup() {
+  
+  @:before
+  public function setup() {
     signal1 = handlers1 = Signal.trigger();
     signal2 = handlers2 = Signal.trigger();
+    return Noise;
   }
-  function testNext() {
+  
+  public function testNext() {
     var next = signal1.next();
     var value = null;
     next.handle(function (v) value = v);
     handlers1.trigger('foo');
-    assertEquals('foo', value);
+    asserts.assert('foo' == value);
     handlers1.trigger('bar');
-    assertEquals('foo', value);
+    asserts.assert('foo' == value);
+    return asserts.done();
   }
   
-  function testSuspendable() {
+  public function testSuspendable() {
     
     var active = false;
     var s = Signal.create({
@@ -29,151 +35,156 @@ class Signals extends Base {
       suspend: function () active = false,
     });
 
-    assertFalse(active);
+    asserts.assert(!active);
 
     var link = s.handle(function () {});
-    assertTrue(active);
+    asserts.assert(active);
     
     link.dissolve();
-    assertFalse(active);
+    asserts.assert(!active);
 
     link = s.handle(function () {});
-    assertTrue(active);
+    asserts.assert(active);
     
     var link2 = s.handle(function () {});
-    assertTrue(active);
+    asserts.assert(active);
 
     link.dissolve();
-    assertTrue(active);
+    asserts.assert(active);
 
     link2.dissolve();
-    assertFalse(active);
+    asserts.assert(!active);
+    return asserts.done();
   }
 
-  function testJoinNoGather() {
+  public function testJoinNoGather() {
     var s = signal1.join(signal2, false);
-    assertEquals(0, handlers1.getLength());
-    assertEquals(0, handlers2.getLength());
+    asserts.assert(0 == handlers1.getLength());
+    asserts.assert(0 == handlers2.getLength());
     
     var calls = 0;
     
     var link1 = s.handle(function () calls++),
       link2 = s.handle(function () calls++);
     
-    assertEquals(2, handlers1.getLength());
-    assertEquals(2, handlers2.getLength());    
+    asserts.assert(2 == handlers1.getLength());
+    asserts.assert(2 == handlers2.getLength());    
     
     handlers1.trigger('foo');
     
-    assertEquals(2, calls);
+    asserts.assert(2 == calls);
     
     handlers2.trigger('foo');
     
-    assertEquals(4, calls);
+    asserts.assert(4 == calls);
     
     link2.dissolve();
     
-    assertEquals(1, handlers1.getLength());
-    assertEquals(1, handlers2.getLength());    
+    asserts.assert(1 == handlers1.getLength());
+    asserts.assert(1 == handlers2.getLength());    
     
     link1.dissolve();
     
-    assertEquals(0, handlers1.getLength());
-    assertEquals(0, handlers2.getLength());    
+    asserts.assert(0 == handlers1.getLength());
+    asserts.assert(0 == handlers2.getLength());  
+    return asserts.done();  
   }
   
-  function testJoinGather() {
+  public function testJoinGather() {
     var s = signal1.join(signal2);
     
-    assertEquals(1, handlers1.getLength());
-    assertEquals(1, handlers2.getLength());
+    asserts.assert(1 == handlers1.getLength());
+    asserts.assert(1 == handlers2.getLength());
     
     var calls = 0;
     
     var link1 = s.handle(function () calls++),
       link2 = s.handle(function () calls++);
     
-    assertEquals(1, handlers1.getLength());
-    assertEquals(1, handlers2.getLength());    
+    asserts.assert(1 == handlers1.getLength());
+    asserts.assert(1 == handlers2.getLength());    
     
     handlers1.trigger('foo');
     
-    assertEquals(2, calls);
+    asserts.assert(2 == calls);
     
     handlers2.trigger('foo');
     
-    assertEquals(4, calls);
+    asserts.assert(4 == calls);
     
     link2.dissolve();
     
-    assertEquals(1, handlers1.getLength());
-    assertEquals(1, handlers2.getLength());    
+    asserts.assert(1 == handlers1.getLength());
+    asserts.assert(1 == handlers2.getLength());    
     
     link1.dissolve();
     
-    assertEquals(1, handlers1.getLength());
-    assertEquals(1, handlers2.getLength());    
+    asserts.assert(1 == handlers1.getLength());
+    asserts.assert(1 == handlers2.getLength());
+    return asserts.done();    
   }
   
-  function testMap() {
+  public function testMap() {
     var mapCalls = 0,
       last = null;
     var s = signal1.map(function (v) { mapCalls++; return last = v + v; } );
     
-    assertEquals(1, handlers1.getLength());
+    asserts.assert(1 == handlers1.getLength());
     
     var calls = 0;
     
     var link1 = s.handle(function () calls++),
       link2 = s.handle(function () calls++);
     
-    assertEquals(1, handlers1.getLength());
+    asserts.assert(1 == handlers1.getLength());
     
     handlers1.trigger('foo');
     
-    assertEquals(2, calls);
-    assertEquals(1, mapCalls);
-    assertEquals('foofoo', last);
+    asserts.assert(2 == calls);
+    asserts.assert(1 == mapCalls);
+    asserts.assert('foofoo' == last);
     
     link2.dissolve();
     
-    assertEquals(1, handlers1.getLength());
+    asserts.assert(1 == handlers1.getLength());
     
     link1.dissolve();
     
-    assertEquals(1, handlers1.getLength());
+    asserts.assert(1 == handlers1.getLength());
+    return asserts.done();
   }
   
-  function testMapNoGather() {
+  public function testMapNoGather() {
     var mapCalls = 0,
       last = null;
     var s = signal1.map(function (v) { mapCalls++; return last = v + v; }, false);
     
-    assertEquals(0, handlers1.getLength());
+    asserts.assert(0 == handlers1.getLength());
     
     var calls = 0;
     
     var link1 = s.handle(function () calls++),
       link2 = s.handle(function () calls++);
     
-    assertEquals(2, handlers1.getLength());
+    asserts.assert(2 == handlers1.getLength());
     
     handlers1.trigger('foo');
     
-    assertEquals(2, calls);
-    assertEquals(2, mapCalls);
-    assertEquals('foofoo', last);
+    asserts.assert(2 == calls);
+    asserts.assert(2 == mapCalls);
+    asserts.assert('foofoo' == last);
     
     link2.dissolve();
     
-    assertEquals(1, handlers1.getLength());
+    asserts.assert(1 == handlers1.getLength());
     
     link1.dissolve();
     
-    assertEquals(0, handlers1.getLength());
+    asserts.assert(0 == handlers1.getLength());
+    return asserts.done();
   }
   
-  function testFlatMap() {
+  public function testFlatMap() {
     var mapCalls = 0,
       out = '',
       inQueueData = [for (i in 1...1000) Std.string(i)],
@@ -190,7 +201,7 @@ class Signals extends Base {
     
     var s = signal1.flatMap(function (v1) { mapCalls++; return make().map(function (v2) return v1 + v2); });
     
-    assertEquals(1, handlers1.getLength());
+    asserts.assert(1 == handlers1.getLength());
     
     var calls = 0;
     
@@ -198,44 +209,45 @@ class Signals extends Base {
       link2 = s.handle(function () calls++),
       link3 = s.handle(function (v) out += v);
     
-    assertEquals(1, handlers1.getLength());
+    asserts.assert(1 == handlers1.getLength());
 
-    assertEquals(0, calls);
-    assertEquals(0, mapCalls);
+    asserts.assert(0 == calls);
+    asserts.assert(0 == mapCalls);
     
     handlers1.trigger('1');
     
-    assertEquals(0, calls);
-    assertEquals(1, mapCalls);
+    asserts.assert(0 == calls);
+    asserts.assert(1 == mapCalls);
     
     handlers1.trigger('2');
     
-    assertEquals(0, calls);
-    assertEquals(2, mapCalls);
+    asserts.assert(0 == calls);
+    asserts.assert(2 == mapCalls);
     
-    assertEquals('', out);
+    asserts.assert('' == out);
     
     step();
     
-    assertEquals(2, calls);
-    assertEquals(2, mapCalls);
+    asserts.assert(2 == calls);
+    asserts.assert(2 == mapCalls);
     
-    assertEquals('11', out);
+    asserts.assert('11' == out);
     
     handlers1.trigger('3');
     
-    assertEquals(2, calls);
-    assertEquals(3, mapCalls);
+    asserts.assert(2 == calls);
+    asserts.assert(3 == mapCalls);
     
     step();
     step();
     
-    assertEquals(6, calls);
-    assertEquals(3, mapCalls);
-    assertEquals('112233', out);
+    asserts.assert(6 == calls);
+    asserts.assert(3 == mapCalls);
+    asserts.assert('112233' == out);
+    return asserts.done();
   }
   
-  function testFlatMapNoGather() {
+  public function testFlatMapNoGather() {
     var mapCalls = 0,
       out = '',
       inQueueData = [for (i in 1...1000) Std.string(i)],
@@ -252,7 +264,7 @@ class Signals extends Base {
     
     var s = signal1.flatMap(function (v1) { mapCalls++; return make().map(function (v2) return v1 + v2); }, false);
     
-    assertEquals(0, handlers1.getLength());
+    asserts.assert(0 == handlers1.getLength());
     
     var calls = 0;
     
@@ -260,39 +272,40 @@ class Signals extends Base {
       link2 = s.handle(function () calls++),
       link3 = s.handle(function (v) out += v);
     
-    assertEquals(3, handlers1.getLength());
+    asserts.assert(3 == handlers1.getLength());
 
-    assertEquals(0, calls);
-    assertEquals(0, mapCalls);
+    asserts.assert(0 == calls);
+    asserts.assert(0 == mapCalls);
     
     handlers1.trigger('1');
     
-    assertEquals(0, calls);
-    assertEquals(3, mapCalls);
+    asserts.assert(0 == calls);
+    asserts.assert(3 == mapCalls);
     
     handlers1.trigger('2');
     
-    assertEquals(0, calls);
-    assertEquals(6, mapCalls);
+    asserts.assert(0 == calls);
+    asserts.assert(6 == mapCalls);
     
-    assertEquals('', out);
-    
-    step();
-    
-    assertEquals(1, calls);
-    assertEquals(6, mapCalls);
-    assertEquals('', out);
+    asserts.assert('' == out);
     
     step();
     
-    assertEquals(2, calls);
-    assertEquals(6, mapCalls);
-    assertEquals('', out);
+    asserts.assert(1 == calls);
+    asserts.assert(6 == mapCalls);
+    asserts.assert('' == out);
     
     step();
     
-    assertEquals(2, calls);
-    assertEquals(6, mapCalls);
-    assertEquals('13', out);
+    asserts.assert(2 == calls);
+    asserts.assert(6 == mapCalls);
+    asserts.assert('' == out);
+    
+    step();
+    
+    asserts.assert(2 == calls);
+    asserts.assert(6 == mapCalls);
+    asserts.assert('13' == out);
+    return asserts.done();
   }  
 }

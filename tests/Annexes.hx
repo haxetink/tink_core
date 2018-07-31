@@ -1,11 +1,14 @@
 package ;
 
+import tink.unit.Assert.*;
+
 using tink.CoreApi;
 
+@:asserts
 class Annexes extends Base {
-  function testAll() {
+  public function testAll() {
     var car = new Car();
-    assertEquals(car.parts.get(Engine), car.parts.get(Engine));
+    return assert(car.parts.get(Engine) == car.parts.get(Engine));
   }
 }
 
