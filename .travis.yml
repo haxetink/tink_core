@@ -3,6 +3,10 @@ dist: trusty
 
 language: node_js
 node_js: 8
+
+os:
+  - linux
+  - osx
     
 install:
   - yarn global add lix haxe-travix
