@@ -9,7 +9,7 @@ os:
   - osx
     
 install:
-  - yarn global add lix haxe-travix
+  - npm i -g lix haxe-travix
   - lix download
 
 script:
