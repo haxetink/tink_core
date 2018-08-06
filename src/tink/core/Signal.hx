@@ -167,19 +167,20 @@ private class Suspendable<T> implements SignalObject<T> {
 
   public function new(activate) {
     this.activate = activate;
-    this.check = function ()
-      if (trigger.getLength() == 0) {
-        suspend();
-        suspend = null;
-      }
   }
 
   public function handle(cb) {
     if (killed) return null;
-    if (trigger.getLength() == 0)
+    if (trigger.getLength() == 0) 
       this.suspend = activate(trigger.trigger);
     
-    return trigger.handle(cb) & check;
+    return 
+      trigger.handle(cb) 
+      & function ()
+          if (trigger.getLength() == 0) {
+            suspend();
+            suspend = null;
+          }
   }
 }
 
