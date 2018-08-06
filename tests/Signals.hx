@@ -12,7 +12,7 @@ class Signals extends Base {
     signal2 = handlers2 = Signal.trigger();
   }
   function testNext() {
-    var next = signal1.next();
+    var next = signal1.nextTime();
     var value = null;
     next.handle(function (v) value = v);
     handlers1.trigger('foo');
@@ -24,10 +24,12 @@ class Signals extends Base {
   function testSuspendable() {
     
     var active = false;
-    var s = Signal.create({
-      activate: function (_) active = true,
-      suspend: function () active = false,
-    });
+    var s = Signal.create(
+      function (_) {
+        active = true;
+        return function () active = false;
+      }
+    );
 
     assertFalse(active);
 
