@@ -84,7 +84,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
     return ret.asFuture();
   }
 
-  public function until<X>(end:Future<X>) {
+  public function until<X>(end:Future<X>):Signal<T> {
     var ret = new Suspendable(
       function (yield) return this.handle(yield).dissolve
     );
