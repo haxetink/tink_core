@@ -108,15 +108,19 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public static inline function lazy<T>(p:Lazy<Promise<T>>):Promise<T>
     return Future.async(function(cb) p.get().handle(cb), true);
 
-  static public function inParallel<T>(a:Array<Promise<T>>, ?lazy:Bool):Promise<Array<T>> 
+  static public function inParallel<T>(a:Array<Promise<T>>, ?concurrency:Int, ?lazy:Bool):Promise<Array<T>> 
     return 
       if(a.length == 0) Future.sync(Success([]))
       else Future.async(function (cb) {
         var result = [], 
             pending = a.length,
             links:CallbackLink = null,
-            sync = false;
-
+            linkArray = [],
+            sync = false,
+            i = 0,
+            iter = a.iterator(),
+            next = null;
+            
         function done(o) {
           if (links == null) sync = true;
           else links.dissolve();
@@ -124,24 +128,34 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
         }
 
         function fail(e:Error) {
+          pending = 0;
           done(Failure(e));
         }
+        
+        inline function hasNext() {
+          return iter.hasNext() && pending > 0;
+        }
+        
         function set(index, value) {
           result[index] = value;
           if (--pending == 0) 
             done(Success(result));
+          else if(hasNext())
+            next();
         }
         
-        var linkArray = [];
-        
-        for (i in 0...a.length) {
-          if (sync) break;
-          linkArray.push(a[i].handle(function (o) switch o {
-            case Success(v): set(i, v);
+        next = function() {
+          var index = i++;
+          linkArray.push(iter.next().handle(function (o) switch o {
+            case Success(v): set(index, v);
             case Failure(e): fail(e);
           }));
-        };
-
+        }
+        
+        while(hasNext() && (concurrency == null || concurrency-- > 0)) {
+          next();
+        }
+          
         links = linkArray;
 
         if (sync) 
@@ -159,6 +173,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
               function (tail) return [head].concat(tail)
             )
           );
+          
 
     return loop(0);
   }

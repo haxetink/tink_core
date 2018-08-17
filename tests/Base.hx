@@ -3,6 +3,7 @@ package ;
 import haxe.PosInfos;
 import tink.core.Either;
 import tink.unit.AssertionBuffer;
+using tink.CoreApi;
 
 abstract PhysicalType<T>(Either<Class<T>, Enum<T>>) {
   
@@ -37,5 +38,9 @@ class Base {
       return;
     }
     asserts.fail('no exception thrown', pos);
+  }
+  
+  function delay(ms:Int, ?lazy):Promise<Noise> {
+    return Future.async(function(cb) haxe.Timer.delay(cb.bind(Noise), ms), lazy);
   }
 }

@@ -53,6 +53,33 @@ class Promises extends Base {
     return asserts.done();
   }
   
+  @:variant(null, 10)
+  @:variant(6, 10)
+  @:variant(10, 10)
+  @:variant(20, 10)
+  public function testThrottle(concurrency:Int, total:Int) {
+    var max = 0;
+    var running = 0;
+    
+    function run() {
+      running++;
+      if(running > max) max = running;
+      var future = delay(1);
+      future.handle(function(_) running--);
+      return future;
+    }
+    var p = Promise.inParallel([for(i in 0...total) Promise.lazy(run)], concurrency);
+    p.handle(function(o) {
+      switch concurrency {
+        case null: asserts.assert(max == total);
+        case v if(v > total): asserts.assert(max == total);
+        case v: asserts.assert(max == v);
+      }
+      asserts.handle(o);
+    });
+    return asserts;
+  }
+  
   public function testInSequence() {
     var counter = 0;
     function make(fail:Bool) 
