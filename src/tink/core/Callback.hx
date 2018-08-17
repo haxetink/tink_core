@@ -65,6 +65,11 @@ abstract CallbackLink(LinkObject) from LinkObject {
 
   public inline function dissolve():Void 
     cancel();
+
+  static function noop() {}
+  
+  @:to inline function toFunction():Void->Void
+    return if (this == null) noop else this.dissolve;
     
   @:to inline function toCallback<A>():Callback<A> 
     return function (_) this.dissolve();
