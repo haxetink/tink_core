@@ -1,42 +1,47 @@
 package ;
 
+import deepequal.DeepEqual.*;
 using tink.CoreApi;
 
+@:asserts
 class Outcomes extends Base {
-  function testSure() {
-    assertEquals(4, Success(4).sure());
+  public function testSure() {
+    asserts.assert(4 == Success(4).sure());
     
     throws(
+      asserts,
       function () Failure('four').sure(),
       String,
       function (f) return f == 'four'
     );
     throws(
+      asserts,
       function () Failure(new Error('test')).sure(),
       Error,
       function (e) return e.message == 'test'
     );
+    
+    return asserts.done();
   }
   
-  function testEquals() {
-    assertTrue(Success(4).equals(4));
-    assertFalse(Success(-4).equals(4));
-    assertFalse(Failure(4).equals(4));
+  public function testEquals() {
+    asserts.assert(Success(4).equals(4));
+    asserts.assert(!Success(-4).equals(4));
+    asserts.assert(!Failure(4).equals(4));
+    return asserts.done();
   }
   
-  function eq<A:EnumValue>(exp:A, found:A) 
-    assertTrue(Type.enumEq(exp, found));
-  
-  function testFlatMap() {
+  public function testFlatMap() {
     var outcomes = [
       Success(5), 
       Failure(true)
     ];
         
-    eq(Success(3), outcomes[0].flatMap(function (x) return Success(x - 2)));
-    eq(Failure(true), outcomes[1].flatMap(function (x) return Success(x - 2)));
+    asserts.assert(compare(Success(3), outcomes[0].flatMap(function (x) return Success(x - 2))));
+    asserts.assert(compare(Failure(true), outcomes[1].flatMap(function (x) return Success(x - 2))));
     
-    eq(Failure(Right(7)), outcomes[0].flatMap(function (x) return Failure(x + 2)));
-    eq(Failure(Left(true)), outcomes[1].flatMap(function (x) return Failure(x + 2)));
+    asserts.assert(compare(Failure(Right(7)), outcomes[0].flatMap(function (x) return Failure(x + 2))));
+    asserts.assert(compare(Failure(Left(true)), outcomes[1].flatMap(function (x) return Failure(x + 2))));
+    return asserts.done();
   }
 }

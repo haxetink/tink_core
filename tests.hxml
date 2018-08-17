@@ -1,2 +1,4 @@
 -cp ./tests/
 -main RunTests
+-lib tink_unittest
+-lib deep_equal

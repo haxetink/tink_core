@@ -2,14 +2,16 @@ package ;
 
 using tink.CoreApi;
 
+@:asserts
 class Pairs extends Base {
-  function test() {
+  public function test() {
     var c = new Pair(new Pair(1, 2), new Pair(3, 4));
     
-    assertEquals(1, c.a.a);
-    assertEquals(2, c.a.b);
-    assertEquals(3, c.b.a);
-    assertEquals(4, c.b.b);
+    asserts.assert(1 == c.a.a);
+    asserts.assert(2 == c.a.b);
+    asserts.assert(3 == c.b.a);
+    asserts.assert(4 == c.b.b);
     
+    return asserts.done();
   }
 }

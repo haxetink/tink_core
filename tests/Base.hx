@@ -1,10 +1,8 @@
 package ;
 
 import haxe.PosInfos;
-import haxe.unit.TestCase;
-import haxe.unit.TestResult;
-import haxe.unit.TestStatus;
 import tink.core.Either;
+import tink.unit.AssertionBuffer;
 
 abstract PhysicalType<T>(Either<Class<T>, Enum<T>>) {
   
@@ -27,74 +25,17 @@ abstract PhysicalType<T>(Either<Class<T>, Enum<T>>) {
   @:from static public function ofEnum<E>(e:Enum<E>) 
     return new PhysicalType(Right(e));
 }
-//TODO: this helper should go somewhere
-class Base extends TestCase {
-  
-  function fail(msg:String, ?c : PosInfos) {
-    currentTest.done = true;
-    currentTest.success = false;
-    currentTest.error = msg;
-    currentTest.posInfos = c;
-    throw currentTest;
-  }
-  function throws<T>(f:Void->Void, t:PhysicalType<T>, ?check:T->Bool, ?pos:PosInfos):Void {
+
+class Base {
+  public function new() {}
+  function throws<T>(asserts:AssertionBuffer, f:Void->Void, t:PhysicalType<T>, ?check:T->Bool, ?pos:PosInfos):Void {
     try f()
     catch (e:Dynamic) {
-      if (!t.check(e)) fail('Exception $e not of type $t', pos);
-      if (check != null && !check(e)) fail('Exception $e does not satisfy condition', pos);
-      assertTrue(true);
+      if (!t.check(e)) asserts.fail('Exception $e not of type $t', pos);
+      if (check != null && !check(e)) asserts.fail('Exception $e does not satisfy condition', pos);
+      asserts.assert(true, 'Expected throw');
       return;
     }
-    fail('no exception thrown', pos);
+    asserts.fail('no exception thrown', pos);
   }
-}
-
-class TestBase extends Base {
-  function testThrowInst() {
-    throws(
-      function () throw 'foo',
-      String
-    );
-    throws(
-      function () assertTrue(false),
-      TestStatus
-    );
-    throws(
-      function () 
-        throws(
-          function () throw 'foo',
-          Array
-        ),
-      TestStatus
-    );    
-  }
-  function testThrowEnum() {
-    throws(
-      function () throw Left(true),
-      Either
-    );
-    throws(
-      function () throws(
-        function () throw Left(true),
-        String
-      ),
-      TestStatus
-    );
-  }
-  function testThrowAndCheck() {
-    throws(
-      function () throw 'foo',
-      String,
-      function (s) return s == 'foo'
-    );
-    throws(
-      function () 
-        throws(
-          function () throw 'foo',
-          String,
-          function (s) return s == 'bar'
-        ),
-      TestStatus
-    );      
-  }  
 }

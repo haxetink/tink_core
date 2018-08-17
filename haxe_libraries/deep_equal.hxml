@@ -1,0 +1,3 @@
+-D deep_equal=0.3.0
+# @install: lix --silent download "gh://github.com/kevinresol/deep_equal#07aea35baef0b366e72ab7557966014da100b972" into deep_equal/0.3.0/github/07aea35baef0b366e72ab7557966014da100b972
+-cp ${HAXE_LIBCACHE}/deep_equal/0.3.0/github/07aea35baef0b366e72ab7557966014da100b972/src

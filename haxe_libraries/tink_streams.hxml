@@ -1,0 +1,4 @@
+-D tink_streams=0.2.1
+# @install: lix --silent download "haxelib:/tink_streams#0.2.1" into tink_streams/0.2.1/haxelib
+-lib tink_core
+-cp ${HAXE_LIBCACHE}/tink_streams/0.2.1/haxelib/src

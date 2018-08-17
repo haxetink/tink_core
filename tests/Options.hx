@@ -2,25 +2,26 @@ package ;
 
 using tink.CoreApi;
 
+@:asserts
 class Options extends Base {
-  
-  function testSure() {
-    assertEquals(4, Some(4).force());
+  public function testSure() {
+    asserts.assert(4 == Some(4).force());
     
     throws(
+      asserts,
       function () None.force(),
       Error,
       function (e) return e.message == 'Some value expected but none found'
     );
+    
+    return asserts.done();
   }
   
-  function testEquals() {
-    assertTrue(Some(4).equals(4));
-    assertFalse(Some(-4).equals(4));
-    assertFalse(None.equals(4));
+  public function testEquals() {
+    asserts.assert(Some(4).equals(4));
+    asserts.assert(!Some(-4).equals(4));
+    asserts.assert(!None.equals(4));
+    return asserts.done();
   }
-  
-  function eq<A:EnumValue>(exp:A, found:A) 
-    assertTrue(Type.enumEq(exp, found));
   
 }
