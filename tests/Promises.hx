@@ -57,7 +57,7 @@ class Promises extends Base {
   @:variant(6, 10)
   @:variant(10, 10)
   @:variant(20, 10)
-  public function testThrottle(concurrency:Int, total:Int) {
+  public function testThrottle(concurrency:Null<Int>, total:Int) {
     var max = 0;
     var running = 0;
     
