@@ -9,6 +9,7 @@ os:
   - osx
     
 install:
+  - npm i -g lix
   - lix download
   - haxelib git travix https://github.com/back2dos/travix && pushd . && cd $(haxelib config)travix/git && haxe build-neko.hxml && popd
 
