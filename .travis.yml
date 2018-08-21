@@ -11,19 +11,19 @@ os:
 install:
   - npm i -g lix
   - lix download
-  - haxelib git travix https://github.com/back2dos/travix && pushd $(haxelib config)travix/git && lix download && haxe build-neko.hxml && popd
+  - lix install gh:back2dos/travix
 
 script:
-  - travix interp
-  - travix neko
-  - travix python
-  - travix node
-  - travix node -D tink_core_no_error_pos
-  # - travix flash
-  # - travix java
-  - travix cpp
-  - travix cs
-  - travix php
+  - lix run travix interp
+  - lix run travix neko
+  - lix run travix python
+  - lix run travix node
+  - lix run travix node -D tink_core_no_error_pos
+  # - lix run travix flash
+  # - lix run travix java
+  - lix run travix cpp
+  - lix run travix cs
+  - lix run travix php
 
 env:
   secure: dhVtIkMcUYAyAK92oEzBiuHE2uH9MQ46PD8zdKnnky9WiH54x/Y167Wt1NvUhFxhNzfu44VpI5d1ngnSV5pwum+E/RfoJNoqIsRsy1dL/vnTwyBdGDwbBJc/RDqXYUQnF8okR3JBZKmr9FLXTl5DMKOP+mJE1IF6GLijTDR4pf8=
