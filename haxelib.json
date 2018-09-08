@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "1.17.0",
-	"releasenote": "Add support for tink_core_no_error_pos.",
+	"version": "1.17.1",
+	"releasenote": "Various fixes.",
 	"tags": [
 		"tink",
 		"cross",
