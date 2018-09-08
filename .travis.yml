@@ -16,16 +16,16 @@ jobs:
         - npm i -g lix
         - lix download
       script:
-        - lix travix interp
-        - lix travix neko
-        - lix travix python
-        - lix travix node
-        - lix travix node -D tink_core_no_error_pos
-        # - lix travix flash
-        # - lix travix java
-        - lix travix cpp
-        - lix travix cs
-        - lix travix php
+        - lix run travix interp
+        - lix run travix neko
+        - lix run travix python
+        - lix run travix node
+        - lix run travix node -D tink_core_no_error_pos
+        # - lix run travix flash
+        # - lix run travix java
+        - lix run travix cpp
+        - lix run travix cs
+        - lix run travix php
     
     - stage: deploy
       language: haxe
