@@ -28,8 +28,9 @@ jobs:
         - travix php
     
     - stage: deploy
-      os: linux
+      language: haxe
       haxe: "3.4.7"
+      os: linux
       script: skip
       after_success:
         - haxelib install travix
