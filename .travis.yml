@@ -6,7 +6,7 @@ node_js: 8
 
 os:
   - linux
-  - osx
+  # - osx
     
 install:
   - npm i -g lix
@@ -36,5 +36,5 @@ jobs:
       script: skip
       after_success:
         - haxelib install travix
-        - haxelib run travix install
-        - travix release
+        - lix run travix install
+        - lix run travix release
