@@ -30,8 +30,8 @@ script:
   - lix run travix node -D tink_core_no_error_pos
   # - lix run travix flash
   # - lix run travix java
+  # - lix run travix cs
   - lix run travix cpp
-  - lix run travix cs
   - lix run travix php
 
 jobs:
