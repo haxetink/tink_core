@@ -15,7 +15,7 @@ os:
 env:
   - HAXE_VERSION=3.3.0-rc.1
   - HAXE_VERSION=3.4.7
-  - HAXE_VERSION=4.0.0-preview.4
+  - HAXE_VERSION=latest
   
 install:
   - npm i -g lix
