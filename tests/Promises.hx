@@ -58,12 +58,12 @@ class Promises extends Base {
   @:variant(10, 10)
   @:variant(20, 10)
   public function testThrottle(concurrency:Null<Int>, total:Int) {
-    var max = 0;
+    var maximum = 0;
     var running = 0;
     
     function run() {
       running++;
-      if(running > max) max = running;
+      if(running > maximum) maximum = running;
       var future = delay(1);
       future.handle(function(_) running--);
       return future;
@@ -71,9 +71,9 @@ class Promises extends Base {
     var p = Promise.inParallel([for(i in 0...total) Promise.lazy(run)], concurrency);
     p.handle(function(o) {
       switch concurrency {
-        case null: asserts.assert(max == total);
-        case v if(v > total): asserts.assert(max == total);
-        case v: asserts.assert(max == v);
+        case null: asserts.assert(maximum == total);
+        case v if(v > total): asserts.assert(maximum == total);
+        case v: asserts.assert(maximum == v);
       }
       asserts.handle(o);
     });
