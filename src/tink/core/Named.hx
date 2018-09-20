@@ -2,6 +2,7 @@ package tink.core;
 
 typedef Named<V> = NamedWith<String, V>;
 
+@:pure
 class NamedWith<N, V> {
   
   public var name(default, null):N;

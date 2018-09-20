@@ -84,21 +84,27 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
     return ret.asFuture();
   }
 
-  /**
-   * Soon to be deprecated in favor of nextTime.
-   */
+  public function until<X>(end:Future<X>):Signal<T> {
+    var ret = new Suspendable(
+      function (yield) return this.handle(yield)
+    );
+    end.handle(ret.kill);
+    return ret;
+  }
+
+  @:deprecated("use nextTime instead")
   public inline function next(?condition:T->Bool):Future<T>
     return nextTime(condition);
   
   /**
-   *  Transfroms this signal and makes it emit `Noise`
+   *  Transforms this signal and makes it emit `Noise`
    */
   public function noise():Signal<Noise>
     return map(function (_) return Noise);
   
   /**
    *  Creates a new signal which stores the result internally.
-   *  Useful for tranformed futures, such as product of `map` and `flatMap`,
+   *  Useful for tranformed signals, such as product of `map` and `flatMap`,
    *  so that the transformation function will not be invoked for every callback
    */
   public function gather():Signal<T> {
@@ -118,6 +124,9 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
    */
   static public function trigger<T>():SignalTrigger<T>
     return new SignalTrigger();
+
+  static public inline function create<T>(create:(T->Void)->(Void->Void)):Signal<T>
+    return new Suspendable<T>(create);
     
   /**
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
@@ -140,6 +149,39 @@ private class SimpleSignal<T> implements SignalObject<T> {
   var f:Callback<T>->CallbackLink;
   public inline function new(f) this.f = f;
   public inline function handle(cb) return this.f(cb);
+}
+
+private class Suspendable<T> implements SignalObject<T> {
+  var trigger:SignalTrigger<T> = new SignalTrigger();
+  var activate:(T->Void)->(Void->Void);
+  var suspend:Void->Void;
+  var check:CallbackLink;
+  
+  public var killed(default, null):Bool = false;
+
+  public function kill()
+    if (!killed) {
+      killed = true;
+      trigger = null;
+    }
+
+  public function new(activate) {
+    this.activate = activate;
+  }
+
+  public function handle(cb) {
+    if (killed) return null;
+    if (trigger.getLength() == 0) 
+      this.suspend = activate(trigger.trigger);
+    
+    return 
+      trigger.handle(cb) 
+      & function ()
+          if (trigger.getLength() == 0) {
+            suspend();
+            suspend = null;
+          }
+  }
 }
 
 class SignalTrigger<T> implements SignalObject<T> {

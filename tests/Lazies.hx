@@ -2,8 +2,9 @@ package;
 
 using tink.CoreApi;
 
+@:asserts
 class Lazies extends Base {
-  function testLaziness() {
+  public function testLaziness() {
     var counter = 0;
 
     function double(x):Int {
@@ -19,20 +20,22 @@ class Lazies extends Base {
     function test(i:Lazy<Int>, expected:Int) {
       counter = 0;
       var j = i.map(double);
-      assertEquals(0, counter);
-      assertEquals(j.get(), expected);
+      asserts.assert(0 == counter);
+      asserts.assert(j.get() == expected);
       j.get();
-      assertEquals(1, counter);
+      asserts.assert(1 == counter);
 
       counter = 0;
       var k = i.flatMap(lazyDouble);
-      assertEquals(0, counter);
-      assertEquals(k.get(), expected);
+      asserts.assert(0 == counter);
+      asserts.assert(k.get() == expected);
       k.get();
-      assertEquals(1, counter);
+      asserts.assert(1 == counter);
     }
 
     test(7, 14);
     test(function () return 11, 22);
+    
+    return asserts.done();
   }
 }

@@ -2,18 +2,20 @@ package ;
 
 using tink.CoreApi;
 
+@:asserts
 class Futures extends Base {
-  
-  function testSync() {
+  public function testSync() {
     var f = Future.sync(4);
     var x = -4;
     f.handle(function (v) x = v);
-    assertEquals(4, x);
+    asserts.assert(4 == x);
     f = 12;
-    f.map(function (v) return v * 2).handle(function (v) assertEquals(24, v));
+    f.map(function (v) return v * 2).handle(function (v) x = v);
+    asserts.assert(24 == x);
+    return asserts.done();
   }
   
-  function testOfAsyncCall() {
+  public function testOfAsyncCall() {
     var callbacks:Array<Int->Void> = [];
     function fake(callback:Int->Void) {
       callbacks.push(callback);
@@ -29,22 +31,23 @@ class Futures extends Base {
       link2 = f.handle(function () calls++);
       
     f.handle(function (v) {
-      assertEquals(4, v);
+      asserts.assert(4 == v);
       calls++;
     });
     
-    assertEquals(1, callbacks.length);
+    asserts.assert(1 == callbacks.length);
     link1.dissolve();
     
     trigger();
     
-    assertEquals(2, calls);
+    asserts.assert(2 == calls);
+    return asserts.done();
   }
   
-  function testTrigger() {
+  public function testTrigger() {
     var t = Future.trigger();
-    assertTrue(t.trigger(4));
-    assertFalse(t.trigger(4));
+    asserts.assert(t.trigger(4));
+    asserts.assert(!t.trigger(4));
     
     t = Future.trigger();
     
@@ -53,30 +56,31 @@ class Futures extends Base {
     var calls = 0;
     
     f.handle(function (v) {
-      assertEquals(4, v);
+      asserts.assert(4 == v);
       calls++;
     });
     
     t.trigger(4);
     
-    assertEquals(1, calls);
-    
+    asserts.assert(1 == calls);
+    return asserts.done();
   }
   
-  function testFlatten() {
+  public function testFlatten() {
     var f = Future.sync(Future.sync(4));
     var flat = Future.flatten(f),
       calls = 0;
       
     flat.handle(function (v) {
-      assertEquals(4, v);
+      asserts.assert(4 == v);
       calls++;
     });
     
-    assertEquals(1, calls);
+    asserts.assert(1 == calls);
+    return asserts.done();
   }
   
-  function testOps() {
+  public function testOps() {
     var t1 = Future.trigger(),
       t2 = Future.trigger();
     var f1:Future<Int> = t1,
@@ -85,15 +89,16 @@ class Futures extends Base {
     var f = f1 || f2;
     t1.trigger(1);
     t2.trigger(2);
-    f.handle(assertEquals.bind(1));
+    f.handle(function(v) asserts.assert(v == 1));
     var f = f1 && f2;
     f.handle(function (p) {
-      assertEquals(p.a, 1);  
-      assertEquals(p.b, 2);  
+      asserts.assert(p.a == 1);  
+      asserts.assert(p.b == 2);  
     });
+    return asserts.done();
   }
   
-  function testMany() {
+  public function testMany() {
     var triggers = [for (i in 0...10) Future.trigger()];
     var futures = [for (t in triggers) t.asFuture()];
     
@@ -121,26 +126,27 @@ class Futures extends Base {
     var f = Future.ofMany(futures).map(sum.bind(_, 0)),
       f2 = Future.ofMany(futures, false).map(sum.bind(_, 0));
       
-    assertFalse(read1);
-    assertFalse(read2);
+    asserts.assert(!read1);
+    asserts.assert(!read2);
     
-    f.handle(assertEquals.bind(65));
-    f2.handle(assertEquals.bind(65));
+    f.handle(function(v) asserts.assert(v == 65));
+    f2.handle(function(v) asserts.assert(v == 65));
     
     var handled = false;
     f.handle(function () handled = true);
     
-    assertFalse(handled);
-    assertTrue(read1);
-    assertFalse(read2);
+    asserts.assert(!handled);
+    asserts.assert(read1);
+    asserts.assert(!read2);
     
     for (i in 0...triggers.length)
       triggers[i].trigger(i);
       
-    assertTrue(handled);
+    asserts.assert(handled);
+    return asserts.done();
   }
   
-  function testNever() {
+  public function testNever() {
     var f:Future<Int> = cast Future.NEVER; 
     f.handle(function () {}).dissolve();
     function foo<A>() {
@@ -148,6 +154,6 @@ class Futures extends Base {
       f.handle(function () {}).dissolve();  
     }
     foo();
-    assertTrue(true);
+    return asserts.done();
   }
 }

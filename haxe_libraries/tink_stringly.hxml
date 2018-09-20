@@ -1,0 +1,4 @@
+-D tink_stringly=0.2.0
+# @install: lix --silent download "haxelib:/tink_stringly#0.2.0" into tink_stringly/0.2.0/haxelib
+-lib tink_core
+-cp ${HAXE_LIBCACHE}/tink_stringly/0.2.0/haxelib/src

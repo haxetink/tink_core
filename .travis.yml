@@ -1,41 +1,51 @@
 sudo: required
 dist: trusty
 
-language: haxe
+stages:
+  - test
+  - deploy
 
-haxe:
-  - "3.2.1"
-  - "3.4.2"
-  # - development
-  
-# https://github.com/travis-ci/travis-ci/issues/7754#issuecomment-301223128
-# matrix:
-#   allow_failures:
-#     - haxe: development
-    
-install:
-  - haxelib install travix
-  - haxelib run travix install
+language: node_js
+node_js: 8
 
-script:
-  - haxelib run travix interp
-  - haxelib run travix neko
-  - haxelib run travix python
-  - haxelib run travix node
-  - haxelib run travix node -D tink_core_no_error_pos
-  # - haxelib run travix flash
-  - haxelib run travix java
-  - haxelib run travix cpp
-  - haxelib run travix cs
-  - haxelib run travix php
+os:
+  - linux
+  # - osx
 
 env:
-  secure: dhVtIkMcUYAyAK92oEzBiuHE2uH9MQ46PD8zdKnnky9WiH54x/Y167Wt1NvUhFxhNzfu44VpI5d1ngnSV5pwum+E/RfoJNoqIsRsy1dL/vnTwyBdGDwbBJc/RDqXYUQnF8okR3JBZKmr9FLXTl5DMKOP+mJE1IF6GLijTDR4pf8=
+  - HAXE_VERSION=3.3.0-rc.1
+  - HAXE_VERSION=3.4.7
+  - HAXE_VERSION=latest
+  
+install:
+  - npm i -g lix
+  - lix install haxe $HAXE_VERSION
+  - lix download
+  
+script:
+  - lix run travix interp
+  - lix run travix neko
+  - lix run travix python
+  - lix run travix node
+  - lix run travix node -D tink_core_no_error_pos
+  # - lix run travix flash
+  # - lix run travix java
+  # - lix run travix cs
+  - lix run travix cpp
+  - lix run travix php
 
 jobs:
   include:
+    # - stage: test # should uncomment this when there is no matrix above (e.g. only one os, one env, etc)
     - stage: deploy
+      language: haxe
+      haxe: "3.4.7"
       os: linux
-      haxe: "3.4.2"
+      install: skip
       script: skip
-      after_success: haxelib run travix release
+      env:
+        secure: dhVtIkMcUYAyAK92oEzBiuHE2uH9MQ46PD8zdKnnky9WiH54x/Y167Wt1NvUhFxhNzfu44VpI5d1ngnSV5pwum+E/RfoJNoqIsRsy1dL/vnTwyBdGDwbBJc/RDqXYUQnF8okR3JBZKmr9FLXTl5DMKOP+mJE1IF6GLijTDR4pf8=
+      after_success:
+        - haxelib install travix
+        - haxelib run travix install
+        - haxelib run travix release

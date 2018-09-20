@@ -2,9 +2,11 @@ package ;
 
 using tink.CoreApi;
 
+@:asserts
 class Refs extends Base {
-  function testImplicit() {
+  public function testImplicit() {
     var r:Ref<Int> = 5;
-    assertEquals(5, r);
+    asserts.assert(r == 5);
+    return asserts.done();
   }
 }
