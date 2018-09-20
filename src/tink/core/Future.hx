@@ -78,10 +78,6 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
     return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
   #end
   
-  // TODO: Shouldn't be necessary. @see https://github.com/HaxeFoundation/haxe/issues/7243
-  @:from static inline function ofFutureObject<T>(v:FutureObject<T>):Future<T>
-    return v;
-  
   @:from static inline function ofAny<T>(v:T):Future<T>
     return Future.sync(v);
   
@@ -273,7 +269,7 @@ private class SimpleFuture<T> implements FutureObject<T> {
   public inline function gather():Future<T> 
     return
       if (gathered != null) gathered;
-      else gathered = FutureTrigger.gatherFuture(this);
+      else gathered = FutureTrigger.gatherFuture((this:Future<T>));
 
   public inline function eager():Future<T> {
     var ret = gather();
@@ -298,7 +294,7 @@ private class NestedFuture<T> implements FutureObject<T> {
   public inline function gather():Future<T> 
     return
       if (gathered != null) gathered;
-      else gathered = FutureTrigger.gatherFuture(this);
+      else gathered = FutureTrigger.gatherFuture((this:Future<T>));
 
   public inline function eager():Future<T> {
     var ret = gather();
