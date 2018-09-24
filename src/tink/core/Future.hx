@@ -77,7 +77,10 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:from static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
     return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
   #end
-    
+  
+  @:from static inline function ofAny<T>(v:T):Future<T>
+    return Future.sync(v);
+  
   /**
    *  Casts a Surprise into a Promise
    */
@@ -183,12 +186,6 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
 }
 
-@:forward
-abstract Futuristic<T>(Future<T>) from Future<T> to Future<T> {
-  @:from static function ofAny<T>(v:T):Futuristic<T>
-    return Future.sync(v);
-}
-
 private interface FutureObject<T> {
 
   function map<R>(f:T->R):Future<R>;
@@ -272,7 +269,7 @@ private class SimpleFuture<T> implements FutureObject<T> {
   public inline function gather():Future<T> 
     return
       if (gathered != null) gathered;
-      else gathered = FutureTrigger.gatherFuture(this);
+      else gathered = FutureTrigger.gatherFuture((this:Future<T>));
 
   public inline function eager():Future<T> {
     var ret = gather();
@@ -297,7 +294,7 @@ private class NestedFuture<T> implements FutureObject<T> {
   public inline function gather():Future<T> 
     return
       if (gathered != null) gathered;
-      else gathered = FutureTrigger.gatherFuture(this);
+      else gathered = FutureTrigger.gatherFuture((this:Future<T>));
 
   public inline function eager():Future<T> {
     var ret = gather();
