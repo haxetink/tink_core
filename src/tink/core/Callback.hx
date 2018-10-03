@@ -23,7 +23,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
     return function (_) cb.invoke(Noise);
     
   @:from static function fromNiladic<A>(f:Void->Void):Callback<A> //inlining this seems to cause recursive implicit casts
-    return function (_) f();
+    return #if js cast f #else function (_) f() #end;
   
   @:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A> 
     return
