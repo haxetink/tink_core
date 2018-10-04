@@ -64,7 +64,7 @@ abstract CallbackLink(LinkObject) from LinkObject {
   public inline function cancel():Void 
     if (this != null) this.cancel();
   
-  @:deprecated('Use cancel() instead')
+  //@:deprecated('Use cancel() instead')
   public inline function dissolve():Void 
     cancel();
 
