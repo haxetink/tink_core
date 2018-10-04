@@ -123,7 +123,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
             
         function done(o) {
           if (links == null) sync = true;
-          else links.dissolve();
+          else links.cancel();
           cb(o);
         }
 
@@ -159,7 +159,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
         links = linkArray;
 
         if (sync) 
-          links.dissolve();
+          links.cancel();
       }, lazy);
   
   static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>> {

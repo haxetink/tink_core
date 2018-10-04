@@ -36,7 +36,7 @@ class Futures extends Base {
     });
     
     asserts.assert(1 == callbacks.length);
-    link1.dissolve();
+    link1.cancel();
     
     trigger();
     
@@ -148,10 +148,10 @@ class Futures extends Base {
   
   public function testNever() {
     var f:Future<Int> = cast Future.NEVER; 
-    f.handle(function () {}).dissolve();
+    f.handle(function () {}).cancel();
     function foo<A>() {
       var f:Future<A> = cast Future.NEVER; 
-      f.handle(function () {}).dissolve();  
+      f.handle(function () {}).cancel();  
     }
     foo();
     return asserts.done();

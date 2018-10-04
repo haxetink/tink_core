@@ -53,7 +53,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
   }
 }
 private interface LinkObject {
-  function dissolve():Void;
+  function cancel():Void;
 }
 
 abstract CallbackLink(LinkObject) from LinkObject {
@@ -62,18 +62,19 @@ abstract CallbackLink(LinkObject) from LinkObject {
     this = new SimpleLink(link);
 
   public inline function cancel():Void 
-    if (this != null) this.dissolve();
-
+    if (this != null) this.cancel();
+  
+  @:deprecated('Use cancel() instead')
   public inline function dissolve():Void 
     cancel();
 
   static function noop() {}
   
   @:to inline function toFunction():Void->Void
-    return if (this == null) noop else this.dissolve;
+    return if (this == null) noop else this.cancel;
     
   @:to inline function toCallback<A>():Callback<A> 
-    return function (_) this.dissolve();
+    return function (_) this.cancel();
     
   @:from static inline function fromFunction(f:Void->Void) 
     return new CallbackLink(f);
@@ -82,7 +83,7 @@ abstract CallbackLink(LinkObject) from LinkObject {
     return new LinkPair(a, b);
     
   @:from static function fromMany(callbacks:Array<CallbackLink>)
-    return fromFunction(function () for (cb in callbacks) cb.dissolve());
+    return fromFunction(function () for (cb in callbacks) cb.cancel());
 }
 
 private class SimpleLink implements LinkObject {
@@ -91,7 +92,7 @@ private class SimpleLink implements LinkObject {
   public inline function new(f) 
     this.f = f;
 
-  public inline function dissolve()
+  public inline function cancel()
     if (f != null) {
       f();
       f = null;
@@ -108,11 +109,11 @@ private class LinkPair implements LinkObject {
     this.b = b;
   }
 
-  public function dissolve() 
+  public function cancel() 
     if (!dissolved) {
       dissolved = true;
-      a.dissolve();
-      b.dissolve();
+      a.cancel();
+      b.cancel();
       a = null;
       b = null;
     }
@@ -138,7 +139,7 @@ private class ListCell<T> implements LinkObject {
     cb = null;
   }
 
-  public function dissolve() 
+  public function cancel() 
     switch list {
       case null:
       case v: clear(); v.remove(this);
