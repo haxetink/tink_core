@@ -51,8 +51,8 @@ class Callbacks extends Base {
   public function testSimpleLink() {
     var calls = 0;
     var link:CallbackLink = function () calls++;
-    link.dissolve();
-    link.dissolve();
+    link.cancel();
+    link.cancel();
     asserts.assert(calls == 1);
     return asserts.done();
   }
@@ -66,18 +66,18 @@ class Callbacks extends Base {
     var link2:CallbackLink = function () { calls++; calls2++; }
     var link = link1 & link2;
     
-    link.dissolve();
+    link.cancel();
     asserts.assert(calls == 2);
     asserts.assert(calls1 == 1);
     asserts.assert(calls2 == 1);
     
-    link.dissolve();
+    link.cancel();
     asserts.assert(calls == 2);
     
-    link1.dissolve();
+    link1.cancel();
     asserts.assert(calls1 == 1);
     
-    link2.dissolve();
+    link2.cancel();
     asserts.assert(calls2 == 1);
     return asserts.done();
   }
@@ -102,11 +102,11 @@ class Callbacks extends Base {
     asserts.assert(calls1 == 1);
     asserts.assert(calls2 == 1);
     
-    link1.dissolve();
+    link1.cancel();
     
     asserts.assert(cb.length == 1);
     
-    link1.dissolve();
+    link1.cancel();
     
     asserts.assert(cb.length == 1);
     

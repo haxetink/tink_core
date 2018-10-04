@@ -42,7 +42,7 @@ class Signals extends Base {
     var link = s.handle(function () {});
     asserts.assert(active);
     
-    link.dissolve();
+    link.cancel();
     asserts.assert(!active);
 
     link = s.handle(function () {});
@@ -51,10 +51,10 @@ class Signals extends Base {
     var link2 = s.handle(function () {});
     asserts.assert(active);
 
-    link.dissolve();
+    link.cancel();
     asserts.assert(active);
 
-    link2.dissolve();
+    link2.cancel();
     asserts.assert(!active);
     return asserts.done();
   }
@@ -80,12 +80,12 @@ class Signals extends Base {
     
     asserts.assert(4 == calls);
     
-    link2.dissolve();
+    link2.cancel();
     
     asserts.assert(1 == handlers1.getLength());
     asserts.assert(1 == handlers2.getLength());    
     
-    link1.dissolve();
+    link1.cancel();
     
     asserts.assert(0 == handlers1.getLength());
     asserts.assert(0 == handlers2.getLength());  
@@ -114,12 +114,12 @@ class Signals extends Base {
     
     asserts.assert(4 == calls);
     
-    link2.dissolve();
+    link2.cancel();
     
     asserts.assert(1 == handlers1.getLength());
     asserts.assert(1 == handlers2.getLength());    
     
-    link1.dissolve();
+    link1.cancel();
     
     asserts.assert(1 == handlers1.getLength());
     asserts.assert(1 == handlers2.getLength());
@@ -146,11 +146,11 @@ class Signals extends Base {
     asserts.assert(1 == mapCalls);
     asserts.assert('foofoo' == last);
     
-    link2.dissolve();
+    link2.cancel();
     
     asserts.assert(1 == handlers1.getLength());
     
-    link1.dissolve();
+    link1.cancel();
     
     asserts.assert(1 == handlers1.getLength());
     return asserts.done();
@@ -176,11 +176,11 @@ class Signals extends Base {
     asserts.assert(2 == mapCalls);
     asserts.assert('foofoo' == last);
     
-    link2.dissolve();
+    link2.cancel();
     
     asserts.assert(1 == handlers1.getLength());
     
-    link1.dissolve();
+    link1.cancel();
     
     asserts.assert(0 == handlers1.getLength());
     return asserts.done();

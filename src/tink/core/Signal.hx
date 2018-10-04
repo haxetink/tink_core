@@ -75,11 +75,11 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
     link = this.handle(function (v) if (condition == null || condition(v)) {
       ret.trigger(v);
       if (link == null) immediate = true;
-      else link.dissolve();
+      else link.cancel();
     });
     
     if (immediate) 
-      link.dissolve();
+      link.cancel();
     
     return ret.asFuture();
   }
