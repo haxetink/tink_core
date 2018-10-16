@@ -1,6 +1,6 @@
 -D tink_syntaxhub=0.3.6
-# @install: lix --silent download "haxelib:/tink_syntaxhub#0.3.6" into tink_syntaxhub/0.3.6/haxelib
+# @install: lix --silent download "gh://github.com/haxetink/tink_syntaxhub#cfc78672e72a2a557bd383332525e17eb9802f79" into tink_syntaxhub/0.3.6/github/cfc78672e72a2a557bd383332525e17eb9802f79
 -lib tink_priority
 -lib tink_macro
--cp ${HAXE_LIBCACHE}/tink_syntaxhub/0.3.6/haxelib/src
+-cp ${HAXE_LIBCACHE}/tink_syntaxhub/0.3.6/github/cfc78672e72a2a557bd383332525e17eb9802f79/src
 --macro tink.SyntaxHub.use()
