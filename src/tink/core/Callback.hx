@@ -9,7 +9,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
     return this;
     
   static var depth = 0;
-  static inline var MAX_DEPTH = #if (interp && !eval) 100 #else 1000 #end;
+  static inline var MAX_DEPTH = #if (interp && !eval) 100 #elseif python 200 #else 1000 #end;
   public function invoke(data:T):Void
     if (depth < MAX_DEPTH) {
       depth++;
