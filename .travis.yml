@@ -42,14 +42,13 @@ jobs:
   include:
     # - stage: test # should uncomment this when there is no matrix above (e.g. only one os, one env, etc)
     - stage: deploy
-      language: haxe
-      haxe: "3.4.7"
       os: linux
-      install: skip
+      install:
+        - npm i -g lix
+        - lix download
       script: skip
       env:
         secure: dhVtIkMcUYAyAK92oEzBiuHE2uH9MQ46PD8zdKnnky9WiH54x/Y167Wt1NvUhFxhNzfu44VpI5d1ngnSV5pwum+E/RfoJNoqIsRsy1dL/vnTwyBdGDwbBJc/RDqXYUQnF8okR3JBZKmr9FLXTl5DMKOP+mJE1IF6GLijTDR4pf8=
       after_success:
-        - haxelib install travix
-        - haxelib run travix install
-        - haxelib run travix release
+        - lix run travix install
+        - lix run travix release
