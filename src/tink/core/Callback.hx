@@ -79,10 +79,10 @@ abstract CallbackLink(LinkObject) from LinkObject {
   @:from static inline function fromFunction(f:Void->Void) 
     return new CallbackLink(f);
 
-  @:op(a & b) static inline function join(a:CallbackLink, b:CallbackLink):CallbackLink
+  @:op(a & b) static public inline function join(a:CallbackLink, b:CallbackLink):CallbackLink
     return new LinkPair(a, b);
     
-  @:from static function fromMany(callbacks:Array<CallbackLink>)
+  @:from static public function fromMany(callbacks:Array<CallbackLink>)
     return fromFunction(function () for (cb in callbacks) cb.cancel());
 }
 
