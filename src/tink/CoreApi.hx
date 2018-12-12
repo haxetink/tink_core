@@ -10,6 +10,7 @@ typedef Future<T> = tink.core.Future<T>;
 typedef Surprise<D, F> = tink.core.Future.Surprise<D, F>;
 #if js typedef JsPromiseTools = tink.core.Future.JsPromiseTools; #end
 typedef FutureTrigger<T> = tink.core.Future.FutureTrigger<T>;
+typedef PromiseTrigger<T> = tink.core.Promise.PromiseTrigger<T>;
 
 typedef Outcome<D, F> = tink.core.Outcome<D, F>;
 typedef OutcomeTools = tink.core.Outcome.OutcomeTools;
