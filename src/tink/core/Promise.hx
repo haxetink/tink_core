@@ -205,6 +205,21 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:noUsing 
   static public inline function lift<T>(p:Promise<T>)
     return p;
+    
+  
+  @:noUsing
+  static public function make<A>(f:(A->Void)->(Error->Void)->Void, lazy = false):Promise<A> {
+    return Future.async(function(cb) {
+      f(function(v) cb(Success(v)), function(e) cb(Failure(e)));
+    }, lazy);
+  }
+    
+  /**
+   *  Creates a new `PromiseTrigger`
+   */
+  @:noUsing
+  static public inline function trigger<A>():PromiseTrigger<A> 
+    return new PromiseTrigger(); 
 }
 
 @:callable
@@ -242,4 +257,12 @@ abstract Combiner<In1, In2, Out>(In1->In2->Promise<Out>) from In1->In2->Promise<
   @:from static function ofSafeSync<In1, In2, Out>(f:In1->In2->Out):Combiner<In1, In2, Out> 
     return function (x1, x2) return f(x1, x2);
 	
+}
+
+@:forward
+abstract PromiseTrigger<T>(FutureTrigger<Outcome<T, Error>>) from FutureTrigger<Outcome<T, Error>> to FutureTrigger<Outcome<T, Error>> {
+  public inline function new() this = Future.trigger();
+  public inline function resolve(v:T) return this.trigger(Success(v));
+  public inline function reject(e:Error) return this.trigger(Failure(e));
+  @:to public inline function asPromise():Promise<T> return this;
 }
