@@ -8,6 +8,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public static var NOISE:Promise<Noise> = Future.sync(Success(Noise));
   public static var NEVER:Promise<Dynamic> = Future.NEVER;
   
+  public inline function new(f:(T->Void)->(Error->Void)->Void, lazy = false) {
+    this = Future.async(function(cb) {
+      f(function(v) cb(Success(v)), function(e) cb(Failure(e)));
+    }, lazy);
+  }
+  
   public inline function eager():Promise<T>
     return this.eager();
 
@@ -205,14 +211,6 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:noUsing 
   static public inline function lift<T>(p:Promise<T>)
     return p;
-    
-  
-  @:noUsing
-  static public function make<A>(f:(A->Void)->(Error->Void)->Void, lazy = false):Promise<A> {
-    return Future.async(function(cb) {
-      f(function(v) cb(Success(v)), function(e) cb(Failure(e)));
-    }, lazy);
-  }
     
   /**
    *  Creates a new `PromiseTrigger`
