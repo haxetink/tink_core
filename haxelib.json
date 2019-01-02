@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Deprecate Future#fromMany (#78)",
-	"version": "1.18.0",
+	"releasenote": "Support js-like promise constructor.",
+	"version": "1.19.0",
 	"url": "http://haxetink.org/tink_core"
 }
