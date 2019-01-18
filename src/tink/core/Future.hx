@@ -185,8 +185,8 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:noUsing static public inline function trigger<A>():FutureTrigger<A> 
     return new FutureTrigger();  
     
-  @:noUsing static public function delay(ms:Int):Future<Noise> 
-    return Future.async(function(cb) haxe.Timer.delay(cb.bind(Noise), ms));
+  @:noUsing static public function delay<T>(ms:Int, value:Lazy<T>):Future<T>
+    return Future.async(function(cb) haxe.Timer.delay(function() cb(value.get()), ms));
 
 }
 
