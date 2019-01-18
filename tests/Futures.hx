@@ -156,4 +156,20 @@ class Futures extends Base {
     foo();
     return asserts.done();
   }
+  
+  public function testDelay() {
+    var now = haxe.Timer.stamp();
+    var resolved = false;
+    Future.delay(500, Noise).handle(function(_) {
+      resolved = true;
+      var dt = haxe.Timer.stamp() - now;
+      asserts.assert(dt > .49); // it may not be very exact
+      asserts.assert(dt < .51); // it may not be very exact
+      asserts.done();
+    });
+    asserts.assert(!resolved);
+    
+    return asserts;
+    
+  }
 }
