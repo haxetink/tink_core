@@ -68,7 +68,24 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
     return a.merge(b, function (a, b) return new Pair(a, b)); // TODO: a.merge(b, Pair.new); => File "src/typing/type.ml", line 555, characters 9-15: Assertion failed
     
-    
+  /**
+   * Given an Iterable (e.g. Array) of Promises, handle them one by one with the `yield` function until one of them yields `Some` value
+   * and the returned promise will resolve that value. If all of them yields `None`, the returned promise will resolve to the `finally` promise.
+   * In a nutshell, it is the async version of the following code:
+   * ```haxe
+   * for(promise in promises) {
+   *   switch yield(promise) {
+   *     case Some(v): return v;
+   *     case None:
+   *   }
+   * }
+   * return finally;
+   * ```
+   * @param promises An Iterable (e.g. Array) of Promises
+   * @param yield A function used to handle the promises and should return an Option
+   * @param finally A value to be used when all yields `None`
+   * @return Promise<T>
+   */
   static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, finally:Promise<R>, ?lazy):Promise<R> {
     return Future.async(function(cb) {
       var iter = promises.iterator();
