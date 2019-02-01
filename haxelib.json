@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Support js-like promise constructor.",
-	"version": "1.19.0",
+	"releasenote": "Add Future.delay()",
+	"version": "1.20.0",
 	"url": "http://haxetink.org/tink_core"
 }
