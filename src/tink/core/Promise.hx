@@ -113,6 +113,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return Future.ofJsPromise(promise);
   #end
   
+  // TODO: investigate why inlining this will cause all kinds of type error all over the place (downstream libraries)
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
     return (s : Surprise<T, Error>);
     
