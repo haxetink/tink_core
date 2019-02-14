@@ -116,19 +116,16 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    * @param timeout A Future to indicate the end of the retry process. This function will wait for the last generated promise to resolve after `timeout` has been fired.
    * @return Promise<T>
    */
-  static function retry<T>(gen:Void->Promise<T>, cooldown:Void->Future<Noise>, timeout:Future<Noise>):Promise<T> {
+  public static function retry<T>(gen:Void->Promise<T>, cooldown:Void->Future<Noise>, timeout:Future<Noise>):Promise<T> {
     return Future.async(function(cb) {
       var expired = false;
-      timeout.handle(function(_) return expired = true);
-      
-      function next() {
+      timeout.handle(function(_) expired = true);
+      (function next() {
         gen().handle(function(o) switch o {
           case Failure(_) if(!expired): cooldown().handle(next);
           case _: cb(o);
         });
-      }
-      
-      next();
+      })();
     });
   }
   
