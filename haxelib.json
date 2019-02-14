@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Add Future.delay()",
-	"version": "1.20.0",
+	"releasenote": "Add Promise.retry()",
+	"version": "1.21.0",
 	"url": "http://haxetink.org/tink_core"
 }
