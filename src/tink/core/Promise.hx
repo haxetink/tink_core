@@ -108,6 +108,57 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     }, lazy);
   }
   
+  /**
+   * Retry a promise generator repeatedly
+   * 
+   * @param gen A function that returns a `Promise`, this function will be called multiple times during the retry process
+   * @param next A callback to be called when an attempt failed. An object will be received containing the info of the last attempt:
+   *   `attempt` is the number of attempts tried, starting from `1`
+   *   `error` is the error produced from the last attempt
+   *   `elasped` is the amount of time (in ms) elapsed since the beginning of the `retry` call
+   * 
+   *   If this function's returned promised resolves to an `Error`, this retry will abort with such error. Otherwise if it resolves to a `Success(Noise)`, the retry will continue.
+   * 
+   *   Some usage examples:
+   *     - wait longer for later attempts and stop after a limit:
+   *     ```haxe
+   *     function (info) return switch info.attempt {
+   *         case 10: info.error;
+   *         case v: Future.delay(v * 1000, Noise);
+   *     }
+   *     ```
+   * 
+   *     - bail out on error codes that are fatal:
+   *     ```haxe
+   *     function (info) return switch info.error.code {
+   *       case Forbidden : info.error; // in this case new attempts probably make no sense 
+   *       default: Future.delay(1000, Noise);
+   *     }
+   *     ```
+   * 
+   *     - and also actually timeout:
+   *     ```haxe
+   *     // with using DateTools
+   *     function (info) return 
+   *       if (info.elapsed > 2.minutes()) info.error 
+   *       else Future.delay(1000, Noise);
+   *     ```
+   * 
+   * @return Promise<T>
+   */
+  static public function retry<T>(gen:Void->Promise<T>, next:Next<{ attempt: Int, error:Error, elapsed:Float }, Noise>):Promise<T> {
+    function stamp() return haxe.Timer.stamp() * 1000;
+    var start = stamp();
+    return (function attempt(count:Int) {
+      return gen().tryRecover(
+        function (error) {
+          return next({ attempt: count, error: error, elapsed: stamp() - start })
+            .next(function (_) return attempt(count + 1));
+        }
+      );
+    })(1);
+  }
+  
   #if js
   @:from static public inline function ofJsPromise<A>(promise:js.Promise<A>):Promise<A>
     return Future.ofJsPromise(promise);
