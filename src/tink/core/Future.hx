@@ -7,7 +7,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   
   public static var NULL:Future<Dynamic> = Future.sync(null);
   public static var NOISE:Future<Noise> = Future.sync(Noise);
-  public static var NEVER:Future<Dynamic> = NeverFuture.inst;
+  public static var NEVER:Future<Dynamic> = (NeverFuture.inst:FutureObject<Dynamic>);
 
   public inline function new(f:Callback<T>->CallbackLink) 
     this = new SimpleFuture(f);  
