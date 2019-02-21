@@ -1,5 +1,45 @@
 # Signal
 
+### Quick Example
+
+```haxe
+class Player {
+  // Expose a signal object to outside 
+  public var damaged(default, null):Signal<Int>;
+  
+  // Keep the trigger private so that only the player itself can trigger it
+  var damagedTrigger:SignalTrigger<Int>;
+  
+  public function new() {
+    // Create a trigger which can be later used to invoke the signal
+    damagedTrigger = Signal.trigger();
+    
+    // Create a Signal instance which can be exposed to outside
+    damaged = damagedTrigger.asSignal();
+  }
+  
+  public function damage(value:Int) {
+    // Invoke a value on the signal
+    damagedTrigger.trigger(value);
+  }
+}
+
+class Main {
+  static function main() {
+    var player = new Player();
+    
+    // Register a handler on the signal
+    player.damanged.handle(v -> trace('Damaged ${v}HP!');
+    
+    // ... later at somewhere else ...
+    player.damage(100);
+  }
+}
+```
+
+
+### Interface
+
 Despite an overabundance of signal implementations, `tink_core` does provide its own flavour of signals. One that aims at utmost simplicity and full integration with the rest of tink. Here it is:
 
 ```haxe
