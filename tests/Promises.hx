@@ -110,7 +110,7 @@ class Promises extends Base {
       case v: Success(v);
     }
 
-  @:include public function testDynamicNext() {
+  public function testDynamicNext() {
     var p = Promise.lift('{"answer":42}');
     return 
       p
