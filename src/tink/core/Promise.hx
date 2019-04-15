@@ -287,6 +287,14 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:noUsing
   static public inline function trigger<A>():PromiseTrigger<A> 
     return new PromiseTrigger(); 
+  
+  @:noUsing
+  static public inline function resolve<A>(v:A):Promise<A> 
+    return Future.sync(Success(v));
+  
+  @:noUsing
+  static public inline function reject<A>(e:Error):Promise<A> 
+    return Future.sync(Failure(e));
 }
 
 @:callable
