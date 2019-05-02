@@ -253,7 +253,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return loop(0);
   }
 			  
-  #if !java
+  #if (!java || jvm)
   static public function cache<T>(gen:Void->Promise<Pair<T, Future<Noise>>>):Void->Promise<T> {
     var p = null;
     return function() {
