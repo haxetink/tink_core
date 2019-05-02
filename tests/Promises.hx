@@ -64,7 +64,7 @@ class Promises extends Base {
     function run() {
       running++;
       if(running > maximum) maximum = running;
-      var future = delay(1);
+      var future = Future.delay(100, Noise);
       future.handle(function(_) running--);
       return future;
     }

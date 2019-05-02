@@ -34,7 +34,7 @@ class Base {
     catch (e:Dynamic) {
       if (!t.check(e)) asserts.fail('Exception $e not of type $t', pos);
       if (check != null && !check(e)) asserts.fail('Exception $e does not satisfy condition', pos);
-      asserts.assert(true, 'Expected throw');
+      asserts.assert(true, 'Expected throw', pos);
       return;
     }
     asserts.fail('no exception thrown', pos);
