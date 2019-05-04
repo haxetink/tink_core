@@ -2,6 +2,11 @@ package tink.core;
 
 using tink.CoreApi;
 
+#if js
+import #if haxe4 js.lib.Error #else js.Error #end as JsError;
+import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
+#end
+
 @:forward(handle, gather, eager)
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   
@@ -72,10 +77,10 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   
   #if js
   /**
-   *  Casts a js.Promise into a Surprise
+   *  Casts a js Promise into a Surprise
    */
-  @:from static public function ofJsPromise<A>(promise:js.Promise<A>):Surprise<A, Error>
-    return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:js.Error) cb(Failure(Error.withData(e.message, e)))));
+  @:from static public function ofJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
+    return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
   
   @:from static inline function ofAny<T>(v:T):Future<T>
@@ -430,9 +435,9 @@ typedef Surprise<D, F> = Future<Outcome<D, F>>;
 
 #if js
 class JsPromiseTools {
-  static inline public function toSurprise<A>(promise:js.Promise<A>):Surprise<A, Error>
+  static inline public function toSurprise<A>(promise:JsPromise<A>):Surprise<A, Error>
     return Future.ofJsPromise(promise);
-  static inline public function toPromise<A>(promise:js.Promise<A>):Promise<A>
+  static inline public function toPromise<A>(promise:JsPromise<A>):Promise<A>
     return Future.ofJsPromise(promise);
 }
 #end

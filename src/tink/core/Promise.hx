@@ -2,6 +2,10 @@ package tink.core;
 
 using tink.CoreApi;
 
+#if js
+import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
+#end
+
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
   
   public static var NULL:Promise<Dynamic> = Future.sync(Success(null));
@@ -160,7 +164,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   }
   
   #if js
-  @:from static public inline function ofJsPromise<A>(promise:js.Promise<A>):Promise<A>
+  @:from static public inline function ofJsPromise<A>(promise:JsPromise<A>):Promise<A>
     return Future.ofJsPromise(promise);
   #end
   

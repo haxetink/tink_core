@@ -3,6 +3,10 @@ package tink.core;
 import tink.core.Outcome;
 import haxe.CallStack;
 
+#if js
+import #if haxe4 js.lib.Error #else js.Error #end as JsError;
+#end
+
 typedef Pos = 
   #if macro
     haxe.macro.Expr.Position;
@@ -99,7 +103,7 @@ class TypedError<T> {
   }
   
   #if js
-  static public inline function ofJsError(e:js.Error, ?pos:Pos):Error 
+  static public inline function ofJsError(e:JsError, ?pos:Pos):Error 
     return Error.withData(500, e.message, e, pos);
   #end
   
