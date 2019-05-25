@@ -191,14 +191,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return 
       if(a.length == 0) Future.sync(Success([]))
       else Future.async(function (cb) {
-        var result = [], 
+        var result = [],
             pending = a.length,
             links:CallbackLink = null,
-            linkArray = [],
-            sync = false,
-            i = 0,
-            iter = a.iterator(),
-            next = null;
+            linkArray:Array<CallbackLink> = [],
+            sync = false;
+            
             
         function done(o) {
           if (links == null) sync = true;
@@ -207,32 +205,37 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
         }
 
         function fail(e:Error) {
-          pending = 0;
           done(Failure(e));
         }
         
-        inline function hasNext() {
-          return iter.hasNext() && pending > 0;
-        }
-        
-        function set(index, value) {
+        function set(index:Int, value) {
           result[index] = value;
           if (--pending == 0) 
             done(Success(result));
-          else if(hasNext())
-            next();
         }
         
-        next = function() {
-          var index = i++;
-          linkArray.push(iter.next().handle(function (o) switch o {
-            case Success(v): set(index, v);
-            case Failure(e): fail(e);
-          }));
-        }
-        
-        while(hasNext() && (concurrency == null || concurrency-- > 0)) {
-          next();
+        // take-a-number system
+        var acquire:Void->Future<CallbackLink> = 
+          if(concurrency == null || concurrency >= a.length) {
+            var future = Future.sync((null:CallbackLink));
+            function() return future;
+          } else {
+            new Quota(concurrency).acquire;
+          }
+          
+        for(i in 0...a.length) {
+          if(sync) break;
+          var callback:CallbackLink;
+          callback = acquire().handle(function(cb) {
+            callback = a[i].handle(function(o) {
+              switch o {
+                case Success(v): set(i, v);
+                case Failure(e): fail(e);
+              }
+              cb.dissolve();
+            });
+          });
+          linkArray.push(function() callback.dissolve());
         }
           
         links = linkArray;

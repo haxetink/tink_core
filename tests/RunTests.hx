@@ -17,6 +17,7 @@ class RunTests {
       new Promises(),
       new Refs(),
       new Signals(),
+      new Quotas(),
     ])).handle(Runner.exit);
   }
 }
