@@ -52,7 +52,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
     #end
   }
 }
-private interface LinkObject {
+interface LinkObject {
   function cancel():Void;
 }
 
