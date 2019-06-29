@@ -1,6 +1,13 @@
 {
 	"name": "tink_core",
-	"license": "MIT",
+	"description": "Tinkerbell Core",
+	"classPath": "src",
+	"url": "http://haxetink.org/tink_core",
+	"contributors": [
+		"back2dos"
+	],
+	"version": "1.23.0",
+	"releasenote": "Add Promise.resolve and Promise.reject.",
 	"tags": [
 		"tink",
 		"cross",
@@ -12,12 +19,5 @@
 		"signal",
 		"event"
 	],
-	"classPath": "src",
-	"description": "Tinkerbell Core",
-	"contributors": [
-		"back2dos"
-	],
-	"releasenote": "Add Promise.resolve() and Promise.reject()",
-	"version": "1.22.0",
-	"url": "http://haxetink.org/tink_core"
+	"license": "MIT"
 }
