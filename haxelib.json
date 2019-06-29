@@ -17,7 +17,7 @@
 	"contributors": [
 		"back2dos"
 	],
-	"releasenote": "Add Promise.retry()",
-	"version": "1.21.0",
+	"releasenote": "Add Promise.resolve() and Promise.reject()",
+	"version": "1.22.0",
 	"url": "http://haxetink.org/tink_core"
 }

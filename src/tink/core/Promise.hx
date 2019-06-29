@@ -2,6 +2,10 @@ package tink.core;
 
 using tink.CoreApi;
 
+#if js
+import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
+#end
+
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
   
   public static var NULL:Promise<Dynamic> = Future.sync(Success(null));
@@ -70,7 +74,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     
   /**
    * Given an Iterable (e.g. Array) of Promises, handle them one by one with the `yield` function until one of them yields `Some` value
-   * and the returned promise will resolve that value. If all of them yields `None`, the returned promise will resolve to the `finally` promise.
+   * and the returned promise will resolve that value. If all of them yields `None`, the returned promise will resolve to the `fallback` promise.
    * In a nutshell, it is the async version of the following code:
    * ```haxe
    * for(promise in promises) {
@@ -79,14 +83,14 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    *     case None:
    *   }
    * }
-   * return finally;
+   * return fallback;
    * ```
    * @param promises An Iterable (e.g. Array) of Promises
    * @param yield A function used to handle the promises and should return an Option
-   * @param finally A value to be used when all yields `None`
+   * @param fallback A value to be used when all yields `None`
    * @return Promise<T>
    */
-  static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, finally:Promise<R>, ?lazy):Promise<R> {
+  static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, fallback:Promise<R>, ?lazy):Promise<R> {
     return Future.async(function(cb) {
       var iter = promises.iterator();
       function next() {
@@ -102,7 +106,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
               cb(Failure(e));
           })
         else
-          finally.handle(cb);
+          fallback.handle(cb);
       }
       next();
     }, lazy);
@@ -160,7 +164,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   }
   
   #if js
-  @:from static public inline function ofJsPromise<A>(promise:js.Promise<A>):Promise<A>
+  @:from static public inline function ofJsPromise<A>(promise:JsPromise<A>):Promise<A>
     return Future.ofJsPromise(promise);
   #end
   
@@ -253,7 +257,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return loop(0);
   }
 			  
-  #if !java
+  #if (!java || jvm)
   static public function cache<T>(gen:Void->Promise<Pair<T, Future<Noise>>>):Void->Promise<T> {
     var p = null;
     return function() {
@@ -287,6 +291,14 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:noUsing
   static public inline function trigger<A>():PromiseTrigger<A> 
     return new PromiseTrigger(); 
+  
+  @:noUsing
+  static public inline function resolve<A>(v:A):Promise<A> 
+    return Future.sync(Success(v));
+  
+  @:noUsing
+  static public inline function reject<A>(e:Error):Promise<A> 
+    return Future.sync(Failure(e));
 }
 
 @:callable

@@ -1,5 +1,6 @@
 package tink.core;
 
+@:pure
 abstract Pair<A, B>(MPair<A, B>) {
   
   public var a(get, never):A;

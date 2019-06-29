@@ -7,6 +7,7 @@ private typedef AnnexableTo<T> =
     { function new(targeT:T):Void; }
   #end
 
+#if (java || cs) @:dce #end // this make sure the generic method is not genrated
 class Annex<Target> {
   
   var target:Target;
