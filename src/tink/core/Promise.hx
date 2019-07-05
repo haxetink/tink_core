@@ -166,6 +166,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   #if js
   @:from static public inline function ofJsPromise<A>(promise:JsPromise<A>):Promise<A>
     return Future.ofJsPromise(promise);
+    
+  @:to public inline function toJsPromise():JsPromise<T>
+    return new js.Promise(function(resolve, reject) this.handle(function(o) switch o {
+      case Success(v): resolve(v);
+      case Failure(e): reject(new TinkError(e));
+    }));
   #end
   
   // TODO: investigate why inlining this will cause all kinds of type error all over the place (downstream libraries)
@@ -345,3 +351,13 @@ abstract PromiseTrigger<T>(FutureTrigger<Outcome<T, Error>>) from FutureTrigger<
   public inline function reject(e:Error) return this.trigger(Failure(e));
   @:to public inline function asPromise():Promise<T> return this.asFuture();
 }
+
+#if js
+private class TinkError extends js.Error {
+	var data:Error;
+	public function new(e:Error) {
+		super(e.message);
+		this.data = e;
+	}
+}
+#end
