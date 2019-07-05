@@ -86,7 +86,7 @@ abstract CallbackLink(LinkObject) from LinkObject {
     return fromFunction(function () for (cb in callbacks) cb.cancel());
 }
 
-private class SimpleLink implements LinkObject {
+class SimpleLink implements LinkObject {
   var f:Void->Void;
 
   public inline function new(f) 
