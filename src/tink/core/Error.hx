@@ -112,6 +112,8 @@ class TypedError<T> {
       #if js
         if (v != null && (cast v:Error).isTinkError) cast v;
         else null;
+      #elseif haxe4
+        Std.downcast(v, Error);
       #else
         Std.instance(v, Error);
       #end
