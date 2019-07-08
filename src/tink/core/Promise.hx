@@ -4,6 +4,7 @@ using tink.CoreApi;
 
 #if js
 import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
+import #if haxe4 js.lib.Error #else js.Error #end as JsError;
 #end
 
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
@@ -168,7 +169,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return Future.ofJsPromise(promise);
     
   @:to public inline function toJsPromise():JsPromise<T>
-    return new js.Promise(function(resolve, reject) this.handle(function(o) switch o {
+    return new JsPromise(function(resolve, reject) this.handle(function(o) switch o {
       case Success(v): resolve(v);
       case Failure(e): reject(new TinkError(e));
     }));
@@ -353,7 +354,7 @@ abstract PromiseTrigger<T>(FutureTrigger<Outcome<T, Error>>) from FutureTrigger<
 }
 
 #if js
-private class TinkError extends js.Error {
+private class TinkError extends JsError {
 	var data:Error;
 	public function new(e:Error) {
 		super(e.message);
