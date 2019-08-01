@@ -1,6 +1,8 @@
 package tink.core;
 
 abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
+  
+  public static var NULL = ofConst(null);
 
   @:to public inline function get():T
     return this.get();
