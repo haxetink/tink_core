@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "1.23.0",
-	"releasenote": "Add Promise.resolve and Promise.reject.",
+	"version": "1.24.0",
+	"releasenote": "Improve JS interop. Use latest Haxe 4. Add Lazy.NULL.",
 	"tags": [
 		"tink",
 		"cross",
