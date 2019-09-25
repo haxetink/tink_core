@@ -15,7 +15,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   public static var NEVER:Future<Dynamic> = (NeverFuture.inst:FutureObject<Dynamic>);
 
   public inline function new(f:Callback<T>->CallbackLink) 
-    this = new SimpleFuture(f);  
+    this = new SuspendableFuture(f);  
   
   /**
    *  Creates a future that contains the first result from `this` or `other`
@@ -73,7 +73,13 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Flattens `Future<Future<A>>` into `Future<A>`
    */
   static public function flatten<A>(f:Future<Future<A>>):Future<A> 
-    return new NestedFuture(f);
+    return new SuspendableFuture<A>(function (yield) {
+      var inner = null;
+      var outer = f.handle(function (second) {
+        inner = second.handle(yield);
+      });
+      return outer.join(function () inner.dissolve());
+    });
   
   #if js
   /**
@@ -134,7 +140,10 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   #if python @:native('make') #end
   @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A> 
     if (lazy) 
-      return new LazyTrigger(f);
+      return new SuspendableFuture(function (yield) {
+        f(yield);
+        return null;
+      });
     else {
       var op = trigger();
       var wrapped:Callback<A->Void> = f;
@@ -239,10 +248,7 @@ private class SyncFuture<T> implements FutureObject<T> {
     return new SyncFuture(value.map(f));
 
   public inline function flatMap<R>(f:T->Future<R>):Future<R>
-    return new SimpleFuture({
-      var l = value.map(f);
-      function (cb) return l.get().handle(cb);
-    });
+    return new SuspendableFuture(function (yield) return f(value.get()).handle(yield));
 
   public function handle(cb:Callback<T>):CallbackLink {
     cb.invoke(value);
@@ -254,70 +260,6 @@ private class SyncFuture<T> implements FutureObject<T> {
 
   public function gather()
     return this;
-}
-
-private class SimpleFuture<T> implements FutureObject<T> {
-  
-  var f:Callback<T>->CallbackLink;
-  var gathered:Future<T>;
-
-  public inline function new(f) 
-    this.f = f;
-
-  public inline function handle(callback:Callback<T>):CallbackLink
-    return f(callback);
-
-  public inline function map<R>(f:T->R):Future<R>
-    return new SimpleFuture(function (cb) {
-      return handle(function (v) cb.invoke(f(v)));
-    });
-
-  public inline function flatMap<R>(f:T->Future<R>):Future<R>
-    return Future.flatten(map(f));
-
-  public inline function gather():Future<T> 
-    return
-      if (gathered != null) gathered;
-      else gathered = FutureTrigger.gatherFuture((this:Future<T>));
-
-  public inline function eager():Future<T> {
-    var ret = gather();
-    ret.handle(function () {});
-    return ret;
-  }
-}
-
-private class NestedFuture<T> implements FutureObject<T> {
-  var outer:Future<Future<T>>;
-  var gathered:Future<T>;
-
-  public inline function new(outer)
-    this.outer = outer;
-
-  public inline function map<R>(f:T->R):Future<R>
-    return outer.flatMap(function (inner) return inner.map(f));
-
-  public inline function flatMap<R>(f:T->Future<R>):Future<R>
-    return outer.flatMap(function (inner) return inner.flatMap(f));
-  
-  public inline function gather():Future<T> 
-    return
-      if (gathered != null) gathered;
-      else gathered = FutureTrigger.gatherFuture((this:Future<T>));
-
-  public inline function eager():Future<T> {
-    var ret = gather();
-    ret.handle(function () {});
-    return ret;
-  }
-  
-  public function handle(cb:Callback<T>) {
-    var ret = null;
-    ret = outer.handle(function (inner:Future<T>) {
-      ret = inner.handle(function (result) cb.invoke(result));
-    });
-    return ret;
-  }
 }
 
 class FutureTrigger<T> implements FutureObject<T> {
@@ -363,17 +305,8 @@ class FutureTrigger<T> implements FutureObject<T> {
   public inline function asFuture():Future<T>
     return this;
 
-  @:noUsing static public function gatherFuture<T>(f:Future<T>):Future<T> {
-    var op = null;
-    return new Future<T>(function (cb:Callback<T>) {
-      if (op == null) {
-        op = new FutureTrigger();
-        f.handle(op.trigger);
-        f = null;        
-      }
-      return op.handle(cb);
-    });  
-  }
+  @:noUsing static public function gatherFuture<T>(f:Future<T>):Future<T> 
+    return new SuspendableFuture(function (yield) return f.handle(yield));
 
   /**
    *  Triggers a value for this future
@@ -390,46 +323,6 @@ class FutureTrigger<T> implements FutureObject<T> {
       }
 }
 
-private class LazyTrigger<T> extends FutureTrigger<T> {
-  var op:Callback<T->Void>;
-
-  public function new(op) {
-    #if debug
-      if (op == null) throw 'invalid argument';
-    #end
-    this.op = op;
-    super();
-  }
-
-  override public function eager() {
-    if (op != null) {
-      var op = op;
-      this.op = null;
-      op.invoke(trigger);
-    }
-    return this;
-  }
-
-  override public function map<R>(f:T->R):Future<R> 
-    return 
-      if (op == null) super.map(f);
-      else Future.async(function (cb) {
-        handle(function (v) cb(f(v)));
-      }, true);
-
-  override public function flatMap<R>(f:T->Future<R>):Future<R>  
-    return 
-      if (op == null) super.flatMap(f);
-      else Future.async(function (cb) {
-        handle(function (v) f(v).handle(cb));
-      }, true);
-
-  override public function handle(cb) {
-    eager();
-    return super.handle(cb);
-  }
-}
-
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
 
 #if js
@@ -440,3 +333,67 @@ class JsPromiseTools {
     return Future.ofJsPromise(promise);
 }
 #end
+
+private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has quite a bit of duplication with FutureTrigger
+  var callbacks:CallbackList<T>;
+  var result:T;
+  var suspended:Bool = true;
+  var link:CallbackLink;
+  var wakeup:(T->Void)->CallbackLink;
+
+  public function new(wakeup) {
+    this.wakeup = wakeup;
+    this.callbacks = new CallbackList();
+
+    callbacks.ondrain = function () if (callbacks != null) {
+      suspended = true;
+      link.cancel();
+      link = null;
+    }
+  }
+
+  function trigger(value:T) 
+    switch callbacks {
+      case null: 
+      case list:
+        callbacks = null;
+        suspended = false;
+        result = value;
+        link = null;//consider disolving
+        wakeup = null;
+        list.invoke(value, true);
+    }
+
+  public function handle(callback:Callback<T>):CallbackLink 
+    return 
+      switch callbacks {
+        case null: 
+          callback.invoke(result);
+          null;
+        case v: 
+          var ret = callbacks.add(callback);
+          if (suspended) {
+            suspended = false;
+            link = wakeup(trigger);
+          }
+          ret;
+      }
+    
+
+  public function map<R>(f:T->R):Future<R>
+    return new SuspendableFuture(function (yield) {
+      return this.handle(function (res) yield(f(res)));
+    });
+
+  public function flatMap<R>(f:T->Future<R>):Future<R>
+    return Future.flatten(map(f));
+
+  public inline function gather():Future<T> 
+    return this;
+
+  public inline function eager():Future<T> {
+    handle(function () {});//TODO: very naive implementeation
+    return this;
+  }  
+
+}
