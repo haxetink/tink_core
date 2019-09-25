@@ -118,4 +118,12 @@ class Callbacks extends Base {
     return asserts.done();
     
   }
+
+  @:include public function testListCompaction() {
+    var list = new CallbackList();
+    for (i in 0...100)
+      list.add(function () {}).cancel();
+    asserts.assert(list.length == 0);
+    return asserts.done();
+  }
 }

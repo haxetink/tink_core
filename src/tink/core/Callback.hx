@@ -127,73 +127,80 @@ private class LinkPair implements LinkObject {
 private class ListCell<T> implements LinkObject {
   
   public var cb:Callback<T>;
-
-  public function new(cb) {
+  var list:CallbackList;
+  public function new(cb, list) {
     if (cb == null) throw 'callback expected but null received';
     this.cb = cb;
+    this.list = list;
   }
 
   public inline function invoke(data)
     if (cb != null) 
       cb.invoke(data);
 
-  public inline function cancel() 
+  public inline function cancel() {
+    if (--list.used < list.length >> 1)
+      list.compact();
     cb = null;
+    list = null;
+  }
 }
 
-abstract CallbackList<T>(Array<ListCell<T>>) {
+class CallbackList<T> {
   
+  var cells:Array<ListCell<T>> = [];
+
   public var length(get, never):Int;
-  
-  inline public function new():Void
-    this = [];
+  var used:Int = 0;
   
   inline function get_length():Int 
-    return this.length;  
+    return cells.length;  
   
   public inline function add(cb:Callback<T>):CallbackLink {
     var node = new ListCell(cb);
-    this.push(node);
+    cells.push(node);
     return node;
   }
     
   public function invoke(data:T) {
-    for (cell in this) 
+    for (cell in cells) 
       cell.invoke(data);
-    compact();
+    if (used < length) 
+      compact();
   }
 
-  function compact() {
-    
-    var compacted = 0;
+  function compact() 
+    if (used == 0) resize(0);
+    else {
+      var compacted = 0;
 
-    for (i in 0...this.length)
-      switch this[i] {
-        case { cb: null }:
-        case v: 
-          if (compacted != i)
-            this[compacted] = v;
-          compacted++;
-      }
+      for (i in 0...cells.length)
+        switch cells[i] {
+          case { cb: null }:
+          case v: 
+            if (compacted != i)
+              cells[compacted] = v;
+            if (++compacted == used) break;
+        }
 
-    resize(compacted);    
-  }
+      resize(used);
+    }
 
   function resize(length) 
     #if haxe4
-      this.resize(length);
+      cells.resize(length);
     #else
-      this.splice(0, length);
+      cells.splice(0, length);
     #end
       
   public function clear():Void {
-    for (cell in this) 
+    for (cell in cells) 
       cell.cancel();
     resize(0);
   }
 
   public function invokeAndClear(data:T) {
-    for (cell in this) {
+    for (cell in cells) {
       cell.invoke(data);
       cell.cancel();
     }
