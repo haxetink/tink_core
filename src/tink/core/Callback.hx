@@ -127,7 +127,7 @@ private class LinkPair implements LinkObject {
 private class ListCell<T> implements LinkObject {
   
   public var cb:Callback<T>;
-  var list:CallbackList<T>;
+  public var list:CallbackList<T>;
   public function new(cb, list) {
     if (cb == null) throw 'callback expected but null received';
     this.cb = cb;
