@@ -119,7 +119,7 @@ class Callbacks extends Base {
     
   }
 
-  @:include public function testListCompaction() {
+  public function testListCompaction() {
     var list = new CallbackList();
     for (i in 0...100)
       list.add(function () {}).cancel();

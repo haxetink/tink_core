@@ -385,8 +385,7 @@ class FutureTrigger<T> implements FutureObject<T> {
         var list = this.list;
         this.list = null;
         this.result = result;
-        list.invoke(result);
-        list.clear();//free callback links          
+        list.invoke(result, true);
         true;
       }
 }

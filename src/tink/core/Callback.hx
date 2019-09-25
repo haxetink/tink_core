@@ -127,7 +127,7 @@ private class LinkPair implements LinkObject {
 private class ListCell<T> implements LinkObject {
   
   public var cb:Callback<T>;
-  var list:CallbackList;
+  var list:CallbackList<T>;
   public function new(cb, list) {
     if (cb == null) throw 'callback expected but null received';
     this.cb = cb;
@@ -135,42 +135,84 @@ private class ListCell<T> implements LinkObject {
   }
 
   public inline function invoke(data)
-    if (cb != null) 
+    if (list != null) 
       cb.invoke(data);
 
-  public inline function cancel() {
-    if (--list.used < list.length >> 1)
-      list.compact();
+  public inline function clear() {
     cb = null;
     list = null;
   }
+
+  public inline function cancel() 
+    if (list != null) {
+      var list = this.list;
+      clear();
+      @:privateAccess list.release();
+    }
 }
 
 class CallbackList<T> {
   
-  var cells:Array<ListCell<T>> = [];
+  var cells:Array<ListCell<T>>;
 
   public var length(get, never):Int;
-  var used:Int = 0;
   
+  var used:Int = 0;
+  var queue = [];
+
+  public var busy(default, null):Bool = false;
+  public function new() {
+    this.cells = [];
+  }
+  
+  dynamic public function ondrain() {}
+
   inline function get_length():Int 
-    return cells.length;  
+    return used;
+
+  inline function release() 
+    if (--used < length >> 1)
+      compact();  
   
   public inline function add(cb:Callback<T>):CallbackLink {
-    var node = new ListCell(cb);
+    var node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
     cells.push(node);
+    used++;
     return node;
   }
     
-  public function invoke(data:T) {
-    for (cell in cells) 
-      cell.invoke(data);
-    if (used < length) 
-      compact();
-  }
+  public function invoke(data:T, ?destructive:Bool) 
+    if (busy) 
+      queue.push(invoke.bind(data, destructive));//TODO: the wisdom of just queueing destructive invokations is questionable
+    else {
+      busy = true;
+      
+      var length = cells.length;
+      for (i in 0...length) 
+        cells[i].invoke(data);
+      
+      busy = false;
+
+      if (destructive) {
+        var added = cells.length - length;
+        for (i in 0...length) 
+          cells[i].clear();
+        for (i in 0...added)
+          cells[i] = cells[length + i];
+        resize(added);
+      }
+      else if (used < cells.length) 
+        compact();
+      if (queue.length > 0)
+        queue.shift()();
+    }
 
   function compact() 
-    if (used == 0) resize(0);
+    if (busy) return;
+    else if (used == 0) {
+      resize(0);
+      ondrain();
+    }
     else {
       var compacted = 0;
 
@@ -193,17 +235,12 @@ class CallbackList<T> {
       cells.splice(0, length);
     #end
       
+  //TODO: probably want to make this private      
   public function clear():Void {
+    if (busy)
+      queue.push(clear);
     for (cell in cells) 
-      cell.cancel();
-    resize(0);
-  }
-
-  public function invokeAndClear(data:T) {
-    for (cell in cells) {
-      cell.invoke(data);
-      cell.cancel();
-    }
+      cell.clear();
     resize(0);
   }
 
