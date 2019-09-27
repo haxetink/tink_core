@@ -109,6 +109,17 @@ class Promises extends Base {
       case null: Failure(new Error(422, '$s is not a valid integer'));
       case v: Success(v);
     }
+
+  public function testDynamicNext() {
+    var p = Promise.lift('{"answer":42}');
+    return 
+      p
+        .next(haxe.Json.parse)
+        .next(function (deepThought:{ answer: Int }) {
+          asserts.assert(deepThought.answer == 42);
+          return asserts.done();
+        });
+  }
     
   public function testIterate() {
     inline function boolAnd(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>

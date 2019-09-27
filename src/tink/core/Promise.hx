@@ -310,7 +310,13 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
 @:callable
 abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
-      
+
+  @:from static function ofDynamic<In>(f:In->Nonsense):Next<In, Dynamic> // Nonsense being non-existent, no function should ever unify with this, unless it returns Dynamic
+    return function (x):Promise<Dynamic> {
+      var d:Dynamic = f(x);
+      return Future.sync(Success(d));
+    }
+
   @:from static function ofSafe<In, Out>(f:In->Outcome<Out, Error>):Next<In, Out> 
     return function (x) return f(x);
     
@@ -324,6 +330,8 @@ abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
     return function (v) return a(v).next(b);
   
 }
+
+private extern class Nonsense {}
 
 @:callable
 abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
