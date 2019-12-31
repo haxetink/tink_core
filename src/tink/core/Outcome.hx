@@ -3,6 +3,7 @@ package tink.core;
 import haxe.ds.Option;
 import tink.core.Either;
 
+@:using(tink.core.Outcome.OutcomeTools)
 enum Outcome<Data, Failure> {//TODO: turn into abstract when this commit is released: https://github.com/HaxeFoundation/haxe/commit/e8715189fc055220f2f33a06c5e1331c96310a88
   Success(data:Data);
   Failure(failure:Failure);
