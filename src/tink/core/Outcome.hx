@@ -129,6 +129,12 @@ class OutcomeTools {
         case Failure(f): 
           Failure(f);
       }
+      
+  static public function next<T, R>(outcome:Outcome<T, Error>, f:tink.core.Promise.Next<T, R>):Promise<R>
+    return switch outcome {
+      case Success(v): f(v);
+      case Failure(e): e;
+    }
   
   /**
    *  Try to run `f` and wraps the result in `Success`,
