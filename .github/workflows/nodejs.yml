@@ -18,7 +18,7 @@ jobs:
       matrix:
         node-version: [10.x]
         haxe-version: [stable, latest, nightly]
-        target: [node, neko, php, cpp]
+        target: [node, neko, php, cpp, js, ${{ 'java -D jvm' }}]
 
     steps:
     - uses: actions/checkout@v2
