@@ -30,7 +30,9 @@ jobs:
           - php
           - cpp
           - js
-          # - java -D jvm
+        include:
+          - haxe-version: nightly
+            target: java -D jvm
 
     steps:
     - uses: actions/checkout@v2
