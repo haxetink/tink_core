@@ -16,9 +16,23 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x]
-        haxe-version: [stable, latest, nightly]
-        target: [node, neko, php, cpp, js, 'java -D jvm']
+        node-version: 
+          - 10.x
+        haxe-version:
+          - stable
+          - latest
+          - nightly
+        target: 
+          - interp
+          - node
+          - node -D tink_core_no_error_pos
+          - neko
+          - neko
+          - python
+          - php
+          - cpp
+          - js
+          # - java -D jvm
 
     steps:
     - uses: actions/checkout@v2
