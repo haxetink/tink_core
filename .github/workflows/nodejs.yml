@@ -17,8 +17,8 @@ jobs:
     strategy:
       matrix:
         haxe-version:
+          - 3.4.7
           - stable
-          - latest
           - nightly
         target: 
           - interp
@@ -30,8 +30,12 @@ jobs:
           - php
           - cpp
           - js
-        include:
-          - haxe-version: nightly
+          - java -D jvm
+        exclude:
+          # jvm only works on nightly for now
+          - haxe-version: 3.4.7
+            target: java -D jvm
+          - haxe-version: stable
             target: java -D jvm
 
     steps:
