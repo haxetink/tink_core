@@ -56,6 +56,3 @@ jobs:
     - run: lix install haxe ${{ matrix.haxe-version }}
     - run: lix download
     - run: lix run travix ${{ matrix.target }}
-    - run: lix install haxe ${{ matrix.haxe-version }}
-    - run: lix download
-    - run: lix run travix ${{ matrix.target }}
