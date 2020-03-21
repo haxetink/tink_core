@@ -146,8 +146,8 @@ class ProgressTrigger<T> extends CompositeProgress<T> {
 class FutureProgress<T> extends CompositeProgress<T> {
 	public function new(future:Future<Progress<T>>) {
 		super(
-			future.flatMap(progress -> progress),
-			Signal.generate(function(cb) future.handle(progress -> progress.listen(cb)))
+			future.flatMap(function(progress) return progress),
+			Signal.generate(function(cb) future.handle(function(progress) progress.listen(cb)))
 		);
 	}
 }
@@ -155,11 +155,11 @@ class FutureProgress<T> extends CompositeProgress<T> {
 class PromiseProgress<T> extends CompositeProgress<Outcome<T, Error>> {
 	public function new(promise:Promise<Progress<T>>) {
 		super(
-			promise.flatMap(o -> switch o {
+			promise.flatMap(function(o) return switch o {
 				case Success(progress): progress.map(Success);
 				case Failure(e): Future.sync(Failure(e));
 			}),
-			Signal.generate(function(cb) promise.handle(o -> switch o {
+			Signal.generate(function(cb) promise.handle(function(o) switch o {
 				case Success(progress): progress.listen(cb);
 				case Failure(e): // do nothing
 			}))
