@@ -204,7 +204,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
 }
 
-private interface FutureObject<T> {
+interface FutureObject<T> {
 
   function map<R>(f:T->R):Future<R>;
   function flatMap<R>(f:T->Future<R>):Future<R>;

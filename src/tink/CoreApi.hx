@@ -40,3 +40,5 @@ typedef Any = tink.core.Any;
 
 typedef Named<V> = tink.core.Named<V>;
 typedef NamedWith<N, V> = tink.core.Named.NamedWith<N, V>;
+
+typedef Progress<T> = tink.core.Progress<T>;

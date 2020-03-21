@@ -8,12 +8,15 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   
   public inline function new(f:Callback<T>->CallbackLink) this = new SimpleSignal(f);
   
+  public inline function handle(handler:Callback<T>):CallbackLink 
+    return this.listen(handler);
+  
   /**
    *  Creates a new signal by applying a transform function to the result.
    *  Different from `flatMap`, the transform function of `map` returns a sync value
    */
   public function map<A>(f:T->A, ?gather = true):Signal<A> {
-    var ret = new Signal(function (cb) return this.handle(function (result) cb.invoke(f(result))));
+    var ret = new Signal(function (cb) return this.listen(function (result) cb.invoke(f(result))));
     return
       if (gather) ret.gather();
       else ret;
@@ -24,7 +27,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
    */
   public function flatMap<A>(f:T->Future<A>, ?gather = true):Signal<A> {
-    var ret = new Signal(function (cb) return this.handle(function (result) f(result).handle(cb)));
+    var ret = new Signal(function (cb) return this.listen(function (result) f(result).handle(cb)));
     return 
       if (gather) ret.gather() 
       else ret;
@@ -34,14 +37,14 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
    *  Creates a new signal whose values will only be emitted when the filter function evalutes to `true`
    */
   public function filter(f:T->Bool, ?gather = true):Signal<T> {
-    var ret = new Signal(function (cb) return this.handle(function (result) if (f(result)) cb.invoke(result)));
+    var ret = new Signal(function (cb) return this.listen(function (result) if (f(result)) cb.invoke(result)));
     return
       if (gather) ret.gather();
       else ret;
   }
 
   public function select<R>(selector:T->Option<R>, ?gather = true):Signal<R> {
-    var ret = new Signal(function (cb) return this.handle(function (result) switch selector(result) {
+    var ret = new Signal(function (cb) return this.listen(function (result) switch selector(result) {
       case Some(v): cb.invoke(v);
       case None:
     }));
@@ -57,7 +60,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   public function join(other:Signal<T>, ?gather = true):Signal<T> {
     var ret = new Signal(
       function (cb:Callback<T>):CallbackLink 
-        return this.handle(cb) & other.handle(cb)
+        return this.listen(cb) & other.handle(cb)
     );
     return
       if (gather) ret.gather();
@@ -72,7 +75,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
     var link:CallbackLink = null,
         immediate = false;
         
-    link = this.handle(function (v) if (condition == null || condition(v)) {
+    link = this.listen(function (v) if (condition == null || condition(v)) {
       ret.trigger(v);
       if (link == null) immediate = true;
       else link.cancel();
@@ -86,7 +89,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
 
   public function until<X>(end:Future<X>):Signal<T> {
     var ret = new Suspendable(
-      function (yield) return this.handle(yield)
+      function (yield) return this.listen(yield)
     );
     end.handle(ret.kill);
     return ret;
@@ -109,7 +112,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
    */
   public function gather():Signal<T> {
     var ret = trigger();
-    this.handle(function (x) ret.trigger(x));
+    this.listen(function (x) ret.trigger(x));
     return ret.asSignal();
   }
   
@@ -148,7 +151,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
 private class SimpleSignal<T> implements SignalObject<T> {
   var f:Callback<T>->CallbackLink;
   public inline function new(f) this.f = f;
-  public inline function handle(cb) return this.f(cb);
+  public inline function listen(cb) return this.f(cb);
 }
 
 private class Suspendable<T> implements SignalObject<T> {
@@ -169,13 +172,13 @@ private class Suspendable<T> implements SignalObject<T> {
     this.activate = activate;
   }
 
-  public function handle(cb) {
+	public function listen(cb) {
     if (killed) return null;
     if (trigger.getLength() == 0) 
       this.suspend = activate(trigger.trigger);
     
     return 
-      trigger.handle(cb) 
+      trigger.listen(cb) 
       & function ()
           if (trigger.getLength() == 0) {
             suspend();
@@ -200,7 +203,7 @@ class SignalTrigger<T> implements SignalObject<T> {
   public inline function getLength()
     return handlers.length;
 
-  public inline function handle(cb) 
+	public inline function listen(cb) 
     return handlers.add(cb);
 
   /**
@@ -218,5 +221,5 @@ interface SignalObject<T> {
    *  Registers a callback to be invoked every time the signal is triggered
    *  @return A `CallbackLink` instance that can be used to unregister the callback
    */
-  function handle(handler:Callback<T>):CallbackLink;
+  function listen(handler:Callback<T>):CallbackLink;
 }
