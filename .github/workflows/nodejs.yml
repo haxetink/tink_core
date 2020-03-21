@@ -22,6 +22,7 @@ jobs:
           - nightly
         target: 
           - interp
+          - flash
           - node
           - node -D tink_core_no_error_pos
           - neko
