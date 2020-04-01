@@ -132,6 +132,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    */
   @:noUsing static inline public function sync<A>(v:A):Future<A> 
     return new SyncFuture(v); 
+
+  @:noUsing static inline public function isFuture(maybeFuture: Dynamic)
+    return Std.is(maybeFuture, FutureObject);
     
   /**
    *  Creates an async future
