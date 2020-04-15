@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "1.25.0",
-	"releasenote": "Compact list upon cancellation. Support next() on Outcome.",
+	"version": "1.26.0",
+	"releasenote": "Add Future.isFuture and Progress. Plus some bug fixes",
 	"tags": [
 		"tink",
 		"cross",
