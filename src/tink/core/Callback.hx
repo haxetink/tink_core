@@ -201,10 +201,15 @@ class CallbackList<T> implements Disposable {
 
   public function invoke(data:T, ?destructive:Bool)
     if (disposed) {}
-    else if (busy)
-      queue.push(invoke.bind(data, destructive));//TODO: the wisdom of just queueing destructive invokations is questionable
+    else if (busy) {
+      if (destructive != true)
+        queue.push(invoke.bind(data, false));//TODO: the wisdom of just queueing destructive invokations is questionable
+    }
     else {
       busy = true;
+
+      if (destructive)
+        disposed = true;
 
       var length = cells.length;
       for (i in 0...length)
@@ -212,17 +217,10 @@ class CallbackList<T> implements Disposable {
 
       busy = false;
 
-      if (disposed) destroy();//TODO: perhaps something should be done with non empty queue
+      if (disposed)
+        destroy();//TODO: perhaps something should be done with non empty queue
       else {
-        if (destructive) {
-          var added = cells.length - length;
-          for (i in 0...length)
-            cells[i].clear();
-          for (i in 0...added)
-            cells[i] = cells[length + i];
-          resize(added);
-        }
-        else if (used < cells.length)
+        if (used < cells.length)
           compact();
 
         if (queue.length > 0)
