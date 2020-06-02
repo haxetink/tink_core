@@ -14,7 +14,7 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
 	public inline static function trigger<T>():ProgressTrigger<T> {
 		return new ProgressTrigger();
 	}
-	
+
 	public static function make<T>(f:(Float->Option<Float>->Void)->(T->Void)->Void) {
 		var value = InProgress(INIT);
 		var signal = Signal.trigger();
@@ -31,7 +31,7 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
 						}
 				}
 			}
-			
+
 			function finish(v:T) {
 				switch value {
 					case Finished(_):
@@ -42,7 +42,7 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
 						cb(v);
 				}
 			}
-			
+
 			f(progress, finish);
 		});
 
@@ -77,7 +77,7 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
 class CompositeProgress<T> implements ProgressObject<T> {
 	var future:Future<T>;
 	var signal:Signal<ProgressValue>;
-	
+
 	public function new(future, signal) {
 		this.future = future;
 		this.signal = signal;
@@ -102,19 +102,21 @@ class CompositeProgress<T> implements ProgressObject<T> {
 	}
 }
 
-interface ProgressObject<T> extends FutureObject<T> extends SignalObject<ProgressValue> {}
+interface ProgressObject<T> extends FutureObject<T> {
+	function listen(callback:Callback<ProgressValue>):CallbackLink;
+}
 
 class ProgressTrigger<T> extends CompositeProgress<T> {
-	
+
 	var futureTrigger:FutureTrigger<T>;
 	var signalTrigger:SignalTrigger<ProgressValue>;
-	
+
 	var value = InProgress(Progress.INIT);
-	
+
 	public function new() {
 		super(futureTrigger = Future.trigger(), signalTrigger = Signal.trigger());
 	}
-	
+
 	public function progress(v:Float, total:Option<Float>) {
 		switch value {
 			case Finished(_):
@@ -127,7 +129,7 @@ class ProgressTrigger<T> extends CompositeProgress<T> {
 				}
 		}
 	}
-	
+
 	public function finish(v:T) {
 		switch value {
 			case Finished(_):
@@ -138,7 +140,7 @@ class ProgressTrigger<T> extends CompositeProgress<T> {
 				futureTrigger.trigger(v);
 		}
 	}
-	
+
 	public inline function asProgress():Progress<T>
 		return this;
 }
