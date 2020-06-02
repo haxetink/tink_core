@@ -1,13 +1,13 @@
 package tink.core;
 
 abstract Callback<T>(T->Void) from (T->Void) {
-  
-  inline function new(f) 
+
+  inline function new(f)
     this = f;
-  
+
   @:to inline function toFunction()
     return this;
-    
+
   static var depth = 0;
   static inline var MAX_DEPTH = #if (python || eval) 200 #elseif interp 100 #else 500 #end;
   public function invoke(data:T):Void
@@ -17,21 +17,21 @@ abstract Callback<T>(T->Void) from (T->Void) {
       depth--;
     }
     else Callback.defer(invoke.bind(data));
-  
-  // This seems useful, but most likely is not. 
+
+  // This seems useful, but most likely is not.
   @:deprecated('Implicit cast from Callback<Noise> is deprecated. Please create an issue if you find it useful, and don\'t want this cast removed.')
   @:to static function ignore<T>(cb:Callback<Noise>):Callback<T>
     return function (_) cb.invoke(Noise);
-    
+
   @:from static function fromNiladic<A>(f:Void->Void):Callback<A> //inlining this seems to cause recursive implicit casts
     return #if js cast f #else function (_) f() #end;
-  
-  @:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A> 
+
+  @:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A>
     return
-      function (v:A) 
+      function (v:A)
         for (callback in callbacks)
           callback.invoke(v);
-          
+
   @:noUsing static public function defer(f:Void->Void) {
     #if macro
       f();
@@ -52,49 +52,50 @@ abstract Callback<T>(T->Void) from (T->Void) {
     #end
   }
 }
+
 interface LinkObject {
   function cancel():Void;
 }
 
 abstract CallbackLink(LinkObject) from LinkObject {
 
-  inline function new(link:Void->Void) 
+  inline function new(link:Void->Void)
     this = new SimpleLink(link);
 
-  public inline function cancel():Void 
+  public inline function cancel():Void
     if (this != null) this.cancel();
-  
+
   //@:deprecated('Use cancel() instead')
-  public inline function dissolve():Void 
+  public inline function dissolve():Void
     cancel();
 
   static function noop() {}
-  
+
   @:to inline function toFunction():Void->Void
     return if (this == null) noop else this.cancel;
-    
-  @:to inline function toCallback<A>():Callback<A> 
+
+  @:to inline function toCallback<A>():Callback<A>
     return function (_) this.cancel();
-    
-  @:from static inline function fromFunction(f:Void->Void) 
+
+  @:from static inline function fromFunction(f:Void->Void)
     return new CallbackLink(f);
 
   @:op(a & b) static public inline function join(a:CallbackLink, b:CallbackLink):CallbackLink
     return new LinkPair(a, b);
-    
+
   @:from static public function fromMany(callbacks:Array<CallbackLink>)
-    return fromFunction(function () { 
-      if (callbacks != null) 
-        for (cb in callbacks) cb.cancel(); 
+    return fromFunction(function () {
+      if (callbacks != null)
+        for (cb in callbacks) cb.cancel();
       else
-        callbacks = null; 
+        callbacks = null;
     });
 }
 
 class SimpleLink implements LinkObject {
   var f:Void->Void;
 
-  public inline function new(f) 
+  public inline function new(f)
     this.f = f;
 
   public inline function cancel()
@@ -105,7 +106,7 @@ class SimpleLink implements LinkObject {
 }
 
 private class LinkPair implements LinkObject {
-  
+
   var a:CallbackLink;
   var b:CallbackLink;
   var dissolved:Bool = false;
@@ -114,7 +115,7 @@ private class LinkPair implements LinkObject {
     this.b = b;
   }
 
-  public function cancel() 
+  public function cancel()
     if (!dissolved) {
       dissolved = true;
       a.cancel();
@@ -125,7 +126,7 @@ private class LinkPair implements LinkObject {
 }
 
 private class ListCell<T> implements LinkObject {
-  
+
   public var cb:Callback<T>;
   public var list:CallbackList<T>;
   public function new(cb, list) {
@@ -135,7 +136,7 @@ private class ListCell<T> implements LinkObject {
   }
 
   public inline function invoke(data)
-    if (list != null) 
+    if (list != null)
       cb.invoke(data);
 
   public inline function clear() {
@@ -143,7 +144,7 @@ private class ListCell<T> implements LinkObject {
     list = null;
   }
 
-  public inline function cancel() 
+  public inline function cancel()
     if (list != null) {
       var list = this.list;
       clear();
@@ -151,12 +152,18 @@ private class ListCell<T> implements LinkObject {
     }
 }
 
-class CallbackList<T> {
-  
+class CallbackList<T> implements Disposable {
+
   var cells:Array<ListCell<T>>;
 
   public var length(get, never):Int;
-  
+    inline function get_length():Int
+      return used;
+
+  public var disposed(get, null):Bool = false;
+    inline function get_disposed()
+      return this.disposed;
+
   var used:Int = 0;
   var queue = [];
 
@@ -164,50 +171,66 @@ class CallbackList<T> {
   public function new() {
     this.cells = [];
   }
-  
+
   dynamic public function ondrain() {}
 
-  inline function get_length():Int 
-    return used;
-
-  inline function release() 
+  inline function release()
     if (--used < length >> 1)
-      compact();  
-  
+      compact();
+
+  public function dispose()
+    if (!disposed) {
+      disposed = false;
+      if (!busy) destroy();
+    }
+
+  function destroy() {
+    queue = null;
+    cells = null;
+    used = 0;
+    ondrain();
+  }
+
   public inline function add(cb:Callback<T>):CallbackLink {
+    if (disposed) return null;
     var node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
     cells.push(node);
     used++;
     return node;
   }
-    
-  public function invoke(data:T, ?destructive:Bool) 
-    if (busy) 
+
+  public function invoke(data:T, ?destructive:Bool)
+    if (disposed) {}
+    else if (busy)
       queue.push(invoke.bind(data, destructive));//TODO: the wisdom of just queueing destructive invokations is questionable
     else {
       busy = true;
-      
+
       var length = cells.length;
-      for (i in 0...length) 
+      for (i in 0...length)
         cells[i].invoke(data);
-      
+
       busy = false;
 
-      if (destructive) {
-        var added = cells.length - length;
-        for (i in 0...length) 
-          cells[i].clear();
-        for (i in 0...added)
-          cells[i] = cells[length + i];
-        resize(added);
+      if (disposed) destroy();//TODO: perhaps something should be done with non empty queue
+      else {
+        if (destructive) {
+          var added = cells.length - length;
+          for (i in 0...length)
+            cells[i].clear();
+          for (i in 0...added)
+            cells[i] = cells[length + i];
+          resize(added);
+        }
+        else if (used < cells.length)
+          compact();
+
+        if (queue.length > 0)
+          queue.shift()();
       }
-      else if (used < cells.length) 
-        compact();
-      if (queue.length > 0)
-        queue.shift()();
     }
 
-  function compact() 
+  function compact()
     if (busy) return;
     else if (used == 0) {
       resize(0);
@@ -219,7 +242,7 @@ class CallbackList<T> {
       for (i in 0...cells.length)
         switch cells[i] {
           case { cb: null }:
-          case v: 
+          case v:
             if (compacted != i)
               cells[compacted] = v;
             if (++compacted == used) break;
@@ -228,18 +251,18 @@ class CallbackList<T> {
       resize(used);
     }
 
-  function resize(length) 
+  function resize(length)
     #if haxe4
       cells.resize(length);
     #else
       cells.splice(0, length);
     #end
-      
-  //TODO: probably want to make this private      
+
+  //TODO: probably want to make this private
   public function clear():Void {
     if (busy)
       queue.push(clear);
-    for (cell in cells) 
+    for (cell in cells)
       cell.clear();
     resize(0);
   }
