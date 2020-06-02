@@ -155,6 +155,7 @@ private class ListCell<T> implements LinkObject {
 class CallbackList<T> implements Disposable {
 
   var cells:Array<ListCell<T>>;
+  var disposables = new Array<Disposable>();
 
   public var length(get, never):Int;
     inline function get_length():Int
@@ -172,6 +173,10 @@ class CallbackList<T> implements Disposable {
     this.cells = [];
   }
 
+  public function attach(d:Disposable)
+    if (disposed) d.dispose();
+    else disposables.push(d);
+
   dynamic public function ondrain() {}
 
   inline function release()
@@ -185,8 +190,13 @@ class CallbackList<T> implements Disposable {
     }
 
   function destroy() {
+    for (d in disposables)
+      d.dispose();
+
+    disposables = null;
     queue = null;
     cells = null;
+
     used = 0;
     ondrain();
   }
