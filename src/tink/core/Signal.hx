@@ -3,8 +3,8 @@ package tink.core;
 import tink.core.Callback;
 import tink.core.Noise;
 
-@:forward
-abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
+@:forward(disposed, attachDisposable)
+abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
   public inline function new(f:Callback<T>->CallbackLink) this = new SimpleSignal(f);
 
@@ -36,22 +36,14 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   /**
    *  Creates a new signal whose values will only be emitted when the filter function evalutes to `true`
    */
-  public function filter(f:T->Bool, ?gather = true):Signal<T> {
-    var ret = new Signal(function (cb) return this.listen(function (result) if (f(result)) cb.invoke(result)));
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
+  public function filter(f:T->Bool, ?gather = true):Signal<T>
+    return Suspendable.over(this, function (fire) return handle(function (v) if (f(v)) fire(v)));
 
-  public function select<R>(selector:T->Option<R>, ?gather = true):Signal<R> {
-    var ret = new Signal(function (cb) return this.listen(function (result) switch selector(result) {
-      case Some(v): cb.invoke(v);
-      case None:
+  public function select<R>(selector:T->Option<R>, ?gather = true):Signal<R>
+    return Suspendable.over(this, function (fire) return handle(function (v) switch selector(v) {
+      case Some(v): fire(v);
+      default:
     }));
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
 
   /**
    *  Creates a new signal by joining `this` and `other`,
@@ -148,13 +140,31 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   }
 }
 
+private class Disposed implements SignalObject<Dynamic> {
+
+  public var disposed(get, never):Bool;
+    inline function get_disposed()
+      return true;
+
+  function new() {}
+
+  static public var INST(default, null):Signal<Dynamic> = new Disposed();
+
+  public function dispose() {}
+  public function attachDisposable(d:Disposable)
+    d.dispose();
+
+  public inline function listen(cb:Callback<Dynamic>):CallbackLink
+    return null;
+}
+
 private class SimpleSignal<T> implements SignalObject<T> {
   var f:Callback<T>->CallbackLink;
   public var disposed(get, never):Bool;
     inline function get_disposed() return false;
 
   public function dispose() {}
-  public function attach(d:Disposable) {}
+  public function attachDisposable(d:Disposable) {}
   public inline function new(f) this.f = f;
   public inline function listen(cb) return this.f(cb);
 }
@@ -179,12 +189,11 @@ private class Suspendable<T> implements SignalObject<T> {
   public inline function kill()
     dispose();
 
-  public inline function attach(d)
-    trigger.attach(d);
+  public inline function attachDisposable(d)
+    trigger.attachDisposable(d);
 
-  public function new(activate) {
+  public function new(activate)
     this.activate = activate;
-  }
 
 	public function listen(cb) {
     if (disposed) return null;
@@ -199,6 +208,15 @@ private class Suspendable<T> implements SignalObject<T> {
             suspend = null;
           }
   }
+
+  static public function over<In, Out>(s:Signal<In>, activate:(Out->Void)->(Void->Void)):Signal<Out>
+    return
+      if (s.disposed) return cast Disposed.INST;
+      else {
+        var ret = new Suspendable<Out>(activate);
+        s.attachDisposable(ret);
+        return ret;
+      }
 }
 
 class SignalTrigger<T> implements SignalObject<T> {
@@ -213,8 +231,8 @@ class SignalTrigger<T> implements SignalObject<T> {
   public function dispose()
     handlers.dispose();
 
-  public function attach(d)
-    handlers.attach(d);
+  public function attachDisposable(d)
+    handlers.attachDisposable(d);
 
   /**
    *  Emits a value for this signal

@@ -173,7 +173,7 @@ class CallbackList<T> implements Disposable {
     this.cells = [];
   }
 
-  public function attach(d:Disposable)
+  public function attachDisposable(d:Disposable)
     if (disposed) d.dispose();
     else disposables.push(d);
 
@@ -192,6 +192,9 @@ class CallbackList<T> implements Disposable {
   function destroy() {
     for (d in disposables)
       d.dispose();
+
+    for (c in cells)
+      c.clear();
 
     disposables = null;
     queue = null;
