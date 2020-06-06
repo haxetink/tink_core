@@ -7,7 +7,7 @@ import tink.core.Noise;
 @:noCompletion
 abstract Gather(Bool) {
   inline function new(v) this = v;
-  @:deprecated('Gathering is deprecated')
+  @:deprecated('Gathering no longer has any effect')
   @:from static function ofBool(b:Bool)
     return new Gather(b);
 }
@@ -15,7 +15,8 @@ abstract Gather(Bool) {
 @:forward
 abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
-  @:deprecated public inline function new(f:Callback<T>->CallbackLink) this = new SimpleSignal(f);
+  @:deprecated public inline function new(f:Callback<T>->CallbackLink)
+    this = new Suspendable<T>(function (fire, _, _) return f(fire));
 
   public inline function handle(handler:Callback<T>):CallbackLink
     return this.listen(handler);
@@ -104,11 +105,9 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    *  Useful for tranformed signals, such as product of `map` and `flatMap`,
    *  so that the transformation function will not be invoked for every callback
    */
-  @:deprecated public function gather():Signal<T> {
-    var ret = trigger();
-    this.listen(function (x) ret.trigger(x));
-    return ret.asSignal();
-  }
+  @:deprecated('Gathering no longer has any effect')
+  public function gather():Signal<T>
+    return this;
 
   static public function generate<T>(generator:(T->Void)->Void):Signal<T> {
     var ret = trigger();
@@ -152,17 +151,6 @@ private class Disposed implements SignalObject<Dynamic> {
 
   public inline function listen(cb:Callback<Dynamic>):CallbackLink
     return null;
-}
-
-private class SimpleSignal<T> implements SignalObject<T> {
-  var f:Callback<T>->CallbackLink;
-  public var disposed(get, never):Bool;
-    inline function get_disposed() return false;
-
-  public function dispose() {}
-  public function ondispose(handler) {}
-  public inline function new(f) this.f = f;
-  public inline function listen(cb) return this.f(cb);
 }
 
 private class Suspendable<T> implements SignalObject<T> {
