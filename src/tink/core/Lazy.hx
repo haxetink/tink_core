@@ -1,8 +1,12 @@
 package tink.core;
 
 abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
-  
+
   public static var NULL = ofConst(null);
+
+  public var computed(get, never):Bool;
+    inline function get_computed()
+      return this.isComputed();
 
   @:to public inline function get():T
     return this.get();
@@ -21,6 +25,7 @@ abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
 }
 
 private interface LazyObject<T> {
+  function isComputed():Bool;
   function get():T;
   function map<R>(f:T->R):Lazy<R>;
   function flatMap<R>(f:T->Lazy<R>):Lazy<R>;
@@ -29,6 +34,9 @@ private interface LazyObject<T> {
 private class LazyConst<T> implements LazyObject<T> {
 
   var value:T;
+
+  public function isComputed():Bool
+    return true;
 
   public inline function new(value)
     this.value = value;
@@ -44,20 +52,26 @@ private class LazyConst<T> implements LazyObject<T> {
 }
 
 private class LazyFunc<T> implements LazyObject<T> {
-  var f:Void->T;
-  var result:T;
+  var f:Null<Void->T>;
+  var result:Null<T>;
   #if debug var busy = false; #end
 
-  public function new(f) this.f = f;
+  public function new(f:Void->T) this.f = f;
+
+  public function isComputed()
+    return this.f == null;
 
   public function get() {
     #if debug if (busy) throw new Error('circular lazyness');#end
-    if (f != null) {
-      #if debug busy = true;#end
-      result = f();
-      f = null;
-      #if debug busy = false;#end
+    switch f {
+      case null:
+      case v:
+        f = null;
+        #if debug busy = true;#end
+        result = v();
+        #if debug busy = false;#end
     }
+
     return result;
   }
 
