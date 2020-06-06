@@ -6,7 +6,7 @@ stages:
   - deploy
 
 language: node_js
-node_js: 8
+node_js: 12
 
 cache:
   directories:
@@ -17,15 +17,14 @@ os:
   # - osx
 
 env:
-  - HAXE_VERSION=3.3.0-rc.1
-  - HAXE_VERSION=3.4.7
+  - HAXE_VERSION=stable
   - HAXE_VERSION=nightly
-  
+
 install:
   - npm i -g lix
   - lix install haxe $HAXE_VERSION
   - lix download
-  
+
 script:
   - lix run travix interp
   - lix run travix neko
