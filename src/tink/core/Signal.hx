@@ -4,7 +4,15 @@ import tink.core.Disposable;
 import tink.core.Callback;
 import tink.core.Noise;
 
-@:forward(disposed, ondispose)
+@:noCompletion
+abstract Gather(Bool) {
+  inline function new(v) this = v;
+  @:deprecated('Gathering is deprecated')
+  @:from static function ofBool(b:Bool)
+    return new Gather(b);
+}
+
+@:forward
 abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
   @:deprecated public inline function new(f:Callback<T>->CallbackLink) this = new SimpleSignal(f);
@@ -16,23 +24,23 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    *  Creates a new signal by applying a transform function to the result.
    *  Different from `flatMap`, the transform function of `map` returns a sync value
    */
-  public function map<A>(f:T->A, ?gather = true):Signal<A>
+  public function map<A>(f:T->A, ?gather:Gather):Signal<A>
     return Suspendable.over(this, function (fire, _, _) return handle(function (v) fire(f(v))));
 
   /**
    *  Creates a new signal by applying a transform function to the result.
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
    */
-  @:deprecated public function flatMap<A>(f:T->Future<A>, ?gather = true):Signal<A>
+  @:deprecated public function flatMap<A>(f:T->Future<A>, ?gather:Gather):Signal<A>
     return Suspendable.over(this, function (fire, _, _) return handle(function (v) f(v).handle(fire)));
 
   /**
    *  Creates a new signal whose values will only be emitted when the filter function evalutes to `true`
    */
-  public function filter(f:T->Bool, ?gather = true):Signal<T>
+  public function filter(f:T->Bool, ?gather:Gather):Signal<T>
     return Suspendable.over(this, function (fire, _, _) return handle(function (v) if (f(v)) fire(v)));
 
-  public function select<R>(selector:T->Option<R>, ?gather = true):Signal<R>
+  public function select<R>(selector:T->Option<R>, ?gather:Gather):Signal<R>
     return Suspendable.over(this, function (fire, _, _) return handle(function (v) switch selector(v) {
       case Some(v): fire(v);
       default:
@@ -42,7 +50,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    *  Creates a new signal by joining `this` and `that`,
    *  the new signal will be triggered whenever either of the two triggers
    */
-  public function join(that:Signal<T>, ?gather = true):Signal<T>
+  public function join(that:Signal<T>, ?gather:Gather):Signal<T>
     return
       if (this.disposed) that;
       else if (that.disposed) this;
@@ -121,17 +129,11 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
    *  Example: `var signal = Signal.ofClassical(emitter.addListener.bind(eventType), emitter.removeListener.bind(eventType));`
    */
-  static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather = true) {
-    var ret = new Signal(function (cb:Callback<A>) {
-      var f = function (a) cb.invoke(a);
-      add(f);
-      return remove.bind(f);
+  static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather:Gather)
+    return new Suspendable<A>(function (fire, _, _) {
+      add(fire);
+      return remove.bind(fire);
     });
-
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
 }
 
 private class Disposed implements SignalObject<Dynamic> {
