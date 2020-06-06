@@ -47,18 +47,25 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
     }));
 
   /**
-   *  Creates a new signal by joining `this` and `other`,
+   *  Creates a new signal by joining `this` and `that`,
    *  the new signal will be triggered whenever either of the two triggers
    */
-  public function join(other:Signal<T>, ?gather = true):Signal<T> {
-    var ret = new Signal(
-      function (cb:Callback<T>):CallbackLink
-        return this.listen(cb) & other.handle(cb)
-    );
+  public function join(that:Signal<T>, ?gather = true):Signal<T>
     return
-      if (gather) ret.gather();
-      else ret;
-  }
+      if (this.disposed) that;
+      else if (that.disposed) this;
+      else {
+        var ret = new Suspendable<T>(function (fire) {
+          var cb:Callback<T> = fire;
+          return handle(cb) & that.handle(cb);
+        });
+
+        function release()
+          if (this.disposed && that.disposed) ret.dispose();
+        this.ondispose(release);
+        that.ondispose(release);
+        ret;
+      }
 
   /**
    *  Gets the next emitted value as a Future
