@@ -16,7 +16,7 @@ abstract Gather(Bool) {
 abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
   @:deprecated public inline function new(f:Callback<T>->CallbackLink)
-    this = new Suspendable<T>(function (fire, _, _) return f(fire));
+    this = new Suspendable<T>(fire -> f(fire));
 
   public inline function handle(handler:Callback<T>):CallbackLink
     return this.listen(handler);
@@ -26,23 +26,23 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    *  Different from `flatMap`, the transform function of `map` returns a sync value
    */
   public function map<A>(f:T->A, ?gather:Gather):Signal<A>
-    return Suspendable.over(this, function (fire, _, _) return handle(function (v) fire(f(v))));
+    return Suspendable.over(this, fire -> handle(v -> fire(f(v))));
 
   /**
    *  Creates a new signal by applying a transform function to the result.
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
    */
   @:deprecated public function flatMap<A>(f:T->Future<A>, ?gather:Gather):Signal<A>
-    return Suspendable.over(this, function (fire, _, _) return handle(function (v) f(v).handle(fire)));
+    return Suspendable.over(this, fire -> handle(v -> f(v).handle(fire)));
 
   /**
    *  Creates a new signal whose values will only be emitted when the filter function evalutes to `true`
    */
   public function filter(f:T->Bool, ?gather:Gather):Signal<T>
-    return Suspendable.over(this, function (fire, _, _) return handle(function (v) if (f(v)) fire(v)));
+    return Suspendable.over(this, fire -> handle(v -> if (f(v)) fire(v)));
 
   public function select<R>(selector:T->Option<R>, ?gather:Gather):Signal<R>
-    return Suspendable.over(this, function (fire, _, _) return handle(function (v) switch selector(v) {
+    return Suspendable.over(this, fire -> handle(v -> switch selector(v) {
       case Some(v): fire(v);
       default:
     }));
@@ -55,16 +55,18 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
     return
       if (this.disposed) that;
       else if (that.disposed) this;
-      else new Suspendable<T>(function (fire, first, self) {
-        var cb:Callback<T> = fire;
-        if (first) {
+      else new Suspendable<T>(
+        fire -> {
+          var cb:Callback<T> = fire;
+          handle(cb) & that.handle(cb);
+        },
+        self -> {
           function release()
             if (this.disposed && that.disposed) self.dispose();
           this.ondispose(release);
           that.ondispose(release);
         }
-        return handle(cb) & that.handle(cb);
-      });
+      );
 
   /**
    *  Gets the next emitted value as a Future
@@ -83,11 +85,8 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
   public function until<X>(end:Future<X>):Signal<T>
     return new Suspendable(
-      function (yield, first, self) {
-        if (first)
-          end.handle(self.dispose);
-        return this.listen(yield);
-      }
+      yield -> this.listen(yield),
+      self -> end.handle(self.dispose)
     );
 
   @:deprecated("use nextTime instead")
@@ -121,15 +120,15 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
   static public function trigger<T>():SignalTrigger<T>
     return new SignalTrigger();
 
-  static public inline function create<T>(create:(T->Void)->(Void->Void)):Signal<T>
-    return new Suspendable<T>(function (fire, first, self) return create(fire));
+  static public inline function create<T>(create:(T->Void)->(Void->Void), ?init):Signal<T>
+    return new Suspendable<T>(fire -> create(fire), init);
 
   /**
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
    *  Example: `var signal = Signal.ofClassical(emitter.addListener.bind(eventType), emitter.removeListener.bind(eventType));`
    */
   static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather:Gather)
-    return new Suspendable<A>(function (fire, _, _) {
+    return new Suspendable<A>(function (fire) {
       add(fire);
       return remove.bind(fire);
     });
@@ -153,11 +152,27 @@ private class Disposed implements SignalObject<Dynamic> {
     return null;
 }
 
-private class Suspendable<T> implements SignalObject<T> {
-  var trigger:SignalTrigger<T> = new SignalTrigger();
-  var activate:(T->Void)->Bool->Suspendable<T>->(Void->Void);
+private class Check<T> implements LinkObject {
+  final target:Suspendable<T>;
+
+  public function new(target)
+    this.target = target;
+
+  public function cancel()
+    @:privateAccess if (target.trigger.getLength() == 0) {
+      target.suspend();
+      target.suspend = null;
+    }
+}
+
+private class Suspendable<T> implements SignalObject<T> implements OwnedDisposable {
+
+  final trigger = new SignalTrigger<T>();
+  final activate:(fire:T->Void)->(Void->Void);
+  final check:CallbackLink;
+
+  var init:Null<OwnedDisposable->Void>;
   var suspend:Void->Void;
-  var first = true;
 
   @:deprecated
   public var killed(get, never):Bool;
@@ -183,27 +198,29 @@ private class Suspendable<T> implements SignalObject<T> {
   public inline function ondispose(handler)
     trigger.ondispose(handler);
 
-  public function new(activate)
+  public function new(activate, ?init) {
     this.activate = activate;
+    this.init = init;
+    this.check = new Check(this);
+  }
 
 	public function listen(cb) {
     if (disposed) return null;
 
-    if (trigger.getLength() == 0)
-      this.suspend = activate(trigger.trigger, first && !(first = false), this);
+    var ret = trigger.listen(cb) & check;
 
-    if (disposed) return null;
+    if (trigger.getLength() == 1) {
+      switch init {
+        case null:
+        case f: init = null; f(this);
+      }
+      this.suspend = activate(trigger.trigger);
+    }
 
-    return
-      trigger.listen(cb)
-      & function ()
-          if (trigger.getLength() == 0) {
-            suspend();
-            suspend = null;
-          }
+    return ret;
   }
 
-  static public function over<In, Out>(s:Signal<In>, activate:(Out->Void)->Bool->Suspendable<Out>->(Void->Void)):Signal<Out>
+  static public function over<In, Out>(s:Signal<In>, activate):Signal<Out>
     return
       if (s.disposed) return cast Disposed.INST;
       else {
