@@ -154,30 +154,23 @@ private class ListCell<T> implements LinkObject {
     }
 }
 
-class CallbackList<T> implements OwnedDisposable {
+class CallbackList<T> extends SimpleDisposable {
 
   var cells:Array<ListCell<T>>;
-  var disposeHandlers = new Array<Void->Void>();
 
   public var length(get, never):Int;
     inline function get_length():Int
       return used;
 
-  public var disposed(get, null):Bool = false;
-    inline function get_disposed()
-      return this.disposed;
-
   var used:Int = 0;
   var queue = [];
 
   public var busy(default, null):Bool = false;
+
   public function new() {
+    super(function () if (!busy) destroy());
     this.cells = [];
   }
-
-  public function ondispose(handler)
-    if (disposed) handler;
-    else disposeHandlers.push(handler);
 
   dynamic public function ondrain() {}
 
@@ -185,25 +178,17 @@ class CallbackList<T> implements OwnedDisposable {
     if (--used < length >> 1)
       compact();
 
-  public function dispose()
-    if (!disposed) {
-      disposed = false;
-      if (!busy) destroy();
-    }
-
   function destroy() {
-    for (h in disposeHandlers)
-      h();
-
     for (c in cells)
       c.clear();
 
-    disposeHandlers = null;
     queue = null;
     cells = null;
 
-    used = 0;
-    ondrain();
+    if (used > 0) {
+      used = 0;
+      ondrain();
+    }
   }
 
   public inline function add(cb:Callback<T>):CallbackLink {
@@ -224,7 +209,7 @@ class CallbackList<T> implements OwnedDisposable {
       busy = true;
 
       if (destructive)
-        disposed = true;
+        dispose();
 
       var length = cells.length;
       for (i in 0...length)
