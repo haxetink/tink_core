@@ -29,26 +29,47 @@ class Signals extends Base {
 
   public function testSuspendable() {
 
-    var active = false;
+    var active = false,
+        d = null,
+        counter = 0,
+        initialized = 0,
+        received = -1;
+
     var s = Signal.create(
-      function (_) {
+      function (fire) {
+        fire(counter++);
         active = true;
         return function () active = false;
+      },
+      v -> {
+        initialized++;
+        d = v;
       }
     );
 
-    asserts.assert(!active);
+    function handler(v)
+      received = v;
 
-    var link = s.handle(function () {});
+    asserts.assert(!active);
+    asserts.assert(d == null);
+    asserts.assert(initialized == 0);
+
+    var link = s.handle(handler);
+
+    asserts.assert(received == 0);
     asserts.assert(active);
+    asserts.assert(d != null);
+    asserts.assert(initialized == 1);
 
     link.cancel();
     asserts.assert(!active);
 
-    link = s.handle(function () {});
+    link = s.handle(handler);
+    asserts.assert(received == 1);
     asserts.assert(active);
+    asserts.assert(initialized == 1);
 
-    var link2 = s.handle(function () {});
+    var link2 = s.handle(handler);
     asserts.assert(active);
 
     link.cancel();
@@ -56,6 +77,15 @@ class Signals extends Base {
 
     link2.cancel();
     asserts.assert(!active);
+
+    link2 = s.handle(handler);
+    asserts.assert(received == 2);
+    d.dispose();
+
+    asserts.assert(!active);
+    link2 = s.handle(handler);
+    asserts.assert(!active);
+
     return asserts.done();
   }
 
