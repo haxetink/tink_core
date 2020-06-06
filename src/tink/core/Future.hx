@@ -272,8 +272,11 @@ private class SyncFuture<T> implements FutureObject<T> {
     return null;
   }
 
-  public function eager()
+  public function eager() {
+    if (!value.computed)
+      value.get();
     return this;
+  }
 
   public function gather()
     return this;
