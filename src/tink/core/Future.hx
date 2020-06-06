@@ -9,14 +9,14 @@ import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
 
 @:forward(handle, gather, eager)
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
-  
+
   public static var NULL:Future<Dynamic> = Future.sync(null);
   public static var NOISE:Future<Noise> = Future.sync(Noise);
   public static var NEVER:Future<Dynamic> = (NeverFuture.inst:FutureObject<Dynamic>);
 
-  public inline function new(f:Callback<T>->CallbackLink) 
-    this = new SuspendableFuture(f);  
-  
+  public inline function new(f:Callback<T>->CallbackLink)
+    this = new SuspendableFuture(f);
+
   /**
    *  Creates a future that contains the first result from `this` or `other`
    */
@@ -31,7 +31,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
       ret.handle(l2);
     return ret;
   }
-  
+
   /**
    *  Creates a new future by applying a transform function to the result.
    *  Different from `flatMap`, the transform function of `map` returns a sync value
@@ -42,7 +42,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
       if (gather) ret.gather();
       else ret;
   }
-  
+
   /**
    *  Creates a new future by applying a transform function to the result.
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
@@ -51,28 +51,28 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
     var ret = this.flatMap(next);
     return
       if (gather) ret.gather();
-      else ret;    
-  }  
-  
+      else ret;
+  }
+
   /**
    *  Like `map` and `flatMap` but with a polymorphic transformer and return a `Promise`
    *  @see `Next`
    */
   public function next<R>(n:Next<T, R>):Promise<R>
     return this.flatMap(function (v) return n(v));
-  
+
   /**
    *  Merges two futures into one by applying the merger function on the two future values
    */
-  public function merge<A, R>(other:Future<A>, merger:T->A->R, ?gather = true):Future<R> 
+  public function merge<A, R>(other:Future<A>, merger:T->A->R, ?gather = true):Future<R>
     return flatMap(function (t:T) {
       return other.map(function (a:A) return merger(t, a), false);
     }, gather);
-  
+
   /**
    *  Flattens `Future<Future<A>>` into `Future<A>`
    */
-  static public function flatten<A>(f:Future<Future<A>>):Future<A> 
+  static public function flatten<A>(f:Future<Future<A>>):Future<A>
     return new SuspendableFuture<A>(function (yield) {
       var inner = null;
       var outer = f.handle(function (second) {
@@ -80,7 +80,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
       });
       return outer.join(function () inner.dissolve());
     });
-  
+
   #if js
   /**
    *  Casts a js Promise into a Surprise
@@ -88,16 +88,16 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:from static public function ofJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
     return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
-  
+
   @:from static inline function ofAny<T>(v:T):Future<T>
     return Future.sync(v);
-  
+
   /**
    *  Casts a Surprise into a Promise
    */
   static inline public function asPromise<T>(s:Surprise<T, Error>):Promise<T>
     return s;
-  
+
   /**
    *  Merges multiple futures into Future<Array<A>>
    */
@@ -105,44 +105,44 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
     var ret = sync([]);
     for (f in futures)
       ret = ret.flatMap(
-        function (results:Array<A>) 
+        function (results:Array<A>)
           return f.map(
-            function (result) 
+            function (result)
               return results.concat([result]),
             false
           ),
         false
       );
-    return 
+    return
       if (gather) ret.gather();
       else ret;
   }
-  
+
   @:deprecated('Implicit cast from Array<Future> is deprecated, please use `ofMany` instead. Please create an issue if you find it useful, and don\'t want this cast removed.')
-  @:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>> 
+  @:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>>
     return ofMany(futures);
-  
+
   //TODO: use this as `sync` for 2.0
   @:noUsing static inline public function lazy<A>(l:Lazy<A>):Future<A>
-    return new SyncFuture(l);    
-  
+    return new SyncFuture(l);
+
   /**
    *  Creates a sync future.
    *  Example: `var i = Future.sync(1); // Future<Int>`
    */
-  @:noUsing static inline public function sync<A>(v:A):Future<A> 
-    return new SyncFuture(v); 
+  @:noUsing static inline public function sync<A>(v:A):Future<A>
+    return new SyncFuture(v);
 
   @:noUsing static inline public function isFuture(maybeFuture: Dynamic)
     return Std.is(maybeFuture, FutureObject);
-    
+
   /**
    *  Creates an async future
    *  Example: `var i = Future.async(function(cb) cb(1)); // Future<Int>`
    */
   #if python @:native('make') #end
-  @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A> 
-    if (lazy) 
+  @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A>
+    if (lazy)
       return new SuspendableFuture(function (yield) {
         f(yield);
         return null;
@@ -151,57 +151,57 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
       var op = trigger();
       var wrapped:Callback<A->Void> = f;
       wrapped.invoke(op.trigger);
-      return op;      
-    }    
-    
+      return op;
+    }
+
   /**
    *  Same as `first`
    */
   @:noCompletion @:op(a || b) static public function or<A>(a:Future<A>, b:Future<A>):Future<A>
     return a.first(b);
-    
+
   /**
    *  Same as `first`, but use `Either` to handle the two different types
    */
   @:noCompletion @:op(a || b) static public function either<A, B>(a:Future<A>, b:Future<B>):Future<Either<A, B>>
     return a.map(Either.Left, false).first(b.map(Either.Right, false));
-      
+
   /**
    *  Uses `Pair` to merge two futures
    */
   @:noCompletion @:op(a && b) static public function and<A, B>(a:Future<A>, b:Future<B>):Future<Pair<A, B>>
     return a.merge(b, function (a, b) return new Pair(a, b));
-  
-  @:noCompletion @:op(a >> b) static public function _tryFailingFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Surprise<R, F>)
+
+  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _tryFailingFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Surprise<R, F>)
     return f.flatMap(function (o) return switch o {
       case Success(d): map(d);
       case Failure(f): Future.sync(Failure(f));
     });
 
-  @:noCompletion @:op(a >> b) static public function _tryFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Future<R>):Surprise<R, F> 
+  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _tryFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Future<R>):Surprise<R, F>
     return f.flatMap(function (o) return switch o {
       case Success(d): map(d).map(Success);
       case Failure(f): Future.sync(Failure(f));
     });
-    
-  @:noCompletion @:op(a >> b) static public function _tryFailingMap<D, F, R>(f:Surprise<D, F>, map:D->Outcome<R, F>)
+
+  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _tryFailingMap<D, F, R>(f:Surprise<D, F>, map:D->Outcome<R, F>)
     return f.map(function (o) return o.flatMap(map));
 
-  @:noCompletion @:op(a >> b) static public function _tryMap<D, F, R>(f:Surprise<D, F>, map:D->R)
-    return f.map(function (o) return o.map(map));    
-  
-  @:noCompletion @:op(a >> b) static public function _flatMap<T, R>(f:Future<T>, map:T->Future<R>)
+  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _tryMap<D, F, R>(f:Surprise<D, F>, map:D->R)
+    return f.map(function (o) return o.map(map));
+
+  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _flatMap<T, R>(f:Future<T>, map:T->Future<R>)
     return f.flatMap(map);
 
-  @:noCompletion @:op(a >> b) static public function _map<T, R>(f:Future<T>, map:T->R)
+  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _map<T, R>(f:Future<T>, map:T->R)
     return f.map(map);
 
   /**
    *  Creates a new `FutureTrigger`
    */
-  @:noUsing static public inline function trigger<A>():FutureTrigger<A> 
-    return new FutureTrigger();  
-    
+  @:noUsing static public inline function trigger<A>():FutureTrigger<A>
+    return new FutureTrigger();
+
   @:noUsing static public function delay<T>(ms:Int, value:Lazy<T>):Future<T>
     return Future.async(function(cb) haxe.Timer.delay(function() cb(value.get()), ms));
 
@@ -214,7 +214,7 @@ interface FutureObject<T> {
   /**
    *  Registers a callback to handle the future result.
    *  If the result is already available, the callback will be invoked immediately.
-   *  @return A `CallbackLink` instance that can be used to cancel the callback, no effect if the callback is already invoked 
+   *  @return A `CallbackLink` instance that can be used to cancel the callback, no effect if the callback is already invoked
    */
   function handle(callback:Callback<T>):CallbackLink;
   /**
@@ -241,7 +241,7 @@ private class NeverFuture<T> implements FutureObject<T> {
 }
 
 private class SyncFuture<T> implements FutureObject<T> {
-  
+
   var value:Lazy<T>;
 
   public inline function new(value)
@@ -269,12 +269,12 @@ class FutureTrigger<T> implements FutureObject<T> {
   var result:T;
   var list:CallbackList<T>;
 
-  public function new() 
+  public function new()
     this.list = new CallbackList();
-  
+
   public function handle(callback:Callback<T>):CallbackLink
     return switch list {
-      case null: 
+      case null:
         callback.invoke(result);
         null;
       case v:
@@ -308,7 +308,7 @@ class FutureTrigger<T> implements FutureObject<T> {
   public inline function asFuture():Future<T>
     return this;
 
-  @:noUsing static public function gatherFuture<T>(f:Future<T>):Future<T> 
+  @:noUsing static public function gatherFuture<T>(f:Future<T>):Future<T>
     return new SuspendableFuture(function (yield) return f.handle(yield));
 
   /**
@@ -355,9 +355,9 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
     }
   }
 
-  function trigger(value:T) 
+  function trigger(value:T)
     switch callbacks {
-      case null: 
+      case null:
       case list:
         callbacks = null;
         suspended = false;
@@ -367,13 +367,13 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
         list.invoke(value, true);
     }
 
-  public function handle(callback:Callback<T>):CallbackLink 
-    return 
+  public function handle(callback:Callback<T>):CallbackLink
+    return
       switch callbacks {
-        case null: 
+        case null:
           callback.invoke(result);
           null;
-        case v: 
+        case v:
           var ret = callbacks.add(callback);
           if (suspended) {
             suspended = false;
@@ -381,7 +381,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
           }
           ret;
       }
-    
+
 
   public function map<R>(f:T->R):Future<R>
     return new SuspendableFuture(function (yield) {
@@ -391,12 +391,12 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
   public function flatMap<R>(f:T->Future<R>):Future<R>
     return Future.flatten(map(f));
 
-  public inline function gather():Future<T> 
+  public inline function gather():Future<T>
     return this;
 
   public inline function eager():Future<T> {
     handle(function () {});//TODO: very naive implementeation
     return this;
-  }  
+  }
 
 }
