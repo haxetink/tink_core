@@ -72,17 +72,12 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    */
   public function nextTime(?condition:T->Bool):Future<T> {
     var ret = Future.trigger();
-    var link:CallbackLink = null,
-        immediate = false;
+    var link:CallbackLink = null;
 
     link = this.listen(function (v) if (condition == null || condition(v)) {
       ret.trigger(v);
-      if (link == null) immediate = true;
-      else link.cancel();
-    });
-
-    if (immediate)
       link.cancel();
+    });
 
     return ret.asFuture();
   }
