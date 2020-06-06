@@ -1,5 +1,7 @@
 package tink.core;
 
+import tink.core.Disposable;
+
 abstract Callback<T>(T->Void) from (T->Void) {
 
   inline function new(f)
@@ -152,10 +154,10 @@ private class ListCell<T> implements LinkObject {
     }
 }
 
-class CallbackList<T> implements Disposable {
+class CallbackList<T> implements OwnedDisposable {
 
   var cells:Array<ListCell<T>>;
-  var disposables = new Array<Disposable>();
+  var disposeHandlers = new Array<Void->Void>();
 
   public var length(get, never):Int;
     inline function get_length():Int
@@ -173,9 +175,9 @@ class CallbackList<T> implements Disposable {
     this.cells = [];
   }
 
-  public function attachDisposable(d:Disposable)
-    if (disposed) d.dispose();
-    else disposables.push(d);
+  public function ondispose(handler)
+    if (disposed) handler;
+    else disposeHandlers.push(handler);
 
   dynamic public function ondrain() {}
 
@@ -190,13 +192,13 @@ class CallbackList<T> implements Disposable {
     }
 
   function destroy() {
-    for (d in disposables)
-      d.dispose();
+    for (h in disposeHandlers)
+      h();
 
     for (c in cells)
       c.clear();
 
-    disposables = null;
+    disposeHandlers = null;
     queue = null;
     cells = null;
 

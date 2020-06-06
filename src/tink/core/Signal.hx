@@ -1,9 +1,10 @@
 package tink.core;
 
+import tink.core.Disposable;
 import tink.core.Callback;
 import tink.core.Noise;
 
-@:forward(disposed, attachDisposable)
+@:forward(disposed, ondispose)
 abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
   public inline function new(f:Callback<T>->CallbackLink) this = new SimpleSignal(f);
@@ -151,8 +152,8 @@ private class Disposed implements SignalObject<Dynamic> {
   static public var INST(default, null):Signal<Dynamic> = new Disposed();
 
   public function dispose() {}
-  public function attachDisposable(d:Disposable)
-    d.dispose();
+  public function ondispose(handler)
+    handler();//TODO: consider using Callback.defer
 
   public inline function listen(cb:Callback<Dynamic>):CallbackLink
     return null;
@@ -164,7 +165,7 @@ private class SimpleSignal<T> implements SignalObject<T> {
     inline function get_disposed() return false;
 
   public function dispose() {}
-  public function attachDisposable(d:Disposable) {}
+  public function ondispose(handler) {}
   public inline function new(f) this.f = f;
   public inline function listen(cb) return this.f(cb);
 }
@@ -189,8 +190,8 @@ private class Suspendable<T> implements SignalObject<T> {
   public inline function kill()
     dispose();
 
-  public inline function attachDisposable(d)
-    trigger.attachDisposable(d);
+  public inline function ondispose(handler)
+    trigger.ondispose(handler);
 
   public function new(activate)
     this.activate = activate;
@@ -214,12 +215,12 @@ private class Suspendable<T> implements SignalObject<T> {
       if (s.disposed) return cast Disposed.INST;
       else {
         var ret = new Suspendable<Out>(activate);
-        s.attachDisposable(ret);
+        s.ondispose(ret.dispose);
         return ret;
       }
 }
 
-class SignalTrigger<T> implements SignalObject<T> {
+class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposable {
   public var disposed(get, never):Bool;
     inline function get_disposed()
       return handlers.disposed;
@@ -231,8 +232,8 @@ class SignalTrigger<T> implements SignalObject<T> {
   public function dispose()
     handlers.dispose();
 
-  public function attachDisposable(d)
-    handlers.attachDisposable(d);
+  public function ondispose(d)
+    handlers.ondispose(d);
 
   /**
    *  Emits a value for this signal
