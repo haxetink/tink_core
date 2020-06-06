@@ -207,8 +207,17 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
 }
 
-interface FutureObject<T> {
+enum FutureStatus<T> {
+  Suspended;
+  Awaited;
+  Ready;
+  IsHere(result:T);
+  NeverEver;
+}
 
+private interface FutureObject<T> {
+
+  function getStatus():FutureStatus<T>;
   function map<R>(f:T->R):Future<R>;
   function flatMap<R>(f:T->Future<R>):Future<R>;
   /**
@@ -233,6 +242,8 @@ interface FutureObject<T> {
 private class NeverFuture<T> implements FutureObject<T> {
   public static var inst(default, null):NeverFuture<Dynamic> = new NeverFuture();
   function new() {}
+  public function getStatus():FutureStatus<T>
+    return NeverEver;
   public function map<R>(f:T->R):Future<R> return cast inst;
   public function flatMap<R>(f:T->Future<R>):Future<R> return cast inst;
   public function handle(callback:Callback<T>):CallbackLink return null;
@@ -243,6 +254,9 @@ private class NeverFuture<T> implements FutureObject<T> {
 private class SyncFuture<T> implements FutureObject<T> {
 
   var value:Lazy<T>;
+
+  public function getStatus()
+    return if (value.computed) IsHere(value.get()) else Ready;
 
   public inline function new(value)
     this.value = value;
@@ -266,34 +280,37 @@ private class SyncFuture<T> implements FutureObject<T> {
 }
 
 class FutureTrigger<T> implements FutureObject<T> {
-  var result:T;
-  var list:CallbackList<T>;
+  var status:FutureStatus<T> = Awaited;
+  final list:CallbackList<T>;
 
   public function new()
     this.list = new CallbackList();
 
+  public function getStatus()
+    return status;
+
   public function handle(callback:Callback<T>):CallbackLink
-    return switch list {
-      case null:
+    return switch status {
+      case IsHere(result):
         callback.invoke(result);
         null;
       case v:
-        v.add(callback);
+        list.add(callback);
     }
 
   public function map<R>(f:T->R):Future<R>
-    return switch list {
-      case null: Future.sync(f(result));
-      case v:
+    return switch status {
+      case IsHere(result): Future.sync(f(result));
+      default:
         var ret = new FutureTrigger();
         list.add(function (v) ret.trigger(f(v)));
         ret;
     }
 
   public function flatMap<R>(f:T->Future<R>):Future<R>
-    return switch list {
-      case null: f(result);
-      case v:
+    return switch status {
+      case IsHere(result): f(result);
+      default:
         var ret = new FutureTrigger();
         list.add(function (v) f(v).handle(ret.trigger));
         ret;
@@ -315,15 +332,13 @@ class FutureTrigger<T> implements FutureObject<T> {
    *  Triggers a value for this future
    */
   public function trigger(result:T):Bool
-    return
-      if (list == null) false;
-      else {
-        var list = this.list;
-        this.list = null;
-        this.result = result;
+    return switch status {
+      case IsHere(_): false;
+      default:
+        status = IsHere(result);
         list.invoke(result, true);
         true;
-      }
+    }
 }
 
 typedef Surprise<D, F> = Future<Outcome<D, F>>;
@@ -338,50 +353,48 @@ class JsPromiseTools {
 #end
 
 private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has quite a bit of duplication with FutureTrigger
-  var callbacks:CallbackList<T>;
-  var result:T;
-  var suspended:Bool = true;
+  final callbacks:CallbackList<T>;
+  var status:FutureStatus<T> = Suspended;
   var link:CallbackLink;
   var wakeup:(T->Void)->CallbackLink;
+
+  public function getStatus()
+    return this.status;
 
   public function new(wakeup) {
     this.wakeup = wakeup;
     this.callbacks = new CallbackList();
 
-    callbacks.ondrain = function () if (callbacks != null) {
-      suspended = true;
+    callbacks.ondrain = function () if (status == Awaited) {
+      status = Suspended;
       link.cancel();
       link = null;
     }
   }
 
   function trigger(value:T)
-    switch callbacks {
-      case null:
-      case list:
-        callbacks = null;
-        suspended = false;
-        result = value;
+    switch status {
+      case IsHere(_):
+      default:
+        status = IsHere(value);
         link = null;//consider disolving
         wakeup = null;
-        list.invoke(value, true);
-    }
+        callbacks.invoke(value, true);
+  }
 
   public function handle(callback:Callback<T>):CallbackLink
-    return
-      switch callbacks {
-        case null:
-          callback.invoke(result);
-          null;
-        case v:
-          var ret = callbacks.add(callback);
-          if (suspended) {
-            suspended = false;
-            link = wakeup(trigger);
-          }
-          ret;
-      }
-
+    return switch status {
+      case IsHere(result):
+        callback.invoke(result);
+        null;
+      case Suspended:
+        var ret = callbacks.add(callback);
+        status = Awaited;
+        link = wakeup(trigger);
+        ret;
+      default:
+        callbacks.add(callback);
+    }
 
   public function map<R>(f:T->R):Future<R>
     return new SuspendableFuture(function (yield) {
