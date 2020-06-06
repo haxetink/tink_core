@@ -211,7 +211,7 @@ enum ProgressType<T> {
 class TotalTools {
 	public static function eq(a:Option<Float>, b:Option<Float>) {
 		return switch [a, b] {
-			case [Some(t1), Some(t2)]: t1 == t2;
+			case [Some(t1), Some(t2)]: t1 == t2;//TODO: deal with precision
 			case [None, None]: true;
 			case _: false;
 		}
