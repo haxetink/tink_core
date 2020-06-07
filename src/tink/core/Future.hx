@@ -141,18 +141,11 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Example: `var i = Future.async(function(cb) cb(1)); // Future<Int>`
    */
   #if python @:native('make') #end
-  @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A>
-    if (lazy)
-      return new SuspendableFuture(function (yield) {
-        f(yield);
-        return null;
-      });
-    else {
-      var op = trigger();
-      var wrapped:Callback<A->Void> = f;
-      wrapped.invoke(op.trigger);
-      return op;
-    }
+  @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = true):Future<A>
+    return new SuspendableFuture(function (yield) {
+      f(yield);
+      return null;
+    });
 
   /**
    *  Same as `first`
