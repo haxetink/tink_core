@@ -4,6 +4,14 @@ import tink.core.Disposable;
 
 abstract Callback<T>(T->Void) from (T->Void) {
 
+  @:extern static inline function guarded(fn:Void->Void):Void
+    if (depth < MAX_DEPTH) {
+      depth++;
+      fn(); //TODO: consider handling exceptions here (per opt-in?) to avoid a failing callback from taking down the whole app
+      depth--;
+    }
+    else Callback.defer(fn);
+
   inline function new(f)
     this = f;
 

@@ -18,10 +18,10 @@ class Promises extends Base {
       return Future.async(function (cb) {
         var id = counter++;
         cb(if (fail) Failure(new Error('error')) else Success(id));
-      }, true);
+      });
 
     counter = 0;
-    var p = Promise.inParallel([for (i in 0...10) make(i > 5)], true);
+    var p = Promise.inParallel([for (i in 0...10) make(i > 5)]);
     asserts.assert(0 == counter);
     p.handle(function (o) {
       asserts.assert(!o.isSuccess());
@@ -30,7 +30,7 @@ class Promises extends Base {
      
     counter = 0;
     var t = Future.trigger();
-    var p = Promise.inParallel([t, make(false), make(false)], true);
+    var p = Promise.inParallel([t, make(false), make(false)]);
     asserts.assert(0 == counter);
     var done = false;
     p.handle(function (o) {
@@ -44,7 +44,7 @@ class Promises extends Base {
     
     
     counter = 0;
-    var p = Promise.inParallel([], true);
+    var p = Promise.inParallel([]);
     asserts.assert(0 == counter);
     p.handle(function (o) {
       asserts.assert(o.isSuccess());
@@ -57,15 +57,18 @@ class Promises extends Base {
   @:variant(6, 10)
   @:variant(10, 10)
   @:variant(20, 10)
+  #if java @:exclude #end // apparently on java (or at least jvm) haxe.Timer callbacks get dispatched on different threads, which creates a race condition on running (or even causes timeouts)
   public function testThrottle(concurrency:Null<Int>, total:Int) {
     var maximum = 0;
     var running = 0;
-    
+
     function run():Promise<Noise> {
       running++;
       if(running > maximum) maximum = running;
       var future = Future.delay(100, Noise);
-      future.handle(function(_) running--);
+      future.handle(function(_) {
+        running--;
+      });
       return future;
     }
     var p = Promise.inParallel([for(i in 0...total) Promise.lazy(run)], concurrency);
@@ -86,7 +89,7 @@ class Promises extends Base {
       return Future.async(function (cb) {
         var id = counter++;
         cb(if (fail) Failure(new Error('error')) else Success(id));
-      }, true);
+      });
 
     counter = 0;
     var p = Promise.inSequence([for (i in 0...10) make(i > 5)]);
@@ -122,11 +125,11 @@ class Promises extends Base {
   }
     
   public function testIterate() {
-    inline function boolAnd(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>
-      return Promise.iterate(promises, function(v) return v ? None : Some(false), true, lazy);
+    inline function boolAnd(promises:Iterable<Promise<Bool>>):Promise<Bool>
+      return Promise.iterate(promises, function(v) return v ? None : Some(false), true);
       
-    inline function boolOr(promises:Iterable<Promise<Bool>>, ?lazy):Promise<Bool>
-      return Promise.iterate(promises, function(v) return v ? Some(true) : None, false, lazy);
+    inline function boolOr(promises:Iterable<Promise<Bool>>):Promise<Bool>
+      return Promise.iterate(promises, function(v) return v ? Some(true) : None, false);
     
     boolAnd([true, true, true]).handle(function(o) asserts.assert(o.match(Success(true))));
     boolAnd([true, false, true]).handle(function(o) asserts.assert(o.match(Success(false))));

@@ -40,7 +40,7 @@ class Base {
     asserts.fail('no exception thrown', pos);
   }
   
-  function delay(ms:Int, ?lazy):Promise<Noise> {
-    return Future.async(function(cb) haxe.Timer.delay(cb.bind(Noise), ms), lazy);
+  function delay(ms:Int):Promise<Noise> {
+    return Future.async(function(cb) haxe.Timer.delay(cb.bind(Noise), ms));
   }
 }

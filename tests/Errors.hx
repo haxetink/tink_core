@@ -3,7 +3,7 @@ package ;
 using tink.CoreApi;
 
 #if js
-import #if haxe4 js.lib.Error #else js.Error #end as JsError;
+import js.lib.Error as JsError;
 #end
 
 @:asserts

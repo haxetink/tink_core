@@ -32,7 +32,7 @@ script:
   - lix run travix node
   - lix run travix node -D tink_core_no_error_pos
   # - lix run travix flash
-  # - lix run travix java
+  - lix run travix java -D jvm
   # - lix run travix cs
   - lix run travix js
   - lix run travix cpp

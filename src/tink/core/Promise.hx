@@ -13,11 +13,10 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public static var NOISE:Promise<Noise> = Future.sync(Success(Noise));
   public static var NEVER:Promise<Dynamic> = Future.NEVER;
 
-  public inline function new(f:(T->Void)->(Error->Void)->Void, lazy = false) {
+  public inline function new(f:(T->Void)->(Error->Void)->Void) 
     this = Future.async(function(cb) {
       f(function(v) cb(Success(v)), function(e) cb(Failure(e)));
-    }, lazy);
-  }
+    });
 
   public inline function eager():Promise<T>
     return this.eager();
@@ -57,9 +56,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
   public function next<R>(f:Next<T, R>, ?gather = true):Promise<R>
     return this.flatMap(function (o) return switch o {
-        case Success(d): f(d);
-        case Failure(f): Future.sync(Failure(f));
-      }, gather);
+      case Success(d): f(d);
+      case Failure(f): Future.sync(Failure(f));
+    });
 
   public inline function swap<R>(v:R):Promise<R>
     return next(_ -> v);
@@ -91,7 +90,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    * @param fallback A value to be used when all yields `None`
    * @return Promise<T>
    */
-  static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, fallback:Promise<R>, ?lazy):Promise<R> {
+  static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, fallback:Promise<R>):Promise<R> {
     return Future.async(function(cb) {
       var iter = promises.iterator();
       function next() {
@@ -110,7 +109,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
           fallback.handle(cb);
       }
       next();
-    }, lazy);
+    });
   }
 
   /**
@@ -192,13 +191,13 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return ofOutcome(Success(d));
 
   public static inline function lazy<T>(p:Lazy<Promise<T>>):Promise<T>
-    return Future.async(function(cb) p.get().handle(cb), true);
+    return Future.async(function(cb) p.get().handle(cb));
 
-  static public function inParallel<T>(a:Array<Promise<T>>, ?concurrency:Int, ?lazy:Bool):Promise<Array<T>>
-    return
+  static public function inParallel<T>(a:Array<Promise<T>>, ?concurrency:Int):Promise<Array<T>> 
+    return 
       if(a.length == 0) Future.sync(Success([]))
       else Future.async(function (cb) {
-        var result = [],
+        var result = [for (i in 0...a.length) null], 
             pending = a.length,
             links:CallbackLink = null,
             linkArray = [],
@@ -246,7 +245,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
         if (sync)
           links.cancel();
-      }, lazy);
+      });
 
   static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>> {
 
@@ -255,8 +254,8 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
         if (index == a.length) [];
         else
           a[index].next(
-            function (head) return loop(index+1).next(
-              function (tail) return [head].concat(tail)
+            head -> loop(index+1).next(
+              tail -> [head].concat(tail)
             )
           );
 
@@ -318,46 +317,53 @@ abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
     }
 
   @:from static function ofSafe<In, Out>(f:In->Outcome<Out, Error>):Next<In, Out>
-    return function (x) return f(x);
+    return x -> f(x);
 
   @:from static function ofSync<In, Out>(f:In->Future<Out>):Next<In, Out>
-    return function (x) return f(x);
+    return x -> f(x);
 
   @:from static function ofSafeSync<In, Out>(f:In->Out):Next<In, Out>
-    return function (x) return f(x);
+    return x -> f(x);
 
   @:op(a * b) static function _chain<A, B, C>(a:Next<A, B>, b:Next<B, C>):Next<A, C>
-    return function (v) return a(v).next(b);
+    return v -> a(v).next(b);
 
 }
 
-private extern class Nonsense {}
+private abstract Nonsense(Dynamic) {}
 
 @:callable
 abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
   @:from static function ofSync<T>(f:Error->T):Recover<T>
-    return function (e) return Future.sync(f(e));
+    return e -> Future.sync(f(e));
 }
 
 @:callable
 abstract Combiner<In1, In2, Out>(In1->In2->Promise<Out>) from In1->In2->Promise<Out> {
-
-  @:from static function ofSafe<In1, In2, Out>(f:In1->In2->Outcome<Out, Error>):Combiner<In1, In2, Out>
-    return function (x1, x2) return f(x1, x2);
-
-  @:from static function ofSync<In1, In2, Out>(f:In1->In2->Future<Out>):Combiner<In1, In2, Out>
-    return function (x1, x2) return f(x1, x2);
+      
+  @:from static function ofSync<In1, In2, Out>(f:In1->In2->Outcome<Out, Error>):Combiner<In1, In2, Out> 
+    return (x1, x2) -> f(x1, x2);
+    
+  @:from static function ofSafe<In1, In2, Out>(f:In1->In2->Future<Out>):Combiner<In1, In2, Out> 
+    return (x1, x2) -> f(x1, x2);
 
   @:from static function ofSafeSync<In1, In2, Out>(f:In1->In2->Out):Combiner<In1, In2, Out>
-    return function (x1, x2) return f(x1, x2);
+    return (x1, x2) -> f(x1, x2);
 
 }
 
 @:forward
 abstract PromiseTrigger<T>(FutureTrigger<Outcome<T, Error>>) from FutureTrigger<Outcome<T, Error>> to FutureTrigger<Outcome<T, Error>> {
-  public inline function new() this = Future.trigger();
-  public inline function resolve(v:T) return this.trigger(Success(v));
-  public inline function reject(e:Error) return this.trigger(Failure(e));
+  
+  public inline function new() 
+    this = Future.trigger();
+
+  public inline function resolve(v:T) 
+    return this.trigger(Success(v));
+
+  public inline function reject(e:Error) 
+    return this.trigger(Failure(e));
+
   @:to public inline function asPromise():Promise<T> return this.asFuture();
 }
 
