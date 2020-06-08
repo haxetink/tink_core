@@ -285,9 +285,6 @@ class FutureTrigger<T> implements FutureObject<T> {
   public inline function asFuture():Future<T>
     return this;
 
-  @:noUsing static public function gatherFuture<T>(f:Future<T>):Future<T>
-    return new SuspendableFuture(function (yield) return f.handle(yield));
-
   /**
    *  Triggers a value for this future
    */
