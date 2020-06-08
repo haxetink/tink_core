@@ -46,10 +46,8 @@ abstract Callback<T>(T->Void) from (T->Void) {
       snow.api.Timer.delay(0, f);
     #elseif java
       haxe.Timer.delay(f, 1);//TODO: find something that leverages the platform better
-    #elseif ((haxe_ver >= 3.3) || js || flash || openfl)
-      haxe.Timer.delay(f, 0);
     #else
-      f();
+      haxe.Timer.delay(f, 0);
     #end
   }
 }
