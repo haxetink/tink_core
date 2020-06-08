@@ -41,16 +41,12 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
     return new ProgressObject<Outcome<T, Error>>(
       v.next(p -> p.result),
       Signal.create(fire -> {
-        var link:CallbackLink = null;
-        var ret = v.handle(o -> switch o {
+        var inner = new CallbackLinkRef();
+        return v.handle(o -> switch o {
           case Success(p):
-            link = p.listen(fire);
+            inner.link = p.listen(fire);
           case Failure(e):
-        });
-        function () {
-          ret.dissolve();
-          link.dissolve();
-        }
+        }) & inner;
       })
     );
 
@@ -59,12 +55,8 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
     return new ProgressObject<T>(
       v.flatMap(p -> p.result),
       Signal.create(fire -> {
-        var link:CallbackLink = null;
-        var ret = v.handle(p -> link = p.listen(fire));
-        function () {
-          ret.dissolve();
-          link.dissolve();
-        }
+        var inner = new CallbackLinkRef();
+        return v.handle(p -> inner.link = p.listen(fire)) & inner;
       })
     );
 

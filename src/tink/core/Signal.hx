@@ -169,19 +169,18 @@ private class Check<T> implements LinkObject {
 
   public function cancel()
     @:privateAccess if (target.trigger.getLength() == 0) {
-      target.suspend();
-      target.suspend = null;
+      target.subscription.cancel();
     }
 }
 
 private class Suspendable<T> implements SignalObject<T> implements OwnedDisposable {
 
   final trigger = new SignalTrigger<T>();
-  final activate:(fire:T->Void)->(Void->Void);
+  final activate:(fire:T->Void)->CallbackLink;
   final check:CallbackLink;
 
   var init:Null<OwnedDisposable->Void>;
-  var suspend:Void->Void;
+  var subscription:CallbackLink;
 
   @:deprecated
   public var killed(get, never):Bool;
@@ -192,15 +191,10 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
 
   public function dispose() {
     trigger.dispose();
-    switch suspend {
-      case null:
-      case fn:
-        suspend = null;
-        fn();
-    }
+    subscription.cancel();
   }
 
-  @:deprecated
+  @:deprecated('use dispose() instead')
   public inline function kill()
     dispose();
 
@@ -223,7 +217,7 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
         case null:
         case f: init = null; f(this);
       }
-      this.suspend = activate(trigger.trigger);
+      this.subscription = activate(trigger.trigger);
     }
 
     return ret;
