@@ -1,5 +1,6 @@
 package tink.core;
 
+import tink.core.Signal;
 import tink.core.Callback;
 
 using tink.CoreApi;
@@ -9,7 +10,7 @@ import #if haxe4 js.lib.Error #else js.Error #end as JsError;
 import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
 #end
 
-@:forward(handle, gather, eager)
+@:forward(handle, eager)
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
   public static var NULL:Future<Dynamic> = Future.sync(null);
@@ -42,14 +43,14 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Creates a new future by applying a transform function to the result.
    *  Different from `flatMap`, the transform function of `map` returns a sync value
    */
-  public inline function map<A>(f:T->A, ?gather = true):Future<A>
+  public inline function map<A>(f:T->A, ?gather:Gather):Future<A>
     return new SuspendableFuture<A>(fire -> this.handle(v -> fire(f(v))));
 
   /**
    *  Creates a new future by applying a transform function to the result.
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
    */
-  public inline function flatMap<A>(next:T->Future<A>, ?gather = true):Future<A>
+  public inline function flatMap<A>(next:T->Future<A>, ?gather:Gather):Future<A>
     return new SuspendableFuture<A>(function (yield) {
       var inner = new CallbackLinkRef();
       var outer = this.handle(v -> inner.link = next(v).handle(yield));
@@ -61,7 +62,11 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  @see `Next`
    */
   public function next<R>(n:Next<T, R>):Promise<R>
-    return this.flatMap(function (v) return n(v));
+    return flatMap(function (v) return n(v));
+
+  @:deprecated('Gathering no longer has any effect')
+  public inline function gather():Future<T>
+    return this;
 
   /**
    *  Merges two futures into one by applying the merger function on the two future values
@@ -107,7 +112,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   /**
    *  Merges multiple futures into Future<Array<A>>
    */
-  static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true)
+  static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Gather)
     return switch futures {
       case []: Future.sync([]);
       default:
@@ -169,7 +174,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Same as `first`, but use `Either` to handle the two different types
    */
   @:noCompletion @:op(a || b) static public function either<A, B>(a:Future<A>, b:Future<B>):Future<Either<A, B>>
-    return a.map(Either.Left, false).first(b.map(Either.Right, false));
+    return a.map(Either.Left).first(b.map(Either.Right));
 
   /**
    *  Uses `Pair` to merge two futures
@@ -224,20 +229,12 @@ enum FutureStatus<T> {
 private interface FutureObject<T> {
 
   function getStatus():FutureStatus<T>;
-  function map<R>(f:T->R):Future<R>;
-  function flatMap<R>(f:T->Future<R>):Future<R>;
   /**
    *  Registers a callback to handle the future result.
    *  If the result is already available, the callback will be invoked immediately.
    *  @return A `CallbackLink` instance that can be used to cancel the callback, no effect if the callback is already invoked
    */
   function handle(callback:Callback<T>):CallbackLink;
-  /**
-   *  Caches the result to ensure the underlying tranform is performed once only.
-   *  Useful for tranformed futures, such as product of `map` and `flatMap`
-   *  so that the transformation function will not be invoked for every callback
-   */
-  function gather():Future<T>;
   /**
    *  Makes this future eager.
    *  Futures are lazy by default, i.e. it does not try to fetch the result until someone `handle` it
@@ -250,14 +247,11 @@ private class NeverFuture<T> implements FutureObject<T> {
   function new() {}
   public function getStatus():FutureStatus<T>
     return NeverEver;
-  public function map<R>(f:T->R):Future<R> return cast inst;
-  public function flatMap<R>(f:T->Future<R>):Future<R> return cast inst;
   public function handle(callback:Callback<T>):CallbackLink return null;
-  public function gather():Future<T> return cast inst;
   public function eager():Future<T> return cast inst;
 }
 
-private class SyncFuture<T> implements FutureObject<T> {
+private class SyncFuture<T> implements FutureObject<T> {//TODO: there should be a way to get rid of this
 
   var value:Lazy<T>;
 
@@ -266,12 +260,6 @@ private class SyncFuture<T> implements FutureObject<T> {
 
   public inline function new(value)
     this.value = value;
-
-  public inline function map<R>(f:T->R):Future<R>
-    return new SyncFuture(value.map(f));
-
-  public inline function flatMap<R>(f:T->Future<R>):Future<R>
-    return new SuspendableFuture(function (yield) return f(value.get()).handle(yield));
 
   public function handle(cb:Callback<T>):CallbackLink {
     cb.invoke(value);
@@ -283,9 +271,6 @@ private class SyncFuture<T> implements FutureObject<T> {
       value.get();
     return this;
   }
-
-  public function gather()
-    return this;
 }
 
 class FutureTrigger<T> implements FutureObject<T> {
@@ -306,27 +291,6 @@ class FutureTrigger<T> implements FutureObject<T> {
       case v:
         list.add(callback);
     }
-
-  public function map<R>(f:T->R):Future<R>
-    return switch status {
-      case IsHere(result): Future.sync(f(result));
-      default:
-        var ret = new FutureTrigger();
-        list.add(function (v) ret.trigger(f(v)));
-        ret;
-    }
-
-  public function flatMap<R>(f:T->Future<R>):Future<R>
-    return switch status {
-      case IsHere(result): f(result);
-      default:
-        var ret = new FutureTrigger();
-        list.add(function (v) f(v).handle(ret.trigger));
-        ret;
-    }
-
-  public inline function gather()
-    return this;
 
   public function eager()
     return this;
@@ -386,10 +350,10 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
       case IsHere(_):
       default:
         status = IsHere(value);
-        link = null;//consider disolving
+        link = null;
         wakeup = null;
         callbacks.invoke(value, true);
-  }
+    }
 
   public function handle(callback:Callback<T>):CallbackLink
     return switch status {
@@ -405,19 +369,13 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
         callbacks.add(callback);
     }
 
-  public function map<R>(f:T->R):Future<R>
-    return new SuspendableFuture(function (yield) {
-      return this.handle(function (res) yield(f(res)));
-    });
-
-  public function flatMap<R>(f:T->Future<R>):Future<R>
-    return Future.flatten(map(f));
-
-  public inline function gather():Future<T>
-    return this;
-
   public inline function eager():Future<T> {
-    handle(function () {});//TODO: very naive implementeation
+    switch status {
+      case Suspended:
+        status = EagerlyAwaited;
+        link = wakeup(trigger);
+      default:
+    }
     return this;
   }
 
