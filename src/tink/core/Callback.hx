@@ -199,9 +199,8 @@ class CallbackList<T> extends SimpleDisposable {
     }
   }
 
-  inline function drain() {
+  inline function drain()
     Callback.guardStackoverflow(ondrain);
-  }
 
   public inline function add(cb:Callback<T>):CallbackLink {
     if (disposed) return null;
