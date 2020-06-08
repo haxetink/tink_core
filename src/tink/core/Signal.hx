@@ -118,7 +118,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
     return this;
 
   static public function generate<T>(generator:(T->Void)->Void):Signal<T> {
-    var ret = trigger();
+    var ret = trigger();//TODO: consider implementing this over `create`
     generator(ret.trigger);
     return ret;
   }
