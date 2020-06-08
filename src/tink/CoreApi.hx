@@ -1,44 +1,44 @@
 package tink;
 
-typedef Annex<Target> = tink.core.Annex<Target>;
+@:noCompletion typedef Annex<Target> = tink.core.Annex<Target>;
 
-typedef Next<In, Out> = tink.core.Promise.Next<In, Out>;
-typedef Combiner<In1, In2, Out> = tink.core.Promise.Combiner<In1, In2, Out>;
-typedef Promise<T> = tink.core.Promise<T>;
-typedef Future<T> = tink.core.Future<T>;
+@:noCompletion typedef Next<In, Out> = tink.core.Promise.Next<In, Out>;
+@:noCompletion typedef Combiner<In1, In2, Out> = tink.core.Promise.Combiner<In1, In2, Out>;
+@:noCompletion typedef Promise<T> = tink.core.Promise<T>;
+@:noCompletion typedef Future<T> = tink.core.Future<T>;
 
-typedef Surprise<D, F> = tink.core.Future.Surprise<D, F>;
-#if js typedef JsPromiseTools = tink.core.Future.JsPromiseTools; #end
-typedef FutureTrigger<T> = tink.core.Future.FutureTrigger<T>;
-typedef PromiseTrigger<T> = tink.core.Promise.PromiseTrigger<T>;
+@:noCompletion typedef Surprise<D, F> = tink.core.Future.Surprise<D, F>;
+#if js @:noCompletion typedef JsPromiseTools = tink.core.Future.JsPromiseTools; #end
+@:noCompletion typedef FutureTrigger<T> = tink.core.Future.FutureTrigger<T>;
+@:noCompletion typedef PromiseTrigger<T> = tink.core.Promise.PromiseTrigger<T>;
 
-typedef Outcome<D, F> = tink.core.Outcome<D, F>;
-typedef OutcomeTools = tink.core.Outcome.OutcomeTools;
+@:noCompletion typedef Outcome<D, F> = tink.core.Outcome<D, F>;
+@:noCompletion typedef OutcomeTools = tink.core.Outcome.OutcomeTools;
 
-typedef Either<L, R> = tink.core.Either<L, R>;
-typedef Option<T> = tink.core.Option<T>;
-typedef OptionTools<T> = tink.core.Option.OptionTools;
+@:noCompletion typedef Either<L, R> = tink.core.Either<L, R>;
+@:noCompletion typedef Option<T> = tink.core.Option<T>;
+@:noCompletion typedef OptionTools<T> = tink.core.Option.OptionTools;
 
-typedef Pair<A, B> = tink.core.Pair<A, B>;
-typedef MPair<A, B> = tink.core.Pair.MPair<A, B>;
+@:noCompletion typedef Pair<A, B> = tink.core.Pair<A, B>;
+@:noCompletion typedef MPair<A, B> = tink.core.Pair.MPair<A, B>;
 
-typedef Signal<T> = tink.core.Signal<T>;
-typedef SignalTrigger<T> = tink.core.Signal.SignalTrigger<T>;
+@:noCompletion typedef Signal<T> = tink.core.Signal<T>;
+@:noCompletion typedef SignalTrigger<T> = tink.core.Signal.SignalTrigger<T>;
 
-typedef Noise = tink.core.Noise;
+@:noCompletion typedef Noise = tink.core.Noise;
 
-typedef Error = tink.core.Error;
-typedef TypedError<T> = tink.core.Error.TypedError<T>;
+@:noCompletion typedef Error = tink.core.Error;
+@:noCompletion typedef TypedError<T> = tink.core.Error.TypedError<T>;
 
-typedef Callback<T> = tink.core.Callback<T>;
-typedef CallbackLink = tink.core.Callback.CallbackLink;
-typedef CallbackList<T> = tink.core.Callback.CallbackList<T>;
+@:noCompletion typedef Callback<T> = tink.core.Callback<T>;
+@:noCompletion typedef CallbackLink = tink.core.Callback.CallbackLink;
+@:noCompletion typedef CallbackList<T> = tink.core.Callback.CallbackList<T>;
 
-typedef Ref<T> = tink.core.Ref<T>;
-typedef Lazy<T> = tink.core.Lazy<T>;
-typedef Any = tink.core.Any;
+@:noCompletion typedef Ref<T> = tink.core.Ref<T>;
+@:noCompletion typedef Lazy<T> = tink.core.Lazy<T>;
+@:noCompletion typedef Any = tink.core.Any;
 
-typedef Named<V> = tink.core.Named<V>;
-typedef NamedWith<N, V> = tink.core.Named.NamedWith<N, V>;
+@:noCompletion typedef Named<V> = tink.core.Named<V>;
+@:noCompletion typedef NamedWith<N, V> = tink.core.Named.NamedWith<N, V>;
 
-typedef Progress<T> = tink.core.Progress<T>;
+@:noCompletion typedef Progress<T> = tink.core.Progress<T>;
