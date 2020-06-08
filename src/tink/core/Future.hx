@@ -13,9 +13,9 @@ import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
 @:forward(handle, eager)
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
-  public static var NULL:Future<Dynamic> = Future.sync(null);
-  public static var NOISE:Future<Noise> = Future.sync(Noise);
-  public static var NEVER:Future<Dynamic> = (NeverFuture.inst:FutureObject<Dynamic>);
+  static public final NULL:Future<Dynamic> = Future.sync(null);
+  static public final NOISE:Future<Noise> = Future.sync(Noise);
+  static public final NEVER:Future<Dynamic> = (NeverFuture.inst:FutureObject<Dynamic>);
 
   public var status(get, never):FutureStatus<T>;
     inline function get_status()
@@ -43,8 +43,8 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    */
   public inline function flatMap<A>(next:T->Future<A>, ?gather:Gather):Future<A>
     return new SuspendableFuture<A>(function (yield) {
-      var inner = new CallbackLinkRef();
-      var outer = this.handle(v -> inner.link = next(v).handle(yield));
+      final inner = new CallbackLinkRef();
+      final outer = this.handle(v -> inner.link = next(v).handle(yield));
       return outer.join(inner);
     });
 
