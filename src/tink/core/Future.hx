@@ -322,7 +322,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
     this.wakeup = wakeup;
     this.callbacks = new CallbackList(true);
 
-    callbacks.ondrain = function () if (status == Awaited) {
+    callbacks.ondrain = function () if (status.match(Awaited)) {
       status = Suspended;
       link.cancel();
       link = null;
