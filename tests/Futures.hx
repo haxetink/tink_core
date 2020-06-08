@@ -27,8 +27,7 @@ class Futures extends Base {
 
     var calls = 0;
 
-    var link1 = f.handle(function () calls++),
-      link2 = f.handle(function () calls++);
+    var link1 = f.handle(function () calls++);
 
     f.handle(function (v) {
       asserts.assert(4 == v);
@@ -82,9 +81,9 @@ class Futures extends Base {
 
   public function testOps() {
     var t1 = Future.trigger(),
-      t2 = Future.trigger();
+        t2 = Future.trigger();
     var f1:Future<Int> = t1,
-      f2:Future<Int> = t2;
+        f2:Future<Int> = t2;
 
     var f = f1 || f2;
     t1.trigger(1);
