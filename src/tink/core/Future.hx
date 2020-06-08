@@ -34,14 +34,14 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Creates a new future by applying a transform function to the result.
    *  Different from `flatMap`, the transform function of `map` returns a sync value
    */
-  public inline function map<A>(f:T->A, ?gather:Gather):Future<A>
+  public function map<A>(f:T->A, ?gather:Gather):Future<A>
     return new SuspendableFuture<A>(fire -> this.handle(v -> fire(f(v))));
 
   /**
    *  Creates a new future by applying a transform function to the result.
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
    */
-  public inline function flatMap<A>(next:T->Future<A>, ?gather:Gather):Future<A>
+  public function flatMap<A>(next:T->Future<A>, ?gather:Gather):Future<A>
     return new SuspendableFuture<A>(function (yield) {
       final inner = new CallbackLinkRef();
       final outer = this.handle(v -> inner.link = next(v).handle(yield));
