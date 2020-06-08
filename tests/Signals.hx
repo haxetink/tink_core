@@ -51,14 +51,14 @@ class Signals extends Base {
       received = v;
 
     asserts.assert(!active);
-    asserts.assert(d == null);
+    asserts.assert(d == null, 'not initialized');
     asserts.assert(initialized == 0);
 
     var link = s.handle(handler);
 
     asserts.assert(received == 0);
     asserts.assert(active);
-    asserts.assert(d != null);
+    asserts.assert(d != null, 'initialized');
     asserts.assert(initialized == 1);
 
     link.cancel();
