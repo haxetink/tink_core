@@ -36,8 +36,6 @@ class Callbacks extends Base {
       rec();
     });
 
-  #if (js || flash || haxe_ver >= 3.3)
-  #if java @:exclude #end
   public function testDefer() {
 
     var counter = 0;
@@ -53,7 +51,6 @@ class Callbacks extends Base {
     asserts.assert(counter == 0);
     return asserts.done();
   }
-  #end
 
   public function testSimpleLink() {
     var calls = 0;
