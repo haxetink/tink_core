@@ -98,12 +98,12 @@ class Futures extends Base {
     return asserts.done();
   }
 
-  @:exclude public function testMany() {
+  public function testMany() {
     var triggers = [for (i in 0...10) Future.trigger()];
     var futures = [for (t in triggers) t.asFuture()];
 
     var read1 = false,
-      read2 = false;
+        read2 = false;
 
     var lazy1 = Future.lazy(function () {
       read1 = true;

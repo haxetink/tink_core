@@ -1,5 +1,7 @@
 package tink.core;
 
+import tink.core.Callback;
+
 using tink.CoreApi;
 
 #if js
@@ -13,6 +15,10 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   public static var NULL:Future<Dynamic> = Future.sync(null);
   public static var NOISE:Future<Noise> = Future.sync(Noise);
   public static var NEVER:Future<Dynamic> = (NeverFuture.inst:FutureObject<Dynamic>);
+
+  public var status(get, never):FutureStatus<T>;
+    inline function get_status()
+      return this.getStatus();
 
   public inline function new(f:Callback<T>->CallbackLink)
     this = new SuspendableFuture(f);
@@ -36,23 +42,19 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Creates a new future by applying a transform function to the result.
    *  Different from `flatMap`, the transform function of `map` returns a sync value
    */
-  public inline function map<A>(f:T->A, ?gather = true):Future<A> {
-    var ret = this.map(f);
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
+  public inline function map<A>(f:T->A, ?gather = true):Future<A>
+    return new SuspendableFuture<A>(fire -> this.handle(v -> fire(f(v))));
 
   /**
    *  Creates a new future by applying a transform function to the result.
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
    */
-  public inline function flatMap<A>(next:T->Future<A>, ?gather = true):Future<A> {
-    var ret = this.flatMap(next);
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
+  public inline function flatMap<A>(next:T->Future<A>, ?gather = true):Future<A>
+    return new SuspendableFuture<A>(function (yield) {
+      var inner = new CallbackLinkRef();
+      var outer = this.handle(v -> inner.link = next(v).handle(yield));
+      return outer.join(inner);
+    });
 
   /**
    *  Like `map` and `flatMap` but with a polymorphic transformer and return a `Promise`
@@ -64,22 +66,26 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   /**
    *  Merges two futures into one by applying the merger function on the two future values
    */
-  public function merge<A, R>(other:Future<A>, merger:T->A->R, ?gather = true):Future<R>
-    return flatMap(function (t:T) {
-      return other.map(function (a:A) return merger(t, a), false);
-    }, gather);
+   public function merge<A, R>(that:Future<A>, combine:T->A->R):Future<R>
+    return
+      new SuspendableFuture<R>(yield -> {
+        var aDone = false,
+            bDone = false;
+        var aRes = null,
+            bRes = null;
+
+        function check() if (aDone && bDone) yield(combine(aRes, bRes));
+        return
+          this.handle(function (a) { aRes = a; aDone = true; check(); }).join(
+            that.handle(function (b) { bRes = b; bDone = true; check(); })
+          );
+      });
 
   /**
    *  Flattens `Future<Future<A>>` into `Future<A>`
    */
   static public function flatten<A>(f:Future<Future<A>>):Future<A>
-    return new SuspendableFuture<A>(function (yield) {
-      var inner = null;
-      var outer = f.handle(function (second) {
-        inner = second.handle(yield);
-      });
-      return outer.join(function () inner.dissolve());
-    });
+    return f.flatMap(v -> v);
 
   #if js
   /**
@@ -101,22 +107,28 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   /**
    *  Merges multiple futures into Future<Array<A>>
    */
-  static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true) {
-    var ret = sync([]);
-    for (f in futures)
-      ret = ret.flatMap(
-        function (results:Array<A>)
-          return f.map(
-            function (result)
-              return results.concat([result]),
-            false
-          ),
-        false
-      );
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
+  static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Bool = true)
+    return switch futures {
+      case []: Future.sync([]);
+      default:
+        var index = 0,
+            results = [for (v in futures) (null:A)];
+
+        new SuspendableFuture<Array<A>>(fire -> {
+          var cur = new CallbackLinkRef();
+
+          function step()
+            cur.link = futures[index].handle(v -> {
+              results[index] = v;
+              if (++index == results.length) fire(results);
+              else step();
+            });
+
+          step();
+
+          cur;
+        });
+    }
 
   @:deprecated('Implicit cast from Array<Future> is deprecated, please use `ofMany` instead. Please create an issue if you find it useful, and don\'t want this cast removed.')
   @:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>>
@@ -203,6 +215,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 enum FutureStatus<T> {
   Suspended;
   Awaited;
+  EagerlyAwaited;
   Ready;
   IsHere(result:T);
   NeverEver;
