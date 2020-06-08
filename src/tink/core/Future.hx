@@ -135,7 +135,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Example: `var i = Future.sync(1); // Future<Int>`
    */
   @:noUsing static inline public function sync<A>(v:A):Future<A>
-    return new SyncFuture(v);
+    return lazy(v);
 
   @:noUsing static inline public function isFuture(maybeFuture: Dynamic)
     return Std.is(maybeFuture, FutureObject);
@@ -249,7 +249,7 @@ private class SyncFuture<T> implements FutureObject<T> {//TODO: there should be 
     this.value = value;
 
   public function handle(cb:Callback<T>):CallbackLink {
-    cb.invoke(value);
+    Callback.guardStackoverlow(() -> cb.invoke(value));
     return null;
   }
 
@@ -265,7 +265,7 @@ class FutureTrigger<T> implements FutureObject<T> {
   final list:CallbackList<T>;
 
   public function new()
-    this.list = new CallbackList();
+    this.list = new CallbackList(true);
 
   public function getStatus()
     return status;
@@ -273,7 +273,7 @@ class FutureTrigger<T> implements FutureObject<T> {
   public function handle(callback:Callback<T>):CallbackLink
     return switch status {
       case IsHere(result):
-        callback.invoke(result);
+        Callback.guardStackoverlow(() -> callback.invoke(result));
         null;
       case v:
         list.add(callback);
@@ -296,7 +296,7 @@ class FutureTrigger<T> implements FutureObject<T> {
       case IsHere(_): false;
       default:
         status = IsHere(result);
-        list.invoke(result, true);
+        list.invoke(result);
         true;
     }
 }
@@ -323,7 +323,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
 
   public function new(wakeup) {
     this.wakeup = wakeup;
-    this.callbacks = new CallbackList();
+    this.callbacks = new CallbackList(true);
 
     callbacks.ondrain = function () if (status == Awaited) {
       status = Suspended;
@@ -339,13 +339,13 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
         status = IsHere(value);
         link = null;
         wakeup = null;
-        callbacks.invoke(value, true);
+        callbacks.invoke(value);
     }
 
   public function handle(callback:Callback<T>):CallbackLink
     return switch status {
       case IsHere(result):
-        callback.invoke(result);
+        Callback.guardStackoverlow(() -> callback.invoke(result));
         null;
       case Suspended:
         var ret = callbacks.add(callback);

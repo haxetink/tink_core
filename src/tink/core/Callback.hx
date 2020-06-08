@@ -16,7 +16,8 @@ abstract Callback<T>(T->Void) from (T->Void) {
   @:extern static public inline function guardStackoverlow(fn:Void->Void):Void
     if (depth < MAX_DEPTH) {
       depth++;
-      Error.tryFinally(fn, () -> depth--);
+      fn();
+      depth--;
     }
     else Callback.defer(fn);
 
@@ -87,8 +88,8 @@ abstract CallbackLink(LinkObject) from LinkObject {
   @:from static inline function fromFunction(f:Void->Void)
     return new CallbackLink(f);
 
-  @:op(a & b) static public inline function join(a:CallbackLink, b:CallbackLink):CallbackLink
-    return new LinkPair(a, b);
+  @:op(a & b) public inline function join(b:CallbackLink):CallbackLink
+    return new LinkPair(this, b);
 
   @:from static public function fromMany(callbacks:Array<CallbackLink>)
     return fromFunction(function () {
@@ -161,6 +162,7 @@ private class ListCell<T> implements LinkObject {
 
 class CallbackList<T> extends SimpleDisposable {
 
+  final destructive:Bool;
   var cells:Array<ListCell<T>>;
 
   public var length(get, never):Int;
@@ -172,8 +174,9 @@ class CallbackList<T> extends SimpleDisposable {
 
   public var busy(default, null):Bool = false;
 
-  public function new() {
+  public function new(destructive = false) {
     super(function () if (!busy) destroy());
+    this.destructive = destructive;
     this.cells = [];
   }
 
@@ -208,12 +211,12 @@ class CallbackList<T> extends SimpleDisposable {
     return node;
   }
 
-  public function invoke(data:T, ?destructive:Bool)
+  public function invoke(data:T)
     Callback.guardStackoverlow(() -> {
       if (disposed) {}
       else if (busy) {
         if (destructive != true)
-          queue.push(invoke.bind(data, false));//TODO: the wisdom of just queueing destructive invokations is questionable
+          queue.push(invoke.bind(data));
       }
       else {
         busy = true;

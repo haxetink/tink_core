@@ -32,6 +32,7 @@ class Callbacks extends Base {
         }
         else
           Callback.guardStackoverlow(rec);
+
       rec();
     });
 
