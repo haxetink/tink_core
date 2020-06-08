@@ -27,7 +27,8 @@ class Futures extends Base {
 
     var calls = 0;
 
-    var link1 = f.handle(function () calls++);
+    var link1 = f.handle(function () calls++),
+        link2 = f.handle(function () calls++);
 
     f.handle(function (v) {
       asserts.assert(4 == v);
