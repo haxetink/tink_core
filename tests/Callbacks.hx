@@ -31,7 +31,7 @@ class Callbacks extends Base {
           done(asserts.done());
         }
         else
-          @:privateAccess Callback.guarded(rec);
+          Callback.guardStackoverlow(rec);
       rec();
     });
 

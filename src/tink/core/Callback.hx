@@ -4,14 +4,6 @@ import tink.core.Disposable;
 
 abstract Callback<T>(T->Void) from (T->Void) {
 
-  @:extern static inline function guarded(fn:Void->Void):Void
-    if (depth < MAX_DEPTH) {
-      depth++;
-      fn(); //TODO: consider handling exceptions here (per opt-in?) to avoid a failing callback from taking down the whole app
-      depth--;
-    }
-    else Callback.defer(fn);
-
   inline function new(f)
     this = f;
 
@@ -20,13 +12,16 @@ abstract Callback<T>(T->Void) from (T->Void) {
 
   static var depth = 0;
   static inline var MAX_DEPTH = #if (python || eval) 200 #elseif interp 100 #else 500 #end;
-  public function invoke(data:T):Void
+
+  @:extern static public inline function guardStackoverlow(fn:Void->Void):Void
     if (depth < MAX_DEPTH) {
       depth++;
-      (this)(data); //TODO: consider handling exceptions here (per opt-in?) to avoid a failing callback from taking down the whole app
-      depth--;
+      Error.tryFinally(fn, () -> depth--);
     }
-    else Callback.defer(invoke.bind(data));
+    else Callback.defer(fn);
+
+  @:extern public inline function invoke(data:T):Void
+    this(data);
 
   // This seems useful, but most likely is not.
   @:deprecated('Implicit cast from Callback<Noise> is deprecated. Please create an issue if you find it useful, and don\'t want this cast removed.')
@@ -202,8 +197,12 @@ class CallbackList<T> extends SimpleDisposable {
 
     if (used > 0) {
       used = 0;
-      ondrain();
+      drain();
     }
+  }
+
+  inline function drain() {
+    Callback.guardStackoverlow(ondrain);
   }
 
   public inline function add(cb:Callback<T>):CallbackLink {
@@ -215,39 +214,41 @@ class CallbackList<T> extends SimpleDisposable {
   }
 
   public function invoke(data:T, ?destructive:Bool)
-    if (disposed) {}
-    else if (busy) {
-      if (destructive != true)
-        queue.push(invoke.bind(data, false));//TODO: the wisdom of just queueing destructive invokations is questionable
-    }
-    else {
-      busy = true;
-
-      if (destructive)
-        dispose();
-
-      var length = cells.length;
-      for (i in 0...length)
-        cells[i].invoke(data);
-
-      busy = false;
-
-      if (disposed)
-        destroy();//TODO: perhaps something should be done with non empty queue
-      else {
-        if (used < cells.length)
-          compact();
-
-        if (queue.length > 0)
-          queue.shift()();
+    Callback.guardStackoverlow(() -> {
+      if (disposed) {}
+      else if (busy) {
+        if (destructive != true)
+          queue.push(invoke.bind(data, false));//TODO: the wisdom of just queueing destructive invokations is questionable
       }
-    }
+      else {
+        busy = true;
+
+        if (destructive)
+          dispose();
+
+        var length = cells.length;
+        for (i in 0...length)
+          cells[i].invoke(data);
+
+        busy = false;
+
+        if (disposed)
+          destroy();//TODO: perhaps something should be done with non empty queue
+        else {
+          if (used < cells.length)
+            compact();
+
+          if (queue.length > 0)
+            queue.shift()();
+        }
+      }
+    });
 
   function compact()
     if (busy) return;
     else if (used == 0) {
       resize(0);
-      ondrain();
+      drain();
     }
     else {
       var compacted = 0;
