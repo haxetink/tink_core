@@ -62,7 +62,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   /**
    *  Merges two futures into one by applying the merger function on the two future values
    */
-   public function merge<A, R>(that:Future<A>, combine:T->A->R):Future<R>
+  public function merge<A, R>(that:Future<A>, combine:T->A->R):Future<R>
     return
       new SuspendableFuture<R>(yield -> {
         var aDone = false,
