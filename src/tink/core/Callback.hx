@@ -67,6 +67,13 @@ interface LinkObject {
   function cancel():Void;
 }
 
+class CallbackLinkRef implements LinkObject {
+  public var link:CallbackLink;
+  public function new() {}
+  public function cancel()
+    link.cancel();
+}
+
 abstract CallbackLink(LinkObject) from LinkObject {
 
   inline function new(link:Void->Void)
