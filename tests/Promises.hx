@@ -12,13 +12,13 @@ class Promises extends Base {
   }
 
   public function testInParallel() {
-    
+
     var counter = 0;
-    function make(fail:Bool) 
+    function make(fail:Bool)
       return Future.async(function (cb) {
         var id = counter++;
         cb(if (fail) Failure(new Error('error')) else Success(id));
-      });
+      }, true);
 
     counter = 0;
     var p = Promise.inParallel([for (i in 0...10) make(i > 5)]);
@@ -26,8 +26,8 @@ class Promises extends Base {
     p.handle(function (o) {
       asserts.assert(!o.isSuccess());
     });
-    asserts.assert(7 == counter);   
-     
+    asserts.assert(7 == counter);
+
     counter = 0;
     var t = Future.trigger();
     var p = Promise.inParallel([t, make(false), make(false)]);
@@ -37,22 +37,22 @@ class Promises extends Base {
       done = true;
       asserts.assert(!o.isSuccess());
     });
-    asserts.assert(2 == counter);    
+    asserts.assert(2 == counter);
     asserts.assert(!done);
     t.trigger(Failure(new Error('test')));
     asserts.assert(done);
-    
-    
+
+
     counter = 0;
     var p = Promise.inParallel([]);
     asserts.assert(0 == counter);
     p.handle(function (o) {
       asserts.assert(o.isSuccess());
     });
-    asserts.assert(0 == counter);  
+    asserts.assert(0 == counter);
     return asserts.done();
   }
-  
+
   @:variant(null, 10)
   @:variant(6, 10)
   @:variant(10, 10)
@@ -82,14 +82,14 @@ class Promises extends Base {
     });
     return asserts;
   }
-  
+
   public function testInSequence() {
     var counter = 0;
-    function make(fail:Bool) 
+    function make(fail:Bool)
       return Future.async(function (cb) {
         var id = counter++;
         cb(if (fail) Failure(new Error('error')) else Success(id));
-      });
+      }, true);
 
     counter = 0;
     var p = Promise.inSequence([for (i in 0...10) make(i > 5)]);
@@ -115,7 +115,7 @@ class Promises extends Base {
 
   public function testDynamicNext() {
     var p = Promise.lift('{"answer":42}');
-    return 
+    return
       p
         .next(haxe.Json.parse)
         .next(function (deepThought:{ answer: Int }) {
@@ -123,19 +123,19 @@ class Promises extends Base {
           return asserts.done();
         });
   }
-    
+
   public function testIterate() {
     inline function boolAnd(promises:Iterable<Promise<Bool>>):Promise<Bool>
       return Promise.iterate(promises, function(v) return v ? None : Some(false), true);
-      
+
     inline function boolOr(promises:Iterable<Promise<Bool>>):Promise<Bool>
       return Promise.iterate(promises, function(v) return v ? Some(true) : None, false);
-    
+
     boolAnd([true, true, true]).handle(function(o) asserts.assert(o.match(Success(true))));
     boolAnd([true, false, true]).handle(function(o) asserts.assert(o.match(Success(false))));
     boolOr([false, false, false]).handle(function(o) asserts.assert(o.match(Success(false))));
     boolOr([false, false, true]).handle(function(o) asserts.assert(o.match(Success(true))));
-    
+
     return asserts.done();
   }
 
@@ -145,9 +145,9 @@ class Promises extends Base {
     p = new Error('test');
     p = Failure(new Error('test'));
     p = Future.sync(Success(5));
-      
+
     for (i in 0...10) {
-      
+
       (p = i)
         .next(function (x) return x * 2)
         .next(Std.string)
@@ -155,10 +155,10 @@ class Promises extends Base {
         .next(function (x) return x >> 1)
         .handle(function (x) asserts.assert(i == x.sure()));
     }
-    
+
     return asserts.done();
   }
-  
+
   #if !java
   public function testCache() {
     var v = 0;
@@ -176,7 +176,7 @@ class Promises extends Base {
     expire.trigger(Noise);
     cache().handle(function(v) asserts.assert(v.match(Success(2))));
     cache().handle(function(v) asserts.assert(v.match(Success(3))));
-    
+
     function err() return Promise.lift(Error.withData('Fail', v++));
     var cache = Promise.cache(err);
     function getError(o:Outcome<Dynamic, Error>):Int
@@ -186,9 +186,9 @@ class Promises extends Base {
       }
     cache().handle(function(o) asserts.assert(getError(o) == 4));
     cache().handle(function(o) asserts.assert(getError(o) == 5));
-    
+
     return asserts.done();
   }
   #end
-  
+
 }
