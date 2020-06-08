@@ -347,7 +347,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
       case Suspended:
         var ret = callbacks.add(callback);
         status = Awaited;
-        link = wakeup(trigger);
+        link = wakeup(trigger);//TODO: long wakeup chains can overflow, which is currently mitigated by a whole bunch of other guards
         ret;
       default:
         callbacks.add(callback);
@@ -358,6 +358,8 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
       case Suspended:
         status = EagerlyAwaited;
         link = wakeup(trigger);
+      case Awaited:
+        status = EagerlyAwaited;
       default:
     }
     return this;
