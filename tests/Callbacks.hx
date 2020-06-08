@@ -31,7 +31,7 @@ class Callbacks extends Base {
           done(asserts.done());
         }
         else
-          Callback.guardStackoverlow(rec);
+          Callback.guardStackoverflow(rec);
 
       rec();
     });

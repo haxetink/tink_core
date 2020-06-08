@@ -13,7 +13,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
   static var depth = 0;
   static inline var MAX_DEPTH = #if (python || eval) 200 #elseif interp 100 #else 500 #end;
 
-  @:extern static public inline function guardStackoverlow(fn:Void->Void):Void
+  @:extern static public inline function guardStackoverflow(fn:Void->Void):Void
     if (depth < MAX_DEPTH) {
       depth++;
       fn();
@@ -200,7 +200,7 @@ class CallbackList<T> extends SimpleDisposable {
   }
 
   inline function drain() {
-    Callback.guardStackoverlow(ondrain);
+    Callback.guardStackoverflow(ondrain);
   }
 
   public inline function add(cb:Callback<T>):CallbackLink {
@@ -212,7 +212,7 @@ class CallbackList<T> extends SimpleDisposable {
   }
 
   public function invoke(data:T)
-    Callback.guardStackoverlow(() -> {
+    Callback.guardStackoverflow(() -> {
       if (disposed) {}
       else if (busy) {
         if (destructive != true)
