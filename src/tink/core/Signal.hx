@@ -71,32 +71,23 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
   /**
    *  Gets the next emitted value as a Future
    */
-  public function nextTime(?condition:T->Bool):Future<T> {
-    //TODO: profile overhead of implementing this via pickNext
-    var ret = Future.trigger();
-    var link:CallbackLink = null;
-
-    link = this.listen(function (v) if (condition == null || condition(v)) {
-      ret.trigger(v);
-      link.cancel();
-    });
-
-    return ret.asFuture();
-  }
+  public function nextTime(?condition:T->Bool):Future<T>
+    return pickNext(v -> if (condition == null || condition(v)) Some(v) else None);
 
   /**
    * Creates a future that yields the next value matched by the provided selector.
    */
    public function pickNext<R>(selector:T->Option<R>):Future<R> {
-    var ret = Future.trigger();
-    var link:CallbackLink = null;
+    var ret = Future.trigger(),
+        link:CallbackLink = null;
 
     link = this.listen(v -> switch selector(v) {
       case None:
       case Some(v):
         ret.trigger(v);
-        link.cancel();
     });
+
+    ret.handle(link);
 
     return ret.asFuture();
   }
