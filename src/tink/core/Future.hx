@@ -249,7 +249,7 @@ private class SyncFuture<T> implements FutureObject<T> {//TODO: there should be 
     this.value = value;
 
   public function handle(cb:Callback<T>):CallbackLink {
-    Callback.guardStackoverflow(() -> cb.invoke(value));
+    cb.invoke(value);
     return null;
   }
 
@@ -273,7 +273,7 @@ class FutureTrigger<T> implements FutureObject<T> {
   public function handle(callback:Callback<T>):CallbackLink
     return switch status {
       case IsHere(result):
-        Callback.guardStackoverflow(() -> callback.invoke(result));
+        callback.invoke(result);
         null;
       case v:
         list.add(callback);
@@ -342,22 +342,27 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
   public function handle(callback:Callback<T>):CallbackLink
     return switch status {
       case IsHere(result):
-        Callback.guardStackoverflow(() -> callback.invoke(result));
+        callback.invoke(result);
         null;
       case Suspended:
         var ret = callbacks.add(callback);
         status = Awaited;
-        link = wakeup(trigger);//TODO: long wakeup chains can overflow, which is currently mitigated by a whole bunch of other guards
+        arm();
         ret;
       default:
         callbacks.add(callback);
     }
 
+  function arm()
+    Callback.guardStackoverflow(() -> if (status.match(Awaited | EagerlyAwaited)) {
+      link = wakeup(trigger);
+    });
+
   public inline function eager():Future<T> {
     switch status {
       case Suspended:
         status = EagerlyAwaited;
-        link = wakeup(trigger);
+        arm();
       case Awaited:
         status = EagerlyAwaited;
       default:
