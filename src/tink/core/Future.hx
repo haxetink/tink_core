@@ -126,10 +126,6 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
         });
     }
 
-  @:deprecated('Implicit cast from Array<Future> is deprecated, please use `ofMany` instead. Please create an issue if you find it useful, and don\'t want this cast removed.')
-  @:from static function fromMany<A>(futures:Array<Future<A>>):Future<Array<A>>
-    return ofMany(futures);
-
   //TODO: use this as `sync` for 2.0
   @:noUsing static inline public function lazy<A>(l:Lazy<A>):Future<A>
     return new SyncFuture(l);

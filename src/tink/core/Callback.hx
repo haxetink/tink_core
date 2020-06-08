@@ -23,11 +23,6 @@ abstract Callback<T>(T->Void) from (T->Void) {
   @:extern public inline function invoke(data:T):Void
     this(data);
 
-  // This seems useful, but most likely is not.
-  @:deprecated('Implicit cast from Callback<Noise> is deprecated. Please create an issue if you find it useful, and don\'t want this cast removed.')
-  @:to static function ignore<T>(cb:Callback<Noise>):Callback<T>
-    return function (_) cb.invoke(Noise);
-
   @:from static function fromNiladic<A>(f:Void->Void):Callback<A> //inlining this seems to cause recursive implicit casts
     return #if js cast f #else function (_) f() #end;
 
