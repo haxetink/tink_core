@@ -101,7 +101,8 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
     return s;
 
   /**
-   *  Merges multiple futures into Future<Array<A>>
+   * Merges multiple futures into a `Future<Array<A>>`
+   * The futures are awaited in order.
    */
   static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Gather)
     return switch futures {
