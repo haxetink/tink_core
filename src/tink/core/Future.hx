@@ -67,7 +67,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
       new SuspendableFuture<R>(yield -> {
         function check(?v:Dynamic)
           return switch [status, that.status] {
-            case [IsHere(a), IsHere(b)]:
+            case [Ready(a), Ready(b)]:
               yield(combine(a, b));
             default:
           }
@@ -211,8 +211,7 @@ enum FutureStatus<T> {
   Suspended;
   Awaited;
   EagerlyAwaited;
-  Ready;
-  IsHere(result:T);
+  Ready(result:Lazy<T>);
   NeverEver;
 }
 
@@ -246,7 +245,7 @@ private class SyncFuture<T> implements FutureObject<T> {//TODO: there should be 
   var value:Lazy<T>;
 
   public function getStatus()
-    return if (value.computed) IsHere(value.get()) else Ready;
+    return Ready(value);
 
   public inline function new(value)
     this.value = value;
@@ -275,7 +274,7 @@ class FutureTrigger<T> implements FutureObject<T> {
 
   public function handle(callback:Callback<T>):CallbackLink
     return switch status {
-      case IsHere(result):
+      case Ready(result):
         callback.invoke(result);
         null;
       case v:
@@ -293,9 +292,9 @@ class FutureTrigger<T> implements FutureObject<T> {
    */
   public function trigger(result:T):Bool
     return switch status {
-      case IsHere(_): false;
+      case Ready(_): false;
       default:
-        status = IsHere(result);
+        status = Ready(result);
         list.invoke(result);
         true;
     }
@@ -334,9 +333,9 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
 
   function trigger(value:T)
     switch status {
-      case IsHere(_):
+      case Ready(_):
       default:
-        status = IsHere(value);
+        status = Ready(value);
         link = null;
         wakeup = null;
         callbacks.invoke(value);
@@ -344,7 +343,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
 
   public function handle(callback:Callback<T>):CallbackLink
     return switch status {
-      case IsHere(result):
+      case Ready(result):
         callback.invoke(result);
         null;
       case Suspended:
