@@ -145,7 +145,6 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Example: `var i = Future.async(function(cb) cb(1)); // Future<Int>`
    */
   #if python @:native('make') #end
-  @:deprecated
   @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A> {
 
     var ret = new SuspendableFuture(function (yield) {
