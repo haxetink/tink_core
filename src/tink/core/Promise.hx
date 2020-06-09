@@ -194,74 +194,64 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return Future.async(function(cb) p.get().handle(cb), true);
 
   static public function inParallel<T>(a:Array<Promise<T>>, ?concurrency:Int):Promise<Array<T>>
-    return
-      if(a.length == 0) Future.sync(Success([]))
-      else Future.async(function (cb) {
-        var result = [for (i in 0...a.length) null],
-            pending = a.length,
-            links:CallbackLink = null,
-            linkArray = [],
-            sync = false,
-            i = 0,
-            iter = a.iterator(),
-            next = null;
+    return many(a, switch concurrency {
+      case null: a.length;
+      case v:
+        if (v < 1) 1;
+        else if (v > a.length) a.length;
+        else v;
+    });
 
-        function done(o) {
-          if (links == null) sync = true;
-          else links.cancel();
-          cb(o);
+  static function many<T>(a:Array<Promise<T>>, concurrency:Int):Promise<Array<T>>
+    return switch a {
+      case []: Promise.lift([]);
+      default: new Future(yield -> {
+        var links = new Array<CallbackLink>(),
+            ret = [for (x in a) (null:T)],
+            index = 0,
+            pending = 0,
+            done = false;
+
+        inline function fire(v) {
+          done = true;
+          yield(v);
         }
 
-        function fail(e:Error) {
-          pending = 0;
-          done(Failure(e));
-        }
+        function step()
+          if (!done)
+            if (index == ret.length)
+              if (pending == 0) fire(Success(ret));
+              else {}//just waiting for the rest to finish
+            else {
+              //TODO: loop here while current a[index] is sync
+              var index = index++;
+              pending++;
+              links.push(
+                a[index].handle(function (o) {
+                  pending--;
+                  switch o {
+                    case Success(v):
+                      ret[index] = v;
+                      step();
+                    case Failure(e):
+                      for (l in links)
+                        l.cancel();
+                      fire(Failure(e));
+                  }
+                })
+              );
+            }
 
-        inline function hasNext() {
-          return iter.hasNext() && pending > 0;
-        }
+        for (i in 0...concurrency)
+          step();
 
-        function set(index, value) {
-          result[index] = value;
-          if (--pending == 0)
-            done(Success(result));
-          else if(hasNext())
-            next();
-        }
+        return links;
+      });
 
-        next = function() {
-          var index = i++;
-          linkArray.push(iter.next().handle(function (o) switch o {
-            case Success(v): set(index, v);
-            case Failure(e): fail(e);
-          }));
-        }
+    }
 
-        while(hasNext() && (concurrency == null || concurrency-- > 0)) {
-          next();
-        }
-
-        links = linkArray;
-
-        if (sync)
-          links.cancel();
-      }, true);
-
-  static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>> {
-
-    function loop(index:Int):Promise<Array<T>>
-      return
-        if (index == a.length) [];
-        else
-          a[index].next(
-            head -> loop(index+1).next(
-              tail -> [head].concat(tail)
-            )
-          );
-
-
-    return loop(0);
-  }
+  static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>>
+    return many(a, 1);
 
   #if (!java || jvm)
   static public function cache<T>(gen:Void->Promise<Pair<T, Future<Noise>>>):Void->Promise<T> {
