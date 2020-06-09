@@ -21,8 +21,8 @@ abstract Callback<T>(T->Void) from (T->Void) {
     }
     else Callback.defer(fn);
 
-  @:extern public inline function invoke(data:T):Void
-    this(data);
+  public function invoke(data:T):Void
+    guardStackoverflow(() -> this(data));
 
   @:from static function fromNiladic<A>(f:Void->Void):Callback<A> //inlining this seems to cause recursive implicit casts
     return #if js cast f #else function (_) f() #end;
@@ -133,7 +133,7 @@ private class LinkPair implements LinkObject {
 
 private class ListCell<T> implements LinkObject {
 
-  public var cb:Callback<T>;
+  public var cb:T->Void;
   public var list:CallbackList<T>;
   public function new(cb, list) {
     if (cb == null) throw 'callback expected but null received';
@@ -143,7 +143,7 @@ private class ListCell<T> implements LinkObject {
 
   public inline function invoke(data)
     if (list != null)
-      cb.invoke(data);
+      cb(data);
 
   public inline function clear() {
     cb = null;

@@ -357,9 +357,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
     }
 
   function arm()
-    Callback.guardStackoverflow(() -> if (status.match(Awaited | EagerlyAwaited)) {
-      link = wakeup(trigger);
-    });
+    link = wakeup(trigger);
 
   public inline function eager():Future<T> {
     switch status {
