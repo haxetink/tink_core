@@ -21,7 +21,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
     inline function get_status()
       return this.getStatus();
 
-  public inline function new(f:Callback<T>->CallbackLink)
+  public inline function new(f:(T->Void)->CallbackLink)
     this = new SuspendableFuture(f);
 
   /**
@@ -65,16 +65,14 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   public function merge<A, R>(that:Future<A>, combine:T->A->R):Future<R>
     return
       new SuspendableFuture<R>(yield -> {
-        var aDone = false,
-            bDone = false;
-        var aRes = null,
-            bRes = null;
+        function check(?v:Dynamic)
+          return switch [status, that.status] {
+            case [IsHere(a), IsHere(b)]:
+              yield(combine(a, b));
+            default:
+          }
 
-        function check() if (aDone && bDone) yield(combine(aRes, bRes));
-        return
-          this.handle(function (a) { aRes = a; aDone = true; check(); }).join(
-            that.handle(function (b) { bRes = b; bDone = true; check(); })
-          );
+        this.handle(check) & that.handle(check);
       });
 
   /**
