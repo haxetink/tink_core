@@ -240,7 +240,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   /**
    * Creates an irreversible future:
    * `init` gets called, when the first handler is registered or `eager()` is called.
-   * The future is never suspended again.
+   * The future is never suspended again. When possible, use `new Future()` instead.
    */
   static public function irreversible<A>(init:(A->Void)->Void)
     return new SuspendableFuture(yield -> { init(yield); null; });
