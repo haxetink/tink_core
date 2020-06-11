@@ -120,31 +120,101 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   static inline public function asPromise<T>(s:Surprise<T, Error>):Promise<T>
     return s;
 
+  @:deprecated('use inSequence instead')
+  static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Gather)
+    return inSequence(futures);
+
+
   /**
    * Merges multiple futures into a `Future<Array<A>>`
-   * The futures are awaited in order.
+   * The futures are processed simultaneously. Set concurrency to limit how many are processed at a time.
    */
-  static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Gather)
-    return switch futures {
-      case []: Future.sync([]);
-      default:
-        var index = 0,
-            results = [for (v in futures) (null:A)];
+   static public function inParallel<T>(futures:Array<Future<T>>, ?concurrency:Int):Future<Array<T>>
+    return many(futures, concurrency);//the `orNull` just pleases the typer
 
-        new SuspendableFuture<Array<A>>(fire -> {
-          var cur = new CallbackLinkRef();
+  /**
+   * Merges multiple futures into a `Future<Array<A>>`
+   * The futures are processed one at a time.
+   */
+  static public function inSequence<T>(futures:Array<Future<T>>):Future<Array<T>>
+    return many(futures, 1);
 
-          function step()
-            cur.link = futures[index].handle(v -> {
-              results[index] = v;
-              if (++index == results.length) fire(results);
-              else step();
-            });
+  static function many<X>(a:Array<Future<X>>, ?concurrency:Int)
+    return processMany(a, concurrency, Success, o -> o.orNull());//the `orNull` just pleases the typer
 
+  static function processMany<In, X, Abort, Out>(a:Array<Future<In>>, ?concurrency:Int, fn:In->Outcome<X, Abort>, lift:Outcome<Array<X>, Abort>->Out):Future<Out>
+    return switch a {
+      case []: Future.sync(lift(Success([])));
+      default: new Future(yield -> {
+        var links = new Array<CallbackLink>(),
+            ret = [for (x in a) (null:X)],
+            index = 0,
+            pending = 0,
+            done = false,
+            concurrency = switch concurrency {
+              case null: a.length;
+              case v:
+                if (v < 1) 1;
+                else if (v > a.length) a.length;
+                else v;
+            };
+
+        inline function fire(v) {
+          done = true;
+          yield(v);
+        }
+
+        function fireWhenReady()
+          return
+            if (index == ret.length)
+              if (pending == 0) {
+                fire(lift(Success(ret)));
+                true;
+              }
+              else false;
+            else false;
+
+        function step()
+          if (!done && !fireWhenReady())
+            while (index < ret.length) {
+
+              var index = index++;
+              var p = a[index];
+
+              function check(o:In)
+                switch fn(o) {
+                  case Success(v):
+                    ret[index] = v;
+                    fireWhenReady();
+                  case Failure(e):
+                    for (l in links)
+                      l.cancel();
+                    fire(lift(Failure(e)));
+                }
+
+              switch p.status {
+                case Ready(_.get() => v):
+                  check(v);
+                  if (!done) continue;
+                default:
+                  pending++;
+                  links.push(
+                    p.handle(function (o) {
+                      pending--;
+                      check(o);
+                      if (!done) step();
+                    })
+                  );
+              }
+              break;
+            }
+
+        for (i in 0...concurrency)
           step();
 
-          cur;
-        });
+        return links;
+      });
+
     }
 
   //TODO: use this as `sync` for 2.0

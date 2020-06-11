@@ -195,81 +195,10 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return Future.async(function(cb) p.get().handle(cb), true);
 
   static public function inParallel<T>(a:Array<Promise<T>>, ?concurrency:Int):Promise<Array<T>>
-    return many(a, switch concurrency {
-      case null: a.length;
-      case v:
-        if (v < 1) 1;
-        else if (v > a.length) a.length;
-        else v;
-    });
+    return many(a, concurrency);
 
   static function many<T>(a:Array<Promise<T>>, concurrency:Int):Promise<Array<T>>
-    return switch a {
-      case []: Promise.lift([]);
-      default: new Future(yield -> {
-        var links = new Array<CallbackLink>(),
-            ret = [for (x in a) (null:T)],
-            index = 0,
-            pending = 0,
-            done = false;
-
-        inline function fire(v) {
-          done = true;
-          yield(v);
-        }
-
-        function fireWhenReady()
-          return
-            if (index == ret.length)
-              if (pending == 0) {
-                fire(Success(ret));
-                true;
-              }
-              else false;
-            else false;
-
-        function step()
-          if (!done && !fireWhenReady())
-            while (index < ret.length) {
-
-              var index = index++;
-              var p = a[index];
-
-              function check(o:Outcome<T, Error>)
-                switch o {
-                  case Success(v):
-                    ret[index] = v;
-                    fireWhenReady();
-                  case Failure(e):
-                    for (l in links)
-                      l.cancel();
-                    fire(Failure(e));
-                }
-
-              switch p.status {
-                case Ready(_.get() => v):
-                  check(v);
-                  if (!done) continue;
-                default:
-                  pending++;
-                  links.push(
-                    p.handle(function (o) {
-                      pending--;
-                      check(o);
-                      if (!done) step();
-                    })
-                  );
-              }
-              break;
-            }
-
-        for (i in 0...concurrency)
-          step();
-
-        return links;
-      });
-
-    }
+    return @:privateAccess Future.processMany((cast a:Array<Surprise<T, Error>>), concurrency, o -> o, o -> o);
 
   static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>>
     return many(a, 1);
