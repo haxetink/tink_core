@@ -15,7 +15,7 @@ abstract Gather(Bool) {
 @:forward
 abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
-  @:deprecated public inline function new(f:Callback<T>->CallbackLink)
+  public inline function new(f:Callback<T>->CallbackLink)
     this = new Suspendable<T>(fire -> f(fire));
 
   public inline function handle(handler:Callback<T>):CallbackLink
