@@ -4,11 +4,11 @@ using tink.CoreApi;
 
 @:asserts
 class Lazies extends Base {
-  @:exclude public function ridiculousDepth() {
+  public function ridiculousDepth() {
     var l:Lazy<Int> = 0;
-    for (i in 0...1000000)
+    for (i in 0...10000)
       l = l.map(x -> x + 1);
-    asserts.assert(l.get() == 1000000);
+    asserts.assert(l.get() == 10000);
     return asserts.done();
   }
   public function testLaziness() {

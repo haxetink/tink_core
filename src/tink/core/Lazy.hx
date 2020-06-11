@@ -8,27 +8,34 @@ abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
     inline function get_computed()
       return this.isComputed();
 
-  @:to public inline function get():T
+  @:to public function get():T {
+    this.compute();
     return this.get();
+  }
 
   @:from static public inline function ofFunc<T>(f:Void->T):Lazy<T>
     return new LazyFunc(f);
 
   public inline function map<A>(f:T->A):Lazy<A>
-    return this.map(f);
+    return new LazyFunc<A>(() -> f(this.get()), this);
 
   public inline function flatMap<A>(f:T->Lazy<A>):Lazy<A>
-    return this.flatMap(f);
+    return new LazyFunc<A>(() -> f(this.get()).get(), this);
+
 
   @:from @:noUsing static inline function ofConst<T>(c:T):Lazy<T>
     return new LazyConst(c);
 }
 
-private interface LazyObject<T> {
+private interface LazyObject<T> extends Computable {
   function isComputed():Bool;
   function get():T;
-  function map<R>(f:T->R):Lazy<R>;
-  function flatMap<R>(f:T->Lazy<R>):Lazy<R>;
+}
+
+private interface Computable {
+  function isComputed():Bool;
+  function compute():Void;
+  function underlying():Null<Computable>;
 }
 
 private class LazyConst<T> implements LazyObject<T> {
@@ -44,40 +51,57 @@ private class LazyConst<T> implements LazyObject<T> {
   public inline function get()
     return value;
 
-  public inline function map<R>(f:T->R):Lazy<R>
-    return new LazyFunc(function () return f(value));
+  public inline function compute() {}
 
-  public inline function flatMap<R>(f:T->Lazy<R>):Lazy<R>
-    return new LazyFunc(function () return f(value).get());
+  public function underlying():Computable
+    return null;
+
 }
 
 private class LazyFunc<T> implements LazyObject<T> {
   var f:Null<Void->T>;
+  var from:Computable;
   var result:Null<T>;
   #if debug var busy = false; #end
 
-  public function new(f:Void->T) this.f = f;
+  public function new(f:Void->T, ?from) {
+    this.f = f;
+    this.from = from;
+  }
+
+  public function underlying()
+    return from;
 
   public function isComputed()
     return this.f == null;
 
-  public function get() {
+  public function get()
+    return result;
+
+  public function compute() {
     #if debug if (busy) throw new Error('circular lazyness');#end
     switch f {
       case null:
       case v:
-        f = null;
         #if debug busy = true;#end
+        f = null;
+        switch this.from {
+          case null:
+          case cur:
+            from = null;
+            var stack = [];
+            while (cur != null && !cur.isComputed()) {
+              stack.push(cur);
+              cur = cur.underlying();
+            }
+            stack.reverse();
+            for (c in stack)
+              c.compute();
+
+        }
+
         result = v();
         #if debug busy = false;#end
     }
-
-    return result;
   }
-
-  public inline function map<R>(f:T->R):Lazy<R>
-    return new LazyFunc(function () return f(get()));
-
-  public inline function flatMap<R>(f:T->Lazy<R>):Lazy<R>
-    return new LazyFunc(function () return f(get()).get());
 }
