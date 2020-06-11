@@ -17,7 +17,6 @@ jobs:
     strategy:
       matrix:
         haxe-version:
-          - 3.4.7
           - stable
           - nightly
         target: 
@@ -25,18 +24,11 @@ jobs:
           - node
           - node -D tink_core_no_error_pos
           - neko
-          - neko
           - python
           - php
           - cpp
           - js
           - java -D jvm
-        exclude:
-          # jvm only works on nightly for now
-          - haxe-version: 3.4.7
-            target: java -D jvm
-          - haxe-version: stable
-            target: java -D jvm
 
     steps:
     - uses: actions/checkout@v2
