@@ -1,11 +1,15 @@
 package tink.core;
 
+import tink.core.Callback;
+import tink.core.Error;
+import tink.core.Future;
+import tink.core.Noise;
+import tink.core.Outcome;
 import tink.core.Signal.Gather;
-using tink.CoreApi;
 
 #if js
-import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
 import #if haxe4 js.lib.Error #else js.Error #end as JsError;
+import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
 #end
 
 @:forward(status)

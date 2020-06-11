@@ -5,7 +5,7 @@ import tink.core.Future;
 import tink.core.Signal;
 
 using tink.core.Progress.TotalTools;
-using tink.CoreApi;
+using tink.core.Option;
 
 @:forward(result)
 abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {

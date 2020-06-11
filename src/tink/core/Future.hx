@@ -1,9 +1,10 @@
 package tink.core;
 
-import tink.core.Signal;
 import tink.core.Callback;
-
-using tink.CoreApi;
+import tink.core.Noise;
+import tink.core.Outcome;
+import tink.core.Promise;
+import tink.core.Signal.Gather;
 
 #if js
 import #if haxe4 js.lib.Error #else js.Error #end as JsError;
