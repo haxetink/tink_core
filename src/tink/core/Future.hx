@@ -42,11 +42,16 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
    */
   public function flatMap<A>(next:T->Future<A>, ?gather:Gather):Future<A>
-    return new SuspendableFuture<A>(function (yield) {
-      final inner = new CallbackLinkRef();
-      final outer = this.handle(v -> inner.link = next(v).handle(yield));
-      return outer.join(inner);
-    });
+    return switch status {
+      case Ready(l):
+        new SuspendableFuture<A>(fire -> next(l.get()).handle(v -> fire(v)));
+      default:
+        new SuspendableFuture<A>(function (yield) {
+          final inner = new CallbackLinkRef();
+          final outer = this.handle(v -> inner.link = next(v).handle(yield));
+          return outer.join(inner);
+        });
+    }
 
   /**
    *  Like `map` and `flatMap` but with a polymorphic transformer and return a `Promise`
