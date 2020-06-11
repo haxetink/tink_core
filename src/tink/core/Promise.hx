@@ -1,5 +1,6 @@
 package tink.core;
 
+import tink.core.Signal.Gather;
 using tink.CoreApi;
 
 #if js
@@ -55,7 +56,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:to public function isSuccess():Future<Bool>
     return this.map(function (o) return o.isSuccess());
 
-  public function next<R>(f:Next<T, R>, ?gather = true):Promise<R>
+  public function next<R>(f:Next<T, R>, ?gather:Gather):Promise<R>
     return this.flatMap(function (o) return switch o {
       case Success(d): f(d);
       case Failure(f): Future.sync(Failure(f));
@@ -67,8 +68,11 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public inline function swapError(e:Error):Promise<T>
     return mapError(_ -> e);
 
-  public function merge<A, R>(other:Promise<A>, merger:Combiner<T, A, R>, ?gather = true):Promise<R>
-    return next(function (t) return other.next(function (a) return merger(t, a), false), gather);
+  public function merge<A, R>(other:Promise<A>, merger:Combiner<T, A, R>, ?gather:Gather):Promise<R>
+    return this.merge(other, (a, b) -> switch [a, b] {
+      case [Success(a), Success(b)]: merger(a, b);
+      case [Failure(e), _] | [_, Failure(e)]: Promise.lift(e);
+    }).flatMap(o -> o);
 
   @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
     return a.merge(b, Pair.new);
