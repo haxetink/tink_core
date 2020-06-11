@@ -6,16 +6,18 @@ private typedef AnnexableTo<T> = haxe.Constraints.Constructible<T->Void>
 class Annex<Target> {
 
   var target:Target;
-  var registry:Map<Dynamic, Dynamic>;
+  var registry:Map<{}, Dynamic>;
 
   public function new(target:Target) {
   	this.target = target;
     this.registry = cast new haxe.ds.ObjectMap();
   }
   #if (java || cs) @:extern #end
-  @:generic public inline function get<A:AnnexableTo<Target>>(c:Class<A>):A
+  @:generic public inline function get<A:AnnexableTo<Target>>(c:Class<A>):A {
+    var c:{} = cast c;
     return switch registry[c] {
       case null: registry[c] = new A(target);
    	  case v: v;
-  	}
+    }
+  }
 }
