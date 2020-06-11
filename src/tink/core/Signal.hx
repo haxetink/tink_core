@@ -117,21 +117,17 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
   public function gather():Signal<T>
     return this;
 
-  static public function generate<T>(generator:(T->Void)->Void):Signal<T> {
-    var ret = trigger();//TODO: consider implementing this over `create`
-    generator(ret.trigger);
-    return ret;
-  }
+  /**
+   * An alternative to `new Signal()` if you have no `CallbackLink` to return.
+   */
+  static public function generate<T>(generator:(T->Void)->Void, ?init):Signal<T>
+    return new Signal<T>(fire -> { generator(fire); null; }, init);
 
   /**
    *  Creates a new `SignalTrigger`
    */
   static public function trigger<T>():SignalTrigger<T>
     return new SignalTrigger();
-
-  // @:deprecate('use new Signal() instead')
-  // static public inline function create<T>(create:(T->Void)->(Void->Void), ?init):Signal<T>
-  //   return new Suspendable<T>(fire -> create(fire), init);
 
   /**
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
@@ -239,7 +235,7 @@ final class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposab
     inline function get_disposed()
       return handlers.disposed;
 
-  var handlers = new CallbackList<T>();
+  final handlers = new CallbackList<T>();
 
   public inline function new() {}
 

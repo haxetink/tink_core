@@ -215,4 +215,20 @@ class Signals extends Base {
     asserts.assert('112233' == out);
     return asserts.done();
   }
+
+  public function testGenerate() {
+    var s = Signal.generate(fire -> {
+      fire('42');
+      handlers1.listen(fire);
+    });
+    var a = [];
+    s.handle(a.push);
+    s.handle(a.push);
+    asserts.assert('42' == a.join(','));
+    handlers1.trigger('0');
+    handlers1.trigger('1');
+    asserts.assert('42,0,0,1,1' == a.join(','));
+
+    return asserts.done();
+  }
 }
