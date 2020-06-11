@@ -7,8 +7,8 @@ import tink.core.Promise;
 import tink.core.Signal.Gather;
 
 #if js
-import #if haxe4 js.lib.Error #else js.Error #end as JsError;
-import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
+import js.lib.Error as JsError;
+import js.lib.Promise as JsPromise;
 #end
 
 @:forward(handle, eager)

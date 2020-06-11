@@ -261,11 +261,7 @@ class CallbackList<T> extends SimpleDisposable {
     }
 
   function resize(length)
-    #if haxe4
-      cells.resize(length);
-    #else
-      cells.splice(0, length);
-    #end
+    cells.resize(length);
 
   //TODO: probably want to make this private
   public function clear():Void {
