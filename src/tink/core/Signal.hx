@@ -15,8 +15,8 @@ abstract Gather(Bool) {
 @:forward
 abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
-  public inline function new(f:Callback<T>->CallbackLink)
-    this = new Suspendable<T>(fire -> f(fire));
+  public inline function new(f:(T->Void)->CallbackLink, ?init:OwnedDisposable->Void)
+    this = new Suspendable<T>(fire -> f(fire), init);
 
   public inline function handle(handler:Callback<T>):CallbackLink
     return this.listen(handler);
@@ -129,8 +129,9 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
   static public function trigger<T>():SignalTrigger<T>
     return new SignalTrigger();
 
-  static public inline function create<T>(create:(T->Void)->(Void->Void), ?init):Signal<T>
-    return new Suspendable<T>(fire -> create(fire), init);
+  // @:deprecate('use new Signal() instead')
+  // static public inline function create<T>(create:(T->Void)->(Void->Void), ?init):Signal<T>
+  //   return new Suspendable<T>(fire -> create(fire), init);
 
   /**
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`

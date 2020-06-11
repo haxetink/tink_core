@@ -40,7 +40,7 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   static inline function promise<T>(v:Promise<Progress<T>>):Progress<Outcome<T, Error>>
     return new ProgressObject<Outcome<T, Error>>(
       v.next(p -> p.result),
-      Signal.create(fire -> {
+      new Signal(fire -> {
         var inner = new CallbackLinkRef();
         return v.handle(o -> switch o {
           case Success(p):
@@ -54,9 +54,9 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   static inline function future<T>(v:Future<Progress<T>>):Progress<T>
     return new ProgressObject<T>(
       v.flatMap(p -> p.result),
-      Signal.create(fire -> {
+      new Signal(fire -> {
         var inner = new CallbackLinkRef();
-        return v.handle(p -> inner.link = p.listen(fire)) & inner;
+        v.handle(p -> inner.link = p.listen(fire)) & inner;
       })
     );
 

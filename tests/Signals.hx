@@ -35,7 +35,7 @@ class Signals extends Base {
         initialized = 0,
         received = -1;
 
-    var s = Signal.create(
+    var s = new Signal(
       function (fire) {
         fire(counter++);
         active = true;
