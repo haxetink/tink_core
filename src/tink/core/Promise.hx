@@ -199,7 +199,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   static public function inParallel<T>(a:Array<Promise<T>>, ?concurrency:Int):Promise<Array<T>>
     return many(a, concurrency);
 
-  static function many<T>(a:Array<Promise<T>>, concurrency:Int):Promise<Array<T>>
+  static function many<T>(a:Array<Promise<T>>, ?concurrency:Int):Promise<Array<T>>
     return @:privateAccess Future.processMany((cast a:Array<Surprise<T, Error>>), concurrency, o -> o, o -> o);//TODO: raise issue for the cast
 
   static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>>
