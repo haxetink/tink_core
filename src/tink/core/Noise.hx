@@ -1,6 +1,5 @@
 package tink.core;
 
-#if cs
-@:native('tink.core.TinkNoise')
-#end
-enum Noise { Noise; }
+enum abstract Noise(Null<Dynamic>) from Dynamic {
+	var Noise = null;
+}
