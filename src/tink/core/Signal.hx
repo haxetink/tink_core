@@ -15,7 +15,11 @@ abstract Gather(Bool) {
 @:forward
 abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
-  public inline function new(f:(T->Void)->CallbackLink, ?init:OwnedDisposable->Void)
+  /**
+   * Creates a new Signal. Any immediate calls to `fire`
+   * will be passed to the first registered `Callback<T>` only.
+   */
+  public inline function new(f:(fire:T->Void)->CallbackLink, ?init:OwnedDisposable->Void)
     this = new Suspendable<T>(fire -> f(fire), init);
 
   public inline function handle(handler:Callback<T>):CallbackLink
@@ -119,6 +123,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
   /**
    * An alternative to `new Signal()` if you have no `CallbackLink` to return.
+   * Other than that, it behaves exactly the same.
    */
   static public function generate<T>(generator:(T->Void)->Void, ?init):Signal<T>
     return new Signal<T>(fire -> { generator(fire); null; }, init);
