@@ -15,10 +15,10 @@ class Promises extends Base {
 
     var counter = 0;
     function make(fail:Bool)
-      return Future.async(function (cb) {
+      return Future.irreversible(function (cb) {
         var id = counter++;
         cb(if (fail) Failure(new Error('error')) else Success(id));
-      }, true);
+      });
 
     counter = 0;
     var p = Promise.inParallel([for (i in 0...10) make(i > 5)]);
@@ -86,10 +86,10 @@ class Promises extends Base {
   public function testInSequence() {
     var counter = 0;
     function make(fail:Bool)
-      return Future.async(function (cb) {
+      return Future.irreversible(function (cb) {
         var id = counter++;
         cb(if (fail) Failure(new Error('error')) else Success(id));
-      }, true);
+      });
 
     counter = 0;
     var p = Promise.inSequence([for (i in 0...10) make(i > 5)]);

@@ -21,12 +21,12 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
     return new ProgressTrigger<T>();
   }
 
-  public static function make<T>(f:(progress:(value:Float, total:Option<Float>)->Void, finish:(result:T)->Void)->Void):Progress<T>
-    return Future.async(yield -> {
+  public static function make<T>(f:(progress:(value:Float, total:Option<Float>)->Void, finish:(result:T)->Void)->CallbackLink):Progress<T>
+    return Future.irreversible(yield -> {
       var ret = trigger();
       f(ret.progress, ret.finish);
       yield(ret.asProgress());
-    }, true);
+    });
 
   @:to
   public inline function asFuture():Future<T>

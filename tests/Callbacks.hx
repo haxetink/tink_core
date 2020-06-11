@@ -22,7 +22,7 @@ class Callbacks extends Base {
   }
 
   public function testGuarding()
-    return Future.async(done -> {
+    return Future.irreversible(done -> {
       var i = 100000,
           finished = true;
       function rec()

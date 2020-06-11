@@ -108,7 +108,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Casts a js Promise into a Surprise
    */
   @:from static public function ofJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
-    return Future.async(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
+    return Future.irreversible(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
 
   @:from static inline function ofAny<T>(v:T):Future<T>
@@ -231,20 +231,19 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:noUsing static inline public function isFuture(maybeFuture: Dynamic)
     return Std.is(maybeFuture, FutureObject);
 
-  /**
-   *  Creates an async future
-   *  Example: `var i = Future.async(function(cb) cb(1)); // Future<Int>`
-   */
   #if python @:native('make') #end
-  @:noUsing static public function async<A>(f:(A->Void)->Void, ?lazy = false):Future<A> {
-
-    var ret = new SuspendableFuture(function (yield) {
-      f(yield);
-      return null;
-    });
-
+  @:deprecated('use Future.irreversible() - or better yet: new Future()')
+  @:noUsing static public function async<A>(init:(A->Void)->Void, ?lazy = false):Future<A> {
+    var ret = irreversible(init);
     return if (lazy) ret else ret.eager();
   }
+  /**
+   * Creates an irreversible future:
+   * `init` gets called, when the first handler is registered or `eager()` is called.
+   * The future is never suspended again.
+   */
+  static public function irreversible<A>(init:(A->Void)->Void)
+    return new SuspendableFuture(yield -> { init(yield); null; });
 
   /**
    *  Same as `first`
@@ -295,7 +294,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
     return new FutureTrigger();
 
   @:noUsing static public function delay<T>(ms:Int, value:Lazy<T>):Future<T>
-    return Future.async(function(cb) haxe.Timer.delay(function() cb(value.get()), ms));
+    return Future.irreversible(function(cb) haxe.Timer.delay(function() cb(value.get()), ms)).eager();
 
 }
 

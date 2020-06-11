@@ -15,10 +15,8 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public static var NOISE:Promise<Noise> = Future.sync(Success(Noise));
   public static var NEVER:Promise<Dynamic> = Future.NEVER;
 
-  public inline function new(f:(T->Void)->(Error->Void)->Void)
-    this = Future.async(function(cb) {
-      f(function(v) cb(Success(v)), function(e) cb(Failure(e)));
-    });
+  public inline function new(f:(T->Void)->(Error->Void)->CallbackLink)
+    this = new Future(cb -> f(v -> cb(Success(v)), e -> cb(Failure(e))));
 
   public inline function eager():Promise<T>
     return this.eager();
@@ -96,7 +94,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    * @return Promise<T>
    */
   static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, fallback:Promise<R>):Promise<R> {
-    return Future.async(function(cb) {
+    return Future.irreversible(function(cb) {
       var iter = promises.iterator();
       function next() {
         if(iter.hasNext())
@@ -196,7 +194,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return ofOutcome(Success(d));
 
   public static inline function lazy<T>(p:Lazy<Promise<T>>):Promise<T>
-    return Future.async(function(cb) p.get().handle(cb), true);
+    return new Future(cb -> p.get().handle(cb));
 
   static public function inParallel<T>(a:Array<Promise<T>>, ?concurrency:Int):Promise<Array<T>>
     return many(a, concurrency);

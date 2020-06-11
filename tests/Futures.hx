@@ -23,7 +23,7 @@ class Futures extends Base {
     function trigger()
       for (c in callbacks) c(4);
 
-    var f = Future.async(fake);
+    var f = Future.irreversible(fake).eager();
 
     var calls = 0;
 
@@ -123,8 +123,8 @@ class Futures extends Base {
         if (index < a.length) a[index] + sum(a, index + 1);
         else 0;
 
-    var f = Future.ofMany(futures).map(sum.bind(_, 0)),
-        f2 = Future.ofMany(futures).map(sum.bind(_, 0));
+    var f = Future.inSequence(futures).map(sum.bind(_, 0)),
+        f2 = Future.inSequence(futures).map(sum.bind(_, 0));
 
     asserts.assert(!read1);
     asserts.assert(!read2);
