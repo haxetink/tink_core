@@ -319,7 +319,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 }
 
 @:callable
-abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> {
+abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> to In->Promise<Out> {
 
   @:extern @:from inline static function ofDynamic<In>(f:In->Nonsense):Next<In, Dynamic> // Nonsense being non-existent, no function should ever unify with this, unless it returns Dynamic
     return function (x):Promise<Dynamic> {

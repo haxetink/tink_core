@@ -28,14 +28,26 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Creates a future that contains the first result from `this` or `that`
    */
   public function first(that:Future<T>):Future<T>
-    return new SuspendableFuture<T>(fire -> this.handle(fire) & that.handle(fire));
+    return switch [(this:Future<T>), that] {
+      case [{ status: NeverEver }, v]
+         | [v, { status: NeverEver }]
+         | [v = { status: Ready(_) }, _]
+         | [_, v = { status: Ready(_) }]:
+         v;
+      default:
+        new SuspendableFuture<T>(fire -> this.handle(fire) & that.handle(fire));
+    }
 
   /**
    *  Creates a new future by applying a transform function to the result.
    *  Different from `flatMap`, the transform function of `map` returns a sync value
    */
   public function map<A>(f:T->A, ?gather:Gather):Future<A>
-    return new SuspendableFuture<A>(fire -> this.handle(v -> fire(f(v))));
+    return switch status {
+      case NeverEver: cast NEVER;
+      case Ready(l): new SyncFuture<A>(l.map(f));
+      default: new SuspendableFuture<A>(fire -> this.handle(v -> fire(f(v))));
+    }
 
   /**
    *  Creates a new future by applying a transform function to the result.
@@ -43,6 +55,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    */
   public function flatMap<A>(next:T->Future<A>, ?gather:Gather):Future<A>
     return switch status {
+      case NeverEver: cast NEVER;
       case Ready(l):
         new SuspendableFuture<A>(fire -> next(l.get()).handle(v -> fire(v)));
       default:
@@ -57,28 +70,32 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Like `map` and `flatMap` but with a polymorphic transformer and return a `Promise`
    *  @see `Next`
    */
-  public function next<R>(n:Next<T, R>):Promise<R>
-    return flatMap(function (v) return n(v));
+  public inline function next<R>(n:Next<T, R>):Promise<R>
+    return flatMap(n);
 
   @:deprecated('Gathering no longer has any effect')
   public inline function gather():Future<T>
     return this;
 
   /**
-   *  Merges two futures into one by applying the merger function on the two future values
+   *  Merges two futures into one by applying `combine` on the two future values
    */
   public function merge<A, R>(that:Future<A>, combine:T->A->R):Future<R>
-    return
-      new SuspendableFuture<R>(yield -> {
-        function check(?v:Dynamic)
-          return switch [status, that.status] {
-            case [Ready(a), Ready(b)]:
-              yield(combine(a, b));
-            default:
-          }
+    return switch [status, that.status] {
+      case [NeverEver, _] | [_, NeverEver]: cast NEVER;
+      default:
+        new SuspendableFuture<R>(yield -> {
+          function check(?v:Dynamic)
+            return switch [status, that.status] {
+              case [Ready(a), Ready(b)]:
+                yield(combine(a, b));
+              default:
+            }
 
-        this.handle(check) & that.handle(check);
-      });
+          this.handle(check) & that.handle(check);
+        });
+    }
+
 
   /**
    *  Flattens `Future<Future<A>>` into `Future<A>`
