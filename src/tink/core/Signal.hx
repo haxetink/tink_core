@@ -233,7 +233,7 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
       }
 }
 
-class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposable {
+final class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposable {
   public var disposed(get, never):Bool;
     inline function get_disposed()
       return handlers.disposed;
@@ -273,7 +273,7 @@ class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposable {
     return this;
 }
 
-interface SignalObject<T> extends Disposable {
+private interface SignalObject<T> extends Disposable {
   /**
    *  Registers a callback to be invoked every time the signal is triggered
    *  @return A `CallbackLink` instance that can be used to unregister the callback

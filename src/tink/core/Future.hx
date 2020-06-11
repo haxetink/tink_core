@@ -354,7 +354,7 @@ private class SyncFuture<T> implements FutureObject<T> {//TODO: there should be 
   }
 }
 
-class FutureTrigger<T> implements FutureObject<T> {
+final class FutureTrigger<T> implements FutureObject<T> {
   var status:FutureStatus<T> = Awaited;
   final list:CallbackList<T>;
 
