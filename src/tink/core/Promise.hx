@@ -7,6 +7,7 @@ import #if haxe4 js.lib.Promise #else js.Promise #end as JsPromise;
 import #if haxe4 js.lib.Error #else js.Error #end as JsError;
 #end
 
+@:forward(status)
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
 
   public static var NULL:Promise<Dynamic> = Future.sync(Success(null));
@@ -217,29 +218,49 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
           yield(v);
         }
 
-        function step()
-          if (!done)
+        function fireWhenReady()
+          return
             if (index == ret.length)
-              if (pending == 0) fire(Success(ret));
-              else {}//just waiting for the rest to finish
-            else {
-              //TODO: loop here while current a[index] is sync
+              if (pending == 0) {
+                fire(Success(ret));
+                true;
+              }
+              else false;
+            else false;
+
+        function step()
+          if (!done && !fireWhenReady())
+            while (index < ret.length) {
+
               var index = index++;
-              pending++;
-              links.push(
-                a[index].handle(function (o) {
-                  pending--;
-                  switch o {
-                    case Success(v):
-                      ret[index] = v;
-                      step();
-                    case Failure(e):
-                      for (l in links)
-                        l.cancel();
-                      fire(Failure(e));
-                  }
-                })
-              );
+              var p = a[index];
+
+              function check(o:Outcome<T, Error>)
+                switch o {
+                  case Success(v):
+                    ret[index] = v;
+                    fireWhenReady();
+                  case Failure(e):
+                    for (l in links)
+                      l.cancel();
+                    fire(Failure(e));
+                }
+
+              switch p.status {
+                case Ready(_.get() => v):
+                  check(v);
+                  if (!done) continue;
+                default:
+                  pending++;
+                  links.push(
+                    p.handle(function (o) {
+                      pending--;
+                      check(o);
+                      if (!done) step();
+                    })
+                  );
+              }
+              break;
             }
 
         for (i in 0...concurrency)
