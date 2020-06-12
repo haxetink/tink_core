@@ -13,7 +13,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
   static var depth = 0;
   static inline var MAX_DEPTH = #if (python || eval) 200 #elseif interp 100 #else 500 #end;
 
-  extern static public inline function guardStackoverflow(fn:Void->Void):Void
+  extern static public inline function guardStackoverflow(fn:()->Void):Void
     if (depth < MAX_DEPTH) {
       depth++;
       fn();
@@ -24,7 +24,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
   public function invoke(data:T):Void
     guardStackoverflow(() -> this(data));
 
-  @:from static function fromNiladic<A>(f:Void->Void):Callback<A> //inlining this seems to cause recursive implicit casts
+  @:from static function fromNiladic<A>(f:()->Void):Callback<A> //inlining this seems to cause recursive implicit casts
     return #if js cast f #else function (_) f() #end;
 
   @:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A>
@@ -33,7 +33,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
         for (callback in callbacks)
           callback.invoke(v);
 
-  @:noUsing static public function defer(f:Void->Void) {
+  @:noUsing static public function defer(f:()->Void) {
     #if macro
       f();
     #elseif tink_runloop
@@ -65,7 +65,7 @@ class CallbackLinkRef implements LinkObject {
 
 abstract CallbackLink(LinkObject) from LinkObject {
 
-  inline function new(link:Void->Void)
+  inline function new(link:()->Void)
     this = new SimpleLink(link);
 
   public inline function cancel():Void
@@ -77,13 +77,13 @@ abstract CallbackLink(LinkObject) from LinkObject {
 
   static function noop() {}
 
-  @:to inline function toFunction():Void->Void
+  @:to inline function toFunction():()->Void
     return if (this == null) noop else this.cancel;
 
   @:to inline function toCallback<A>():Callback<A>
     return this.cancel;
 
-  @:from static inline function fromFunction(f:Void->Void)
+  @:from static inline function fromFunction(f:()->Void)
     return new CallbackLink(f);
 
   @:op(a & b) public inline function join(b:CallbackLink):CallbackLink
@@ -99,7 +99,7 @@ abstract CallbackLink(LinkObject) from LinkObject {
 }
 
 class SimpleLink implements LinkObject {
-  var f:Void->Void;
+  var f:()->Void;
 
   public inline function new(f)
     this.f = f;

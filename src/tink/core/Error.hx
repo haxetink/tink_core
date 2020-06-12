@@ -116,7 +116,7 @@ class TypedError<T> {
         Std.downcast(v, Error);
       #end
   }
-  static public function catchExceptions<A>(f:Void->A, ?report:Dynamic->Error, ?pos:Pos)
+  static public function catchExceptions<A>(f:()->A, ?report:Dynamic->Error, ?pos:Pos)
     return
       try
         Success(f())
@@ -149,7 +149,7 @@ class TypedError<T> {
     return any;
   }
 
-  static public function tryFinally<T>(f:Void->T, cleanup:Void->Void):T {
+  static public function tryFinally<T>(f:()->T, cleanup:()->Void):T {
     #if js
       #if haxe4
       js.Syntax.code('try { return f(); } finally { cleanup(); }');

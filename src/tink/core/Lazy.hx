@@ -13,7 +13,7 @@ abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
     return this.get();
   }
 
-  @:from static public inline function ofFunc<T>(f:Void->T):Lazy<T>
+  @:from static public inline function ofFunc<T>(f:()->T):Lazy<T>
     return new LazyFunc(f);
 
   public inline function map<A>(f:T->A):Lazy<A>
@@ -59,12 +59,12 @@ private class LazyConst<T> implements LazyObject<T> {
 }
 
 private class LazyFunc<T> implements LazyObject<T> {
-  var f:Null<Void->T>;
+  var f:Null<()->T>;
   var from:Computable;
   var result:Null<T>;
   #if debug var busy = false; #end
 
-  public function new(f:Void->T, ?from) {
+  public function new(f:()->T, ?from) {
     this.f = f;
     this.from = from;
   }
