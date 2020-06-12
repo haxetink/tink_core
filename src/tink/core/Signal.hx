@@ -1,126 +1,132 @@
 package tink.core;
 
+import tink.core.Disposable;
 import tink.core.Callback;
 import tink.core.Noise;
 
+@:noCompletion
+abstract Gather(Bool) {
+  inline function new(v) this = v;
+  @:deprecated('Gathering no longer has any effect')
+  @:from static function ofBool(b:Bool)
+    return new Gather(b);
+}
+
 @:forward
-abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
-  
-  public inline function new(f:Callback<T>->CallbackLink) this = new SimpleSignal(f);
-  
-  public inline function handle(handler:Callback<T>):CallbackLink 
+abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
+
+  /**
+   * Creates a new Signal. Any immediate calls to `fire`
+   * will be passed to the first registered `Callback<T>` only.
+   */
+  public inline function new(f:(fire:T->Void)->CallbackLink, ?init:OwnedDisposable->Void)
+    this = new Suspendable<T>(fire -> f(fire), init);
+
+  public inline function handle(handler:Callback<T>):CallbackLink
     return this.listen(handler);
-  
+
   /**
    *  Creates a new signal by applying a transform function to the result.
    *  Different from `flatMap`, the transform function of `map` returns a sync value
    */
-  public function map<A>(f:T->A, ?gather = true):Signal<A> {
-    var ret = new Signal(function (cb) return this.listen(function (result) cb.invoke(f(result))));
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
-  
+  public function map<A>(f:T->A, ?gather:Gather):Signal<A>
+    return Suspendable.over(this, fire -> handle(v -> fire(f(v))));
+
   /**
    *  Creates a new signal by applying a transform function to the result.
    *  Different from `map`, the transform function of `flatMap` returns a `Future`
    */
-  public function flatMap<A>(f:T->Future<A>, ?gather = true):Signal<A> {
-    var ret = new Signal(function (cb) return this.listen(function (result) f(result).handle(cb)));
-    return 
-      if (gather) ret.gather() 
-      else ret;
-  }
-  
+  @:deprecated public function flatMap<A>(f:T->Future<A>, ?gather:Gather):Signal<A>
+    return Suspendable.over(this, fire -> handle(v -> f(v).handle(fire)));
+
   /**
    *  Creates a new signal whose values will only be emitted when the filter function evalutes to `true`
    */
-  public function filter(f:T->Bool, ?gather = true):Signal<T> {
-    var ret = new Signal(function (cb) return this.listen(function (result) if (f(result)) cb.invoke(result)));
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
+  public function filter(f:T->Bool, ?gather:Gather):Signal<T>
+    return Suspendable.over(this, fire -> handle(v -> if (f(v)) fire(v)));
 
-  public function select<R>(selector:T->Option<R>, ?gather = true):Signal<R> {
-    var ret = new Signal(function (cb) return this.listen(function (result) switch selector(result) {
-      case Some(v): cb.invoke(v);
-      case None:
+  public function select<R>(selector:T->Option<R>, ?gather:Gather):Signal<R>
+    return Suspendable.over(this, fire -> handle(v -> switch selector(v) {
+      case Some(v): fire(v);
+      default:
     }));
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
-  
+
   /**
-   *  Creates a new signal by joining `this` and `other`,
+   *  Creates a new signal by joining `this` and `that`,
    *  the new signal will be triggered whenever either of the two triggers
    */
-  public function join(other:Signal<T>, ?gather = true):Signal<T> {
-    var ret = new Signal(
-      function (cb:Callback<T>):CallbackLink 
-        return this.listen(cb) & other.handle(cb)
-    );
+  public function join(that:Signal<T>, ?gather:Gather):Signal<T>
     return
-      if (gather) ret.gather();
-      else ret;
-  }
-  
+      if (this.disposed) that;
+      else if (that.disposed) this;
+      else new Suspendable<T>(
+        fire -> {
+          var cb:Callback<T> = fire;
+          handle(cb) & that.handle(cb);
+        },
+        self -> {
+          function release()
+            if (this.disposed && that.disposed) self.dispose();
+          this.ondispose(release);
+          that.ondispose(release);
+        }
+      );
+
   /**
    *  Gets the next emitted value as a Future
    */
-  public function nextTime(?condition:T->Bool):Future<T> {
-    var ret = Future.trigger();
-    var link:CallbackLink = null,
-        immediate = false;
-        
-    link = this.listen(function (v) if (condition == null || condition(v)) {
-      ret.trigger(v);
-      if (link == null) immediate = true;
-      else link.cancel();
+  public function nextTime(?condition:T->Bool):Future<T>
+    return pickNext(v -> if (condition == null || condition(v)) Some(v) else None);
+
+  /**
+   * Creates a future that yields the next value matched by the provided selector.
+   */
+   public function pickNext<R>(selector:T->Option<R>):Future<R> {
+    var ret = Future.trigger(),
+        link:CallbackLink = null;
+
+    link = this.listen(v -> switch selector(v) {
+      case None:
+      case Some(v):
+        ret.trigger(v);
     });
-    
-    if (immediate) 
-      link.cancel();
-    
+
+    ret.handle(link);
+
     return ret.asFuture();
   }
 
-  public function until<X>(end:Future<X>):Signal<T> {
-    var ret = new Suspendable(
-      function (yield) return this.listen(yield)
+  public function until<X>(end:Future<X>):Signal<T>
+    return new Suspendable(
+      yield -> this.listen(yield),
+      self -> end.handle(self.dispose)
     );
-    end.handle(ret.kill);
-    return ret;
-  }
 
   @:deprecated("use nextTime instead")
   public inline function next(?condition:T->Bool):Future<T>
     return nextTime(condition);
-  
+
   /**
    *  Transforms this signal and makes it emit `Noise`
    */
   public function noise():Signal<Noise>
     return map(function (_) return Noise);
-  
+
   /**
    *  Creates a new signal which stores the result internally.
    *  Useful for tranformed signals, such as product of `map` and `flatMap`,
    *  so that the transformation function will not be invoked for every callback
    */
-  public function gather():Signal<T> {
-    var ret = trigger();
-    this.listen(function (x) ret.trigger(x));
-    return ret.asSignal();
-  }
-  
-  static public function generate<T>(generator:(T->Void)->Void):Signal<T> {
-    var ret = trigger();
-    generator(ret.trigger);
-    return ret;
-  }
+  @:deprecated('Gathering no longer has any effect')
+  public function gather():Signal<T>
+    return this;
+
+  /**
+   * An alternative to `new Signal()` if you have no `CallbackLink` to return.
+   * Other than that, it behaves exactly the same.
+   */
+  static public function generate<T>(generator:(T->Void)->Void, ?init):Signal<T>
+    return new Signal<T>(fire -> { generator(fire); null; }, init);
 
   /**
    *  Creates a new `SignalTrigger`
@@ -128,82 +134,135 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> to SignalObject<T> {
   static public function trigger<T>():SignalTrigger<T>
     return new SignalTrigger();
 
-  static public inline function create<T>(create:(T->Void)->(Void->Void)):Signal<T>
-    return new Suspendable<T>(create);
-    
   /**
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
    *  Example: `var signal = Signal.ofClassical(emitter.addListener.bind(eventType), emitter.removeListener.bind(eventType));`
    */
-  static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather = true) {
-    var ret = new Signal(function (cb:Callback<A>) {
-      var f = function (a) cb.invoke(a);
-      add(f);
-      return remove.bind(f);
+  static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather:Gather)
+    return new Suspendable<A>(function (fire) {
+      add(fire);
+      return remove.bind(fire);
     });
-    
-    return
-      if (gather) ret.gather();
-      else ret;
-  }
 }
 
-private class SimpleSignal<T> implements SignalObject<T> {
-  var f:Callback<T>->CallbackLink;
-  public inline function new(f) this.f = f;
-  public inline function listen(cb) return this.f(cb);
+private class Disposed implements SignalObject<Dynamic> {
+
+  public var disposed(get, never):Bool;
+    inline function get_disposed()
+      return true;
+
+  function new() {}
+
+  static public var INST(default, null):Signal<Dynamic> = new Disposed();
+
+  public function dispose() {}
+  public function ondispose(handler)
+    handler();//TODO: consider using Callback.defer
+
+  public inline function listen(cb:Callback<Dynamic>):CallbackLink
+    return null;
 }
 
-private class Suspendable<T> implements SignalObject<T> {
-  var trigger:SignalTrigger<T> = new SignalTrigger();
-  var activate:(T->Void)->(Void->Void);
-  var suspend:Void->Void;
-  var check:CallbackLink;
-  
-  public var killed(default, null):Bool = false;
+private class Check<T> implements LinkObject {
+  final target:Suspendable<T>;
 
-  public function kill()
-    if (!killed) {
-      killed = true;
-      trigger = null;
+  public function new(target)
+    this.target = target;
+
+  public function cancel()
+    @:privateAccess if (target.trigger.getLength() == 0) {
+      target.subscription.cancel();
     }
+}
 
-  public function new(activate) {
+private class Suspendable<T> implements SignalObject<T> implements OwnedDisposable {
+
+  final trigger = new SignalTrigger<T>();
+  final activate:(fire:T->Void)->CallbackLink;
+  final check:CallbackLink;
+
+  var init:Null<OwnedDisposable->Void>;
+  var subscription:CallbackLink;
+
+  @:deprecated
+  public var killed(get, never):Bool;
+    inline function get_killed() return disposed;
+
+  public var disposed(get, never):Bool;
+    inline function get_disposed() return trigger.disposed;
+
+  public function dispose() {
+    trigger.dispose();
+    subscription.cancel();
+  }
+
+  @:deprecated('use dispose() instead')
+  public inline function kill()
+    dispose();
+
+  public inline function ondispose(handler)
+    trigger.ondispose(handler);
+
+  public function new(activate, ?init) {
     this.activate = activate;
+    this.init = init;
+    this.check = new Check(this);
   }
 
 	public function listen(cb) {
-    if (killed) return null;
-    if (trigger.getLength() == 0) 
-      this.suspend = activate(trigger.trigger);
-    
-    return 
-      trigger.listen(cb) 
-      & function ()
-          if (trigger.getLength() == 0) {
-            suspend();
-            suspend = null;
-          }
+    if (disposed) return null;
+
+    var ret = trigger.listen(cb) & check;
+
+    if (trigger.getLength() == 1) {
+      switch init {
+        case null:
+        case f: init = null; f(this);
+      }
+      this.subscription = activate(trigger.trigger);
+    }
+
+    return ret;
   }
+
+  static public function over<In, Out>(s:Signal<In>, activate):Signal<Out>
+    return
+      if (s.disposed) return cast Disposed.INST;
+      else {
+        var ret = new Suspendable<Out>(activate);
+        s.ondispose(ret.dispose);
+        return ret;
+      }
 }
 
-class SignalTrigger<T> implements SignalObject<T> {
-  var handlers = new CallbackList<T>();
-  public inline function new() {} 
-    
+final class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposable {
+  public var disposed(get, never):Bool;
+    inline function get_disposed()
+      return handlers.disposed;
+
+  final handlers = new CallbackList<T>();
+
+  public inline function new() {}
+
+  public function dispose()
+    handlers.dispose();
+
+  public function ondispose(d)
+    handlers.ondispose(d);
+
   /**
    *  Emits a value for this signal
    */
   public inline function trigger(event:T)
     handlers.invoke(event);
-    
+
   /**
    *  Gets the number of handlers registered
    */
   public inline function getLength()
     return handlers.length;
 
-	public inline function listen(cb) 
+	public inline function listen(cb)
     return handlers.add(cb);
 
   /**
@@ -211,12 +270,12 @@ class SignalTrigger<T> implements SignalObject<T> {
    */
   public inline function clear()
     handlers.clear();
-    
-  @:to public inline function asSignal():Signal<T> 
+
+  @:to public inline function asSignal():Signal<T>
     return this;
 }
 
-interface SignalObject<T> {
+private interface SignalObject<T> extends Disposable {
   /**
    *  Registers a callback to be invoked every time the signal is triggered
    *  @return A `CallbackLink` instance that can be used to unregister the callback

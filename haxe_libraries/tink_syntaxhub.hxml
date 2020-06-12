@@ -1,6 +1,6 @@
+# @install: lix --silent download https://github.com/haxetink/tink_syntaxhub/archive/b8a7e51a48c002cbeedb873f6cec177dbec9b8fd.tar.gz into tink_syntaxhub/0.3.6/github/b8a7e51a48c002cbeedb873f6cec177dbec9b8fd
 -D tink_syntaxhub=0.3.6
-# @install: lix --silent download "gh://github.com/haxetink/tink_syntaxhub#cfc78672e72a2a557bd383332525e17eb9802f79" into tink_syntaxhub/0.3.6/github/cfc78672e72a2a557bd383332525e17eb9802f79
+-cp ${HAXESHIM_LIBCACHE}/tink_syntaxhub/0.3.6/github/b8a7e51a48c002cbeedb873f6cec177dbec9b8fd/src
+--macro tink.SyntaxHub.use()
 -lib tink_priority
 -lib tink_macro
--cp ${HAXE_LIBCACHE}/tink_syntaxhub/0.3.6/github/cfc78672e72a2a557bd383332525e17eb9802f79/src
---macro tink.SyntaxHub.use()

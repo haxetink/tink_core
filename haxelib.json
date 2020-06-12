@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "1.26.0",
-	"releasenote": "Add Future.isFuture and Progress. Plus some bug fixes",
+	"version": "2.0.0-alpha",
+	"releasenote": "Improve JS interop. Use latest Haxe 4. Add Lazy.NULL.",
 	"tags": [
 		"tink",
 		"cross",

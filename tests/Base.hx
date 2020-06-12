@@ -6,24 +6,24 @@ import tink.unit.AssertionBuffer;
 using tink.CoreApi;
 
 abstract PhysicalType<T>(Either<Class<T>, Enum<T>>) {
-  
+
   function new(v) this = v;
-  
-  public function toString() 
-    return 
+
+  public function toString()
+    return
       switch this {
         case Left(c): Type.getClassName(c);
         case Right(e): Type.getEnumName(e);
       }
-      
-  public function check(v:T) 
-    return 
+
+  public function check(v:T)
+    return
       Std.is(v, this.getParameters()[0]);
-  
-  @:from static public function ofClass<C>(c:Class<C>) 
+
+  @:from static public function ofClass<C>(c:Class<C>)
     return new PhysicalType(Left(c));
-    
-  @:from static public function ofEnum<E>(e:Enum<E>) 
+
+  @:from static public function ofEnum<E>(e:Enum<E>)
     return new PhysicalType(Right(e));
 }
 
@@ -39,8 +39,7 @@ class Base {
     }
     asserts.fail('no exception thrown', pos);
   }
-  
-  function delay(ms:Int, ?lazy):Promise<Noise> {
-    return Future.async(function(cb) haxe.Timer.delay(cb.bind(Noise), ms), lazy);
-  }
+
+  function delay(ms:Int):Promise<Noise>
+    return Future.delay(ms, Noise);
 }

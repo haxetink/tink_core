@@ -13,7 +13,7 @@ typedef FutureTrigger<T> = tink.core.Future.FutureTrigger<T>;
 typedef PromiseTrigger<T> = tink.core.Promise.PromiseTrigger<T>;
 
 typedef Outcome<D, F> = tink.core.Outcome<D, F>;
-typedef OutcomeTools = tink.core.Outcome.OutcomeTools;
+@:noCompletion typedef OutcomeTools = tink.core.Outcome.OutcomeTools;
 
 typedef Either<L, R> = tink.core.Either<L, R>;
 typedef Option<T> = tink.core.Option<T>;

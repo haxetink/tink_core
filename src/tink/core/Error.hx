@@ -4,7 +4,7 @@ import tink.core.Outcome;
 import haxe.CallStack;
 
 #if js
-import #if haxe4 js.lib.Error #else js.Error #end as JsError;
+import js.lib.Error as JsError;
 #end
 
 typedef Pos = 
@@ -112,10 +112,8 @@ class TypedError<T> {
       #if js
         if (v != null && (cast v:Error).isTinkError) cast v;
         else null;
-      #elseif haxe4
-        Std.downcast(v, Error);
       #else
-        Std.instance(v, Error);
+        Std.downcast(v, Error);
       #end
   }
   static public function catchExceptions<A>(f:Void->A, ?report:Dynamic->Error, ?pos:Pos)
