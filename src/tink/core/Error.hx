@@ -7,7 +7,7 @@ import haxe.CallStack;
 import js.lib.Error as JsError;
 #end
 
-typedef Pos = 
+typedef Pos =
   #if macro
     haxe.macro.Expr.Position;
   #elseif tink_core_no_error_pos
@@ -17,7 +17,7 @@ typedef Pos =
   #end
 
 //TODO: there's huge overlap with haxe.macro.Error
-typedef Error = TypedError<Dynamic>;
+typedef Error = TypedError<Any>;
 
 @:enum abstract ErrorCode(Int) from Int to Int {
   var BadRequest = 400;
@@ -53,7 +53,7 @@ class TypedError<T> {
   public var callStack(default, null):Stack;
   public var exceptionStack(default, null):Stack;
   var isTinkError = true;
-  
+
   public function new(?code:ErrorCode = InternalError, message, ?pos) {
     this.code = code;
     this.message = message;
@@ -70,7 +70,7 @@ class TypedError<T> {
       #else
         pos.className+'.'+pos.methodName+':'+pos.lineNumber;
       #end
-      
+
   public function toString() {
     var ret = 'Error#$code: $message';
     #if !tink_core_no_error_pos
@@ -79,7 +79,7 @@ class TypedError<T> {
     #end
     return ret;
   }
-  
+
   public function throwSelf():Dynamic
     return
       #if macro
@@ -91,24 +91,24 @@ class TypedError<T> {
       #else
         rethrow(this);
       #end
-    
+
   static public function withData(?code:ErrorCode, message:String, data:Dynamic, ?pos:Pos):Error {
     return typed(code, message, data, pos);
   }
-  
+
   static public function typed<A>(?code:ErrorCode, message:String, data:A, ?pos:Pos):TypedError<A> {
     var ret = new TypedError(code, message, pos);
     ret.data = data;
     return ret;
   }
-  
+
   #if js
-  static public inline function ofJsError(e:JsError, ?pos:Pos):Error 
+  static public inline function ofJsError(e:JsError, ?pos:Pos):Error
     return Error.withData(500, e.message, e, pos);
   #end
-  
+
   @:noUsing static public function asError(v:Dynamic):Null<Error> {
-    return 
+    return
       #if js
         if (v != null && (cast v:Error).isTinkError) cast v;
         else null;
@@ -118,7 +118,7 @@ class TypedError<T> {
   }
   static public function catchExceptions<A>(f:Void->A, ?report:Dynamic->Error, ?pos:Pos)
     return
-      try 
+      try
         Success(f())
       catch (e:Dynamic)
         Failure(
@@ -131,11 +131,11 @@ class TypedError<T> {
               case e: e;
           }
         );
-  
-  static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error 
-    return 
+
+  static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error
+    return
       function (e:Dynamic) return Error.withData(code, message, e, pos);
-      
+
   static public inline function rethrow(any:Dynamic):Dynamic {
     #if neko
       neko.Lib.rethrow(any);
@@ -175,7 +175,7 @@ class TypedError<T> {
 abstract Stack(Array<StackItem>) from Array<StackItem> to Array<StackItem> {
   @:to
   public inline function toString():String
-    return 
+    return
       #if error_stack
         CallStack.toString(this);
       #else

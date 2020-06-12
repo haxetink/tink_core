@@ -183,7 +183,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
   // TODO: investigate why inlining this will cause all kinds of type error all over the place (downstream libraries)
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
-    return (s : Surprise<T, Error>);
+    return (cast s : Surprise<T, Error>);
 
   @:from static inline function ofFuture<T>(f:Future<T>):Promise<T>
     return f.map(Success);
