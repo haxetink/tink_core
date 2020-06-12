@@ -12,8 +12,10 @@ class Annex<Target> {
   	this.target = target;
     this.registry = cast new haxe.ds.ObjectMap();
   }
-  #if (java || cs) @:extern #end
-  @:generic public inline function get<A:AnnexableTo<Target>>(c:Class<A>):A {
+
+  @:generic
+  #if (java || cs) extern #end
+  public inline function get<A:AnnexableTo<Target>>(c:Class<A>):A {
     var c:{} = cast c;
     return switch registry[c] {
       case null: registry[c] = new A(target);

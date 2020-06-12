@@ -13,7 +13,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
   static var depth = 0;
   static inline var MAX_DEPTH = #if (python || eval) 200 #elseif interp 100 #else 500 #end;
 
-  @:extern static public inline function guardStackoverflow(fn:Void->Void):Void
+  extern static public inline function guardStackoverflow(fn:Void->Void):Void
     if (depth < MAX_DEPTH) {
       depth++;
       fn();
