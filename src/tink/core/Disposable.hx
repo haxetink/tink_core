@@ -28,7 +28,7 @@ package tink.core;
  */
 interface Disposable {
   var disposed(get, never):Bool;
-  function ondispose(d:Void->Void):Void;
+  function ondispose(d:()->Void):Void;
 }
 
 /**
@@ -43,14 +43,14 @@ interface OwnedDisposable extends Disposable {
  * where actual disposal is passed in via the constructor.
  */
 class SimpleDisposable implements OwnedDisposable {
-  var f:Void->Void;
-  var disposeHandlers:Null<Array<Void->Void>> = [];
+  var f:()->Void;
+  var disposeHandlers:Null<Array<()->Void>> = [];
 
   public var disposed(get, never):Bool;
     function get_disposed()
       return disposeHandlers == null;
 
-  public function ondispose(d:Void->Void)
+  public function ondispose(d:()->Void)
     switch disposeHandlers {
       case null: d();
       case v: v.push(d);

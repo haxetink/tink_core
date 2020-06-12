@@ -157,7 +157,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    *
    * @return Promise<T>
    */
-  static public function retry<T>(gen:Void->Promise<T>, next:Next<{ attempt: Int, error:Error, elapsed:Float }, Noise>):Promise<T> {
+  static public function retry<T>(gen:()->Promise<T>, next:Next<{ attempt: Int, error:Error, elapsed:Float }, Noise>):Promise<T> {
     function stamp() return haxe.Timer.stamp() * 1000;
     var start = stamp();
     return (function attempt(count:Int) {
@@ -210,7 +210,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return many(a, 1);
 
   #if (!java || jvm)
-  static public function cache<T>(gen:Void->Promise<Pair<T, Future<Noise>>>):Void->Promise<T> {
+  static public function cache<T>(gen:()->Promise<Pair<T, Future<Noise>>>):()->Promise<T> {
     var p = null;
     return function() {
       var ret = p;
