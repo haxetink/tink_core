@@ -15,9 +15,9 @@ import js.lib.Promise as JsPromise;
 @:forward(status)
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
 
-  public static var NULL:Promise<Dynamic> = Future.sync(Success(null));
-  public static var NOISE:Promise<Noise> = Future.sync(Success(Noise));
-  public static var NEVER:Promise<Dynamic> = Future.NEVER;
+  static public final NOISE:Promise<Noise> = Future.sync(Success(Noise));
+  @:deprecated('use Promise.NOISE instead') static public final NULL:Promise<Noise> = NOISE;
+  static public final NEVER:Promise<Dynamic> = Future.NEVER;
 
   public inline function new(f:(T->Void)->(Error->Void)->CallbackLink)
     this = new Future(cb -> f(v -> cb(Success(v)), e -> cb(Failure(e))));
@@ -184,6 +184,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   // TODO: investigate why inlining this will cause all kinds of type error all over the place (downstream libraries)
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
     return (cast s : Surprise<T, Error>);
+
+  @:from static inline function fromNoise<T>(l:Promise<Noise>):Promise<Null<T>>
+    return cast l;
 
   @:from static inline function ofFuture<T>(f:Future<T>):Promise<T>
     return f.map(Success);
