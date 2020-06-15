@@ -57,7 +57,6 @@ class Promises extends Base {
   @:variant(6, 10)
   @:variant(10, 10)
   @:variant(20, 10)
-  #if java @:exclude #end // apparently on java (or at least jvm) haxe.Timer callbacks get dispatched on different threads, which creates a race condition on running (or even causes timeouts)
   public function testThrottle(concurrency:Null<Int>, total:Int) {
     var maximum = 0;
     var running = 0;
@@ -159,7 +158,6 @@ class Promises extends Base {
     return asserts.done();
   }
 
-  #if !java
   public function testCache() {
     var v = 0;
     var expire = Future.trigger();
@@ -189,6 +187,5 @@ class Promises extends Base {
 
     return asserts.done();
   }
-  #end
 
 }

@@ -18,7 +18,7 @@ class Lazies extends Base {
     @:nullSafety(Off) {
       asserts.assert(l.get() == null);
       var l:Lazy<Int> = Lazy.NOISE;
-      asserts.assert(l.get() == null);
+      asserts.assert(l.get() == (cast null:Int));
     }
     return asserts.done();
   }
