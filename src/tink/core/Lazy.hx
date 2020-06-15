@@ -2,7 +2,8 @@ package tink.core;
 
 abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
 
-  public static var NULL = ofConst(null);
+  static public final NOISE:Lazy<Noise> = ofConst(null);
+  @:deprecated('use Lazy.NOISE instead') static public final NULL = NOISE;
 
   public var computed(get, never):Bool;
     inline function get_computed()
@@ -12,6 +13,9 @@ abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
     this.compute();
     return this.get();
   }
+
+  @:from static inline function fromNoise<T>(l:Lazy<Noise>):Lazy<Null<T>>
+    return cast l;
 
   @:from static public inline function ofFunc<T>(f:()->T):Lazy<T>
     return new LazyFunc(f);

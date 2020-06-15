@@ -3,12 +3,23 @@ package;
 using tink.CoreApi;
 
 @:asserts
+@:nullSafety(Strict)
 class Lazies extends Base {
   public function ridiculousDepth() {
     var l:Lazy<Int> = 0;
     for (i in 0...10000)
       l = l.map(x -> x + 1);
     asserts.assert(l.get() == 10000);
+    return asserts.done();
+  }
+
+  public function testNoise() {
+    var l:Lazy<Null<Int>> = Lazy.NOISE;
+    @:nullSafety(Off) {
+      asserts.assert(l.get() == null);
+      var l:Lazy<Int> = Lazy.NOISE;
+      asserts.assert(l.get() == null);
+    }
     return asserts.done();
   }
   public function testLaziness() {
