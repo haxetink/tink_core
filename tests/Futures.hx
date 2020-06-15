@@ -147,10 +147,10 @@ class Futures extends Base {
   }
 
   public function testNever() {
-    var f:Future<Int> = cast Future.NEVER;
+    var f:Future<Int> = Future.NEVER;
     f.handle(function () {}).cancel();
     function foo<A>() {
-      var f:Future<A> = cast Future.NEVER;
+      var f:Future<A> = Future.NEVER;
       f.handle(function () {}).cancel();
     }
     foo();

@@ -14,8 +14,8 @@ import js.lib.Promise as JsPromise;
 @:forward(handle, eager)
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
-  static public final NULL:Future<Dynamic> = Future.sync(null);
   static public final NOISE:Future<Noise> = Future.sync(Noise);
+  @:deprecated('use Future.NOISE instead') static public final NULL:Future<Noise> = NOISE;
   static public final NEVER:Future<Dynamic> = (NeverFuture.inst:FutureObject<Dynamic>);
 
   public var status(get, never):FutureStatus<T>;
@@ -111,6 +111,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:from static public function ofJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
     return Future.irreversible(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
+
+  @:from static inline function fromNoise<T>(l:Future<Noise>):Future<Null<T>>
+    return cast l;
 
   @:from static inline function ofAny<T>(v:T):Future<T>
     return Future.sync(v);
