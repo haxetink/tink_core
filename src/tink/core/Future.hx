@@ -12,7 +12,7 @@ import js.lib.Promise as JsPromise;
 #end
 
 @:forward(handle, eager)
-abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
+abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from FutureTrigger<T> {
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
   @:deprecated('use Future.NOISE instead') static public final NULL:Future<Noise> = NOISE;
