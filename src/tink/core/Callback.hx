@@ -178,7 +178,7 @@ class CallbackList<T> extends SimpleDisposable {
     this.cells = [];
   }
 
-  dynamic public function ondrain() {}
+  public var ondrain:()->Void = function() {}
 
   inline function release()
     if (--used <= length >> 1)
