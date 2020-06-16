@@ -31,12 +31,12 @@ abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
     return new LazyConst(c);
 }
 
-private interface LazyObject<T> extends Computable {
+interface LazyObject<T> extends Computable {
   function isComputed():Bool;
   function get():T;
 }
 
-private interface Computable {
+interface Computable {
   function isComputed():Bool;
   function compute():Void;
   function underlying():Null<Computable>;

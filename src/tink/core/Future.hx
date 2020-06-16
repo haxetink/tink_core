@@ -229,8 +229,8 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
    *  Creates a sync future.
    *  Example: `var i = Future.sync(1); // Future<Int>`
    */
-  @:noUsing static inline public function sync<A>(v:A):Future<A>
-    return lazy(v);
+  @:noUsing static inline public function sync<A>(v:SyncFutureInput<A>):Future<A>
+    return v;
 
   @:noUsing static inline public function isFuture(maybeFuture: Dynamic)
     return Std.is(maybeFuture, FutureObject);
@@ -300,6 +300,47 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
   @:noUsing static public function delay<T>(ms:Int, value:Lazy<T>):Future<T>
     return Future.irreversible(function(cb) haxe.Timer.delay(function() cb(value.get()), ms)).eager();
 
+}
+
+private abstract SyncFutureInput<T>(FutureObject<T>) from FutureObject<T> to Future<T> {
+  @:from static inline function ofLazy<T>(v:Lazy<T>):SyncFutureInput<T> {
+    return new SyncFuture(v);
+  }
+  @:from static inline function ofOther<T>(v:T):SyncFutureInput<T> {
+    // cast is important here to avoid triggering of ofLazy (because SyncFutureConst is also a Lazy)
+    return cast new SyncFutureConst(v);
+  }
+}
+
+private class SyncFutureConst<T> implements FutureObject<T> implements tink.core.Lazy.LazyObject<T> {
+  final value:T;
+
+  public inline function getStatus()
+    return Ready((this : Lazy<T>));
+
+  public inline function new(value:T)
+    this.value = value;
+
+  public inline function handle(cb:Callback<T>):CallbackLink {
+    cb.invoke(value);
+    return null;
+  }
+
+  public inline function eager() {
+    return this;
+  }
+
+
+  public function isComputed():Bool
+    return true;
+
+  public inline function get()
+    return value;
+
+  public inline function compute() {}
+
+  public function underlying():tink.core.Lazy.Computable
+    return null;
 }
 
 enum FutureStatus<T> {
