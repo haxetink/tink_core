@@ -181,7 +181,7 @@ class CallbackList<T> extends SimpleDisposable {
   dynamic public function ondrain() {}
 
   inline function release()
-    if (--used < length >> 1)
+    if (--used <= length >> 1)
       compact();
 
   function destroy() {
