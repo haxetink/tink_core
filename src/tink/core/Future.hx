@@ -16,7 +16,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> {
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
   @:deprecated('use Future.NOISE instead') static public final NULL:Future<Noise> = NOISE;
-  static public final NEVER:Future<Dynamic> = (NeverFuture.inst:FutureObject<Dynamic>);
+  static public final NEVER:Future<Noise> = (NeverFuture.inst:FutureObject<Noise>);
 
   public var status(get, never):FutureStatus<T>;
     inline function get_status()
@@ -327,7 +327,7 @@ private interface FutureObject<T> {
 }
 
 private class NeverFuture<T> implements FutureObject<T> {
-  public static var inst(default, null):NeverFuture<Dynamic> = new NeverFuture();
+  public static var inst(default, null):NeverFuture<Noise> = new NeverFuture();
   function new() {}
   public function getStatus():FutureStatus<T>
     return NeverEver;
