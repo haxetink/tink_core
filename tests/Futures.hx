@@ -80,6 +80,16 @@ class Futures extends Base {
     return asserts.done();
   }
 
+  public function issue131() {
+    var future = new Future(yield -> null);
+    asserts.assert(future.status.match(Suspended));
+    var link = future.handle(_ -> {});
+    asserts.assert(!future.status.match(Suspended));
+    link.cancel();
+    asserts.assert(future.status.match(Suspended));
+    return asserts.done();
+  }
+
   public function testOps() {
     var t1 = Future.trigger(),
         t2 = Future.trigger();
