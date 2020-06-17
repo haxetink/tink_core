@@ -24,7 +24,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
   public function invoke(data:T):Void
     guardStackoverflow(() -> this(data));
 
-  @:from static function fromNiladic<A>(f:()->Void):Callback<A> //inlining this seems to cause recursive implicit casts
+  @:from static inline function fromNiladic<A>(f:()->Void):Callback<A>
     return #if js cast f #else function (_) f() #end;
 
   @:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A>

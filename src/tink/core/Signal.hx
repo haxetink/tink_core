@@ -20,7 +20,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    * will be passed to the first registered `Callback<T>` only.
    */
   public inline function new(f:(fire:T->Void)->CallbackLink, ?init:OwnedDisposable->Void)
-    this = new Suspendable<T>(fire -> f(fire), init);
+    this = new Suspendable<T>(f, init);
 
   public inline function handle(handler:Callback<T>):CallbackLink
     return this.listen(handler);
