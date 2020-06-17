@@ -11,7 +11,6 @@ import js.lib.Error as JsError;
 import js.lib.Promise as JsPromise;
 #end
 
-@:forward(handle, eager)
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from FutureTrigger<T> {
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
@@ -24,6 +23,23 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
 
   public inline function new(f:(T->Void)->CallbackLink)
     this = new SuspendableFuture(f);
+
+  /**
+   *  Registers a callback to handle the future result.
+   *  If the result is already available, the callback will be invoked immediately.
+   *  @return A `CallbackLink` instance that can be used to cancel the callback, no effect if the callback is already invoked
+   */
+  public inline function handle(callback:Callback<T>):CallbackLink {
+    return this.handle(callback);
+  }
+
+  /**
+   *  Makes this future eager.
+   *  Futures are lazy by default, i.e. it does not try to fetch the result until someone `handle` it
+   */
+  public inline function eager():Future<T> {
+    return this.eager();
+  }
 
   /**
    *  Creates a future that contains the first result from `this` or `that`
@@ -313,16 +329,7 @@ enum FutureStatus<T> {
 private interface FutureObject<T> {
 
   function getStatus():FutureStatus<T>;
-  /**
-   *  Registers a callback to handle the future result.
-   *  If the result is already available, the callback will be invoked immediately.
-   *  @return A `CallbackLink` instance that can be used to cancel the callback, no effect if the callback is already invoked
-   */
   function handle(callback:Callback<T>):CallbackLink;
-  /**
-   *  Makes this future eager.
-   *  Futures are lazy by default, i.e. it does not try to fetch the result until someone `handle` it
-   */
   function eager():Future<T>;
 }
 
