@@ -38,7 +38,8 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    *  Futures are lazy by default, i.e. it does not try to fetch the result until someone `handle` it
    */
   public inline function eager():Future<T> {
-    return this.eager();
+    this.eager();
+    return this;
   }
 
   /**
@@ -262,7 +263,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    * `init` gets called, when the first handler is registered or `eager()` is called.
    * The future is never suspended again. When possible, use `new Future()` instead.
    */
-  static public function irreversible<A>(init:(A->Void)->Void)
+  static public function irreversible<A>(init:(A->Void)->Void):Future<A>
     return new SuspendableFuture(yield -> { init(yield); null; });
 
   /**
@@ -330,7 +331,7 @@ private interface FutureObject<T> {
 
   function getStatus():FutureStatus<T>;
   function handle(callback:Callback<T>):CallbackLink;
-  function eager():Future<T>;
+  function eager():Void;
 }
 
 private class NeverFuture<T> implements FutureObject<T> {
@@ -339,7 +340,7 @@ private class NeverFuture<T> implements FutureObject<T> {
   public function getStatus():FutureStatus<T>
     return NeverEver;
   public function handle(callback:Callback<T>):CallbackLink return null;
-  public function eager():Future<T> return cast inst;
+  public function eager() {};
 }
 
 private class SyncFuture<T> implements FutureObject<T> {//TODO: there should be a way to get rid of this
@@ -360,7 +361,6 @@ private class SyncFuture<T> implements FutureObject<T> {//TODO: there should be 
   public function eager() {
     if (!value.computed)
       value.get();
-    return this;
   }
 }
 
@@ -383,8 +383,7 @@ final class FutureTrigger<T> implements FutureObject<T> {
         list.add(callback);
     }
 
-  public function eager()
-    return this;
+  public function eager() {}
 
   public inline function asFuture():Future<T>
     return this;
@@ -460,7 +459,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
   function arm()
     link = wakeup(trigger);
 
-  public inline function eager():Future<T> {
+  public inline function eager() {
     switch status {
       case Suspended:
         status = EagerlyAwaited;
@@ -469,7 +468,6 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
         status = EagerlyAwaited;
       default:
     }
-    return this;
   }
 
 }
