@@ -120,9 +120,10 @@ class TypedError<T> {
     return
       try
         Success(f())
-      catch (e:Dynamic)
+      catch (e:Dynamic) {
+        var e = asError(e); // this tempvar sidesteps https://github.com/HaxeFoundation/haxe/issues/9617
         Failure(
-          switch asError(e) {
+          switch e {
             case null:
               if (report == null)
                 Error.withData('Unexpected Error', e, pos)
@@ -131,6 +132,7 @@ class TypedError<T> {
               case e: e;
           }
         );
+      }
 
   static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error
     return
