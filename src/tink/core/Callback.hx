@@ -81,7 +81,7 @@ abstract CallbackLink(LinkObject) from LinkObject {
     return if (this == null) noop else this.cancel;
 
   @:to inline function toCallback<A>():Callback<A>
-    return this.cancel;
+    return if (this == null) noop else this.cancel;
 
   @:from static inline function fromFunction(f:()->Void)
     return new CallbackLink(f);

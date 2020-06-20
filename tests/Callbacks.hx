@@ -123,6 +123,26 @@ class Callbacks extends Base {
     return asserts.done();
   }
 
+  @:describe("null CallbackLink should be noop and not crash")
+  public function testNullCallbackLink() {
+    var link:CallbackLink = null;
+    link.cancel();
+
+    var fn:()->Void = link;
+    fn();
+
+    var cb:Callback<Noise> = link;
+    cb.invoke(Noise);
+
+    var pair = link & link;
+    pair.cancel();
+
+    var many:CallbackLink = [link, link];
+    many.cancel();
+
+    return asserts.done();
+  }
+
   /*public function testListCompaction() {
     var on = 0,
         off = 0,
