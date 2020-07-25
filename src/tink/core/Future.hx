@@ -437,9 +437,11 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
       case Ready(_):
       default:
         status = Ready(value);
-        link = null;
+        var link = this.link;
+        this.link = null;
         wakeup = null;
         callbacks.invoke(value);
+        link.cancel();
     }
 
   public function handle(callback:Callback<T>):CallbackLink

@@ -182,4 +182,46 @@ class Futures extends Base {
     return asserts;
 
   }
+
+  public function testFirst() {
+    var triggered1 = false;
+    var triggered2 = false;
+    var cancelled1 = false;
+    var cancelled2 = false;
+    
+    var f1 = new Future(cb -> {
+      var timer = haxe.Timer.delay(function() {
+        triggered1 = true;
+        cb(1);
+      }, 50);
+      function() {
+        cancelled1 = true;
+        timer.stop();
+      }
+    });
+    var f2 = new Future(cb -> {
+      var timer = haxe.Timer.delay(function() {
+        triggered2 = true;
+        cb(2);
+      }, 100);
+      function() {
+        cancelled2 = true;
+        timer.stop();
+      }
+    });
+    
+    f1.first(f2).handle(function(o) {
+      asserts.assert(o == 1);
+      haxe.Timer.delay(function() {
+        asserts.assert(triggered1);
+        asserts.assert(cancelled1);
+        asserts.assert(!triggered2);
+        asserts.assert(cancelled2);
+        asserts.done();
+      }, 150);
+    });
+
+    return asserts;
+
+  }
 }
