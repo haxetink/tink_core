@@ -12,7 +12,7 @@ import js.lib.Error as JsError;
 import js.lib.Promise as JsPromise;
 #end
 
-@:forward(status)
+@:forward(status) @:transitive
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
 
   static public final NOISE:Promise<Noise> = Future.sync(Success(Noise));

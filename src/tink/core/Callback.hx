@@ -63,6 +63,7 @@ class CallbackLinkRef implements LinkObject {
     link.cancel();
 }
 
+
 abstract CallbackLink(LinkObject) from LinkObject {
 
   inline function new(link:()->Void)

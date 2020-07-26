@@ -30,7 +30,7 @@ class Promises extends Base {
 
     counter = 0;
     var t = Future.trigger();
-    var p = Promise.inParallel([t, make(false), make(false)]);
+    var p = Promise.inParallel([t.asFuture(), make(false), make(false)]);
     asserts.assert(0 == counter);
     var done = false;
     p.handle(function (o) {

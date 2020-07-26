@@ -7,6 +7,7 @@ import tink.core.Signal;
 using tink.core.Progress.TotalTools;
 using tink.core.Option;
 
+@:using(tink.core.Progress.ProgressTools)
 @:forward(result)
 abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   static public final INIT = ProgressValue.ZERO;
@@ -31,10 +32,6 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   @:to
   public inline function asFuture():Future<T>
     return this.result;
-
-  @:impl
-  public static inline function asPromise<T>(p:ProgressObject<Outcome<T, Error>>):Promise<T>
-    return (p:Progress<Outcome<T, Error>>).result;
 
   @:from
   static inline function promise<T>(v:Promise<Progress<T>>):Progress<Outcome<T, Error>>
@@ -169,4 +166,9 @@ class TotalTools {
       case _: false;
     }
   }
+}
+
+class ProgressTools {
+  public static inline function asPromise<T>(p:Progress<Outcome<T, Error>>):Promise<T>
+    return p.result;
 }

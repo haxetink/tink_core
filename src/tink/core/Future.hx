@@ -11,6 +11,7 @@ import js.lib.Error as JsError;
 import js.lib.Promise as JsPromise;
 #end
 
+@:transitive
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from FutureTrigger<T> {
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
