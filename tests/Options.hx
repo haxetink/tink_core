@@ -5,11 +5,11 @@ using tink.CoreApi;
 @:asserts
 class Options extends Base {
   public function testSure() {
-    asserts.assert(4 == Some(4).force());
+    asserts.assert(4 == Some(4).sure());
     
     throws(
       asserts,
-      function () None.force(),
+      function () None.sure(),
       Error,
       function (e) return e.message == 'Some value expected but none found'
     );

@@ -4,10 +4,14 @@ typedef Option<T> = haxe.ds.Option<T>;
 
 class OptionTools {
   
+  @:deprecated('Use .sure() instead')
+  static public inline function force<T>(o:Option<T>, ?pos:tink.core.Error.Pos)
+    return sure(o, pos);
+  
   /**
    *  Extracts the value if the option is `Some`, throws an `Error` otherwise
    */
-  static public inline function force<T>(o:Option<T>, ?pos:tink.core.Error.Pos)
+  static public inline function sure<T>(o:Option<T>, ?pos:tink.core.Error.Pos)
     return switch o {
       case Some(v): 
         v;
