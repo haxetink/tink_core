@@ -212,13 +212,13 @@ class Futures extends Base {
     
     f1.first(f2).handle(function(o) {
       asserts.assert(o == 1);
-      haxe.Timer.delay(function() {
+      Callback.defer(function() {
         asserts.assert(triggered1);
         asserts.assert(cancelled1);
         asserts.assert(!triggered2);
         asserts.assert(cancelled2);
         asserts.done();
-      }, 150);
+      });
     });
 
     return asserts;
