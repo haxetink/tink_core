@@ -24,4 +24,21 @@ class Options extends Base {
     return asserts.done();
   }
   
+  public function or() {
+    var some = Some(1);
+    var none = None;
+        
+    asserts.assert(some.orNull() == 1);
+    asserts.assert(none.orNull() == null);
+        
+    asserts.assert(some.or(5) == 1);
+    asserts.assert(none.or(5) == 5);
+        
+    asserts.assert(some.orTry(Some(2)).match(Some(1)));
+    asserts.assert(none.orTry(Some(2)).match(Some(2)));
+    asserts.assert(none.orTry(None).match(None));
+    
+    return asserts.done();
+  }
+  
 }

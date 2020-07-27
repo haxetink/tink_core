@@ -14,7 +14,20 @@ class OptionTools {
       default: 
         throw new Error(NotFound, 'Some value expected but none found', pos);
     }
+    
+  /**
+   *  Creates an `Outcome` from an `Option`, with made-up `Failure` information
+   */
+  static public function toOutcome<D>(o:Option<D>, ?pos:haxe.PosInfos):Outcome<D, Error>
+    return
+      switch o {
+        case Some(value):
+          Success(value);
+        case None:
+          Failure(new Error(NotFound, 'Some value expected but none found in ' + pos.fileName + '@line ' + pos.lineNumber));
+      }
   
+      
   /**
    *  Extracts the value if the option is `Some`, uses the fallback value otherwise
    */
@@ -22,6 +35,15 @@ class OptionTools {
     return switch o {
       case Some(v): v;
       default: l.get();
+    }
+  
+  /**
+   *  Extracts the value if the option is `Some`, uses the fallback value otherwise
+   */
+  static public inline function orTry<T>(o:Option<T>, fallback:Lazy<Option<T>>):Option<T>
+    return switch o {
+      case Some(v): o;
+      default: fallback.get();
     }
 
   /**
