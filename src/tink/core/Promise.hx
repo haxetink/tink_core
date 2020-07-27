@@ -77,7 +77,8 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     }).flatMap(o -> o);
 
   @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
-    return a.merge(b, Pair.new);
+    // return a.merge(b, Pair.new); // see https://github.com/HaxeFoundation/haxe/issues/9764
+    return a.merge(b, (a, b) -> new Pair(a, b));
 
   /**
    * Given an Iterable (e.g. Array) of Promises, handle them one by one with the `yield` function until one of them yields `Some` value
