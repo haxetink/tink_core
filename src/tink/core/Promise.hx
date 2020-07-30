@@ -55,7 +55,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:to public function noise():Promise<Noise>
     return (this:Promise<T>).next(function (v) return Noise);
 
-  @:to public function isSuccess():Future<Bool>
+  public function isSuccess():Future<Bool>
     return this.map(function (o) return o.isSuccess());
 
   public function next<R>(f:Next<T, R>, ?gather:Gather):Promise<R>
