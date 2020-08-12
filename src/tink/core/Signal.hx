@@ -121,6 +121,10 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
   public function gather():Signal<T>
     return this;
 
+  @:deprecated('Use new Signal() instead')
+  static public inline function create<T>(f)
+    return new Signal<T>(f);
+
   /**
    * An alternative to `new Signal()` if you have no `CallbackLink` to return.
    * Other than that, it behaves exactly the same.
