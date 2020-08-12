@@ -90,6 +90,24 @@ class Futures extends Base {
     return asserts.done();
   }
 
+  public function issue142() {
+    var t1 = Future.trigger(),
+        t2 = Future.trigger(),
+        t3 = Future.trigger();
+
+    t2.trigger(42);
+    t3.trigger(Failure(new Error('haha!')));
+
+    var a = [
+      Promise.lift(t1),
+      Promise.lift(t2),
+      Promise.lift(t3),
+    ];
+
+    t1.trigger(Success(123));
+    return asserts.done();
+  }
+
   public function testOps() {
     var t1 = Future.trigger(),
         t2 = Future.trigger();
@@ -188,7 +206,7 @@ class Futures extends Base {
     var triggered2 = false;
     var cancelled1 = false;
     var cancelled2 = false;
-    
+
     var f1 = new Future(cb -> {
       var timer = haxe.Timer.delay(function() {
         triggered1 = true;
@@ -209,7 +227,7 @@ class Futures extends Base {
         timer.stop();
       }
     });
-    
+
     f1.first(f2).handle(function(o) {
       asserts.assert(o == 1);
       Callback.defer(function() {

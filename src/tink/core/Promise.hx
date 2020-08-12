@@ -189,6 +189,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:from static inline function fromNoise<T>(l:Promise<Noise>):Promise<Null<T>>
     return cast l;
 
+  @:from static inline function ofTrigger<T>(f:FutureTrigger<Outcome<T, Error>>):Promise<T>
+    return f.asFuture();
+
+  @:from static inline function ofHappyTrigger<T>(f:FutureTrigger<T>):Promise<T>
+    return ofFuture(f.asFuture());
+
   @:from static inline function ofFuture<T>(f:Future<T>):Promise<T>
     return f.map(Success);
 
