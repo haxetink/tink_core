@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "1.26.0",
-	"releasenote": "Add Future.isFuture and Progress. Plus some bug fixes",
+	"version": "1.27.0",
+	"releasenote": "Backport CallbackList::onfill from v2.",
 	"tags": [
 		"tink",
 		"cross",
