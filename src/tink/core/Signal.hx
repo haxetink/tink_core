@@ -167,67 +167,41 @@ private class Disposed implements SignalObject<Dynamic> {
     return null;
 }
 
-private class Check<T> implements LinkObject {
-  final target:Suspendable<T>;
-
-  public function new(target)
-    this.target = target;
-
-  public function cancel()
-    @:privateAccess if (target.trigger.getLength() == 0) {
-      target.subscription.cancel();
-    }
-}
-
 private class Suspendable<T> implements SignalObject<T> implements OwnedDisposable {
 
-  final trigger = new SignalTrigger<T>();
+  final handlers = new CallbackList<T>();
   final activate:(fire:T->Void)->CallbackLink;
-  final check:CallbackLink;
 
   var init:Null<OwnedDisposable->Void>;
   var subscription:CallbackLink;
 
-  @:deprecated
-  public var killed(get, never):Bool;
-    inline function get_killed() return disposed;
-
   public var disposed(get, never):Bool;
-    inline function get_disposed() return trigger.disposed;
+    inline function get_disposed() return handlers.disposed;
 
-  public function dispose() {
-    trigger.dispose();
-    subscription.cancel();
-  }
-
-  @:deprecated('use dispose() instead')
-  public inline function kill()
-    dispose();
+  public function dispose()
+    handlers.dispose();
 
   public inline function ondispose(handler)
-    trigger.ondispose(handler);
+    handlers.ondispose(handler);
 
   public function new(activate, ?init) {
     this.activate = activate;
     this.init = init;
-    this.check = new Check(this);
-  }
 
-	public function listen(cb) {
-    if (disposed) return null;
-
-    var ret = trigger.listen(cb) & check;
-
-    if (trigger.getLength() == 1) {
+    handlers.ondrain = function () subscription.cancel();
+    handlers.onfill = function () {
       switch init {
         case null:
-        case f: init = null; f(this);
+        case f:
+          init = null;
+          f(this);
       }
-      this.subscription = activate(trigger.trigger);
+      subscription = activate(handlers.invoke);
     }
-
-    return ret;
   }
+
+  public function listen(cb)
+    return handlers.add(cb);
 
   static public function over<In, Out>(s:Signal<In>, activate):Signal<Out>
     return
