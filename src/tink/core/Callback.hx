@@ -179,7 +179,8 @@ class CallbackList<T> extends SimpleDisposable {
     this.cells = [];
   }
 
-  public var ondrain:()->Void = function() {}
+  public var ondrain:()->Void = function () {}
+  public var onfill:()->Void = function () {}
 
   inline function release()
     if (--used <= cells.length >> 1)
@@ -205,7 +206,7 @@ class CallbackList<T> extends SimpleDisposable {
     if (disposed) return null;
     var node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
     cells.push(node);
-    used++;
+    if (used++ == 0) Callback.guardStackoverflow(onfill);
     return node;
   }
 

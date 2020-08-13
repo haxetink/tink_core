@@ -426,10 +426,14 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
     this.wakeup = wakeup;
     this.callbacks = new CallbackList(true);
 
-    callbacks.ondrain = function () if (status.match(Awaited)) {
+    callbacks.ondrain = function () if (status == Awaited) {
       status = Suspended;
       link.cancel();
       link = null;
+    }
+    callbacks.onfill = function () if (status == Suspended) {
+      status = Awaited;
+      arm();
     }
   }
 
@@ -450,11 +454,6 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
       case Ready(result):
         callback.invoke(result);
         null;
-      case Suspended:
-        var ret = callbacks.add(callback);
-        status = Awaited;
-        arm();
-        ret;
       default:
         callbacks.add(callback);
     }
