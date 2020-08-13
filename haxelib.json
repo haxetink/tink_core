@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "1.27.0",
-	"releasenote": "Backport CallbackList::onfill from v2.",
+	"version": "1.27.1",
+	"releasenote": "Fix compaction.",
 	"tags": [
 		"tink",
 		"cross",
