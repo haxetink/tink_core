@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "2.0.0-alpha",
-	"releasenote": "Improve JS interop. Use latest Haxe 4. Add Lazy.NULL.",
+	"version": "2.0.0-alpha.1",
+	"releasenote": "First v2 prerelease \\o/",
 	"tags": [
 		"tink",
 		"cross",
