@@ -172,7 +172,7 @@ class CallbackList<T> {
     return used;
 
   inline function release()
-    if (--used <= length >> 1)
+    if (--used <= cells.length >> 1)
       compact();
 
   public inline function add(cb:Callback<T>):CallbackLink {
