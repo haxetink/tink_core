@@ -105,6 +105,8 @@ class TypedError<T> {
   #if js
   static public inline function ofJsError(e:JsError, ?pos:Pos):Error
     return Error.withData(500, e.message, e, pos);
+  public inline function toJsError():JsError
+    return new TinkError(this);
   #end
 
   @:noUsing static public function asError(v:Dynamic):Null<Error> {
@@ -184,3 +186,13 @@ abstract Stack(Array<StackItem>) from Array<StackItem> to Array<StackItem> {
         'Error stack not available. Compile with -D error_stack.';
       #end
 }
+
+#if js
+private class TinkError<T> extends JsError {
+	var data:TypedError<T>;
+	public function new(e:TypedError<T>) {
+		super(e.message);
+		this.data = e;
+	}
+}
+#end

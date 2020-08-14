@@ -178,7 +178,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:to public inline function toJsPromise():JsPromise<T>
     return new JsPromise(function(resolve, reject) this.handle(function(o) switch o {
       case Success(v): resolve(v);
-      case Failure(e): reject(new TinkError(e));
+      case Failure(e): reject(e.toJsError());
     }));
   #end
 
@@ -322,13 +322,3 @@ abstract PromiseTrigger<T>(FutureTrigger<Outcome<T, Error>>) from FutureTrigger<
 
   @:to public inline function asPromise():Promise<T> return this.asFuture();
 }
-
-#if js
-private class TinkError extends JsError {
-	var data:Error;
-	public function new(e:Error) {
-		super(e.message);
-		this.data = e;
-	}
-}
-#end
