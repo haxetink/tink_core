@@ -37,18 +37,6 @@ class OutcomeTools {
       }
 
   /**
-   *  Creates an `Outcome` from an `Option`, with made-up `Failure` information
-   */
-  static public function toOutcome<D>(option:Option<D>, ?pos:haxe.PosInfos):Outcome<D, Error>//TODO: this should go into OptionTools in the next major release
-    return
-      switch (option) {
-        case Some(value):
-          Success(value);
-        case None:
-          Failure(new Error(NotFound, 'Some value expected but none found in ' + pos.fileName + '@line ' + pos.lineNumber));
-      }
-
-  /**
    *  Extracts the value if the option is `Success`, otherwise `null`
    */
   static public function orNull<D, F>(outcome: Outcome<D, F>):Null<D>
@@ -58,10 +46,14 @@ class OutcomeTools {
         case Failure(_): null;
       }
 
+  @:deprecated('Use .or() instead')
+  static inline public function orUse<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>):D
+    return or(outcome, fallback);
+        
   /**
    *  Extracts the value if the option is `Success`, uses the fallback value otherwise
    */
-  static public function orUse<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>):D
+  static public function or<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>):D
     return
       switch (outcome) {
         case Success(data): data;

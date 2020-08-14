@@ -4,17 +4,34 @@ typedef Option<T> = haxe.ds.Option<T>;
 
 class OptionTools {
   
+  @:deprecated('Use .sure() instead')
+  static public inline function force<T>(o:Option<T>, ?pos:tink.core.Error.Pos)
+    return sure(o, pos);
+  
   /**
    *  Extracts the value if the option is `Some`, throws an `Error` otherwise
    */
-  static public inline function force<T>(o:Option<T>, ?pos:tink.core.Error.Pos)
+  static public inline function sure<T>(o:Option<T>, ?pos:tink.core.Error.Pos)
     return switch o {
       case Some(v): 
         v;
       default: 
         throw new Error(NotFound, 'Some value expected but none found', pos);
     }
+    
+  /**
+   *  Creates an `Outcome` from an `Option`, with made-up `Failure` information
+   */
+  static public function toOutcome<D>(o:Option<D>, ?pos:haxe.PosInfos):Outcome<D, Error>
+    return
+      switch o {
+        case Some(value):
+          Success(value);
+        case None:
+          Failure(new Error(NotFound, 'Some value expected but none found in ' + pos.fileName + '@line ' + pos.lineNumber));
+      }
   
+      
   /**
    *  Extracts the value if the option is `Some`, uses the fallback value otherwise
    */
@@ -22,6 +39,15 @@ class OptionTools {
     return switch o {
       case Some(v): v;
       default: l.get();
+    }
+  
+  /**
+   *  Extracts the value if the option is `Some`, uses the fallback value otherwise
+   */
+  static public inline function orTry<T>(o:Option<T>, fallback:Lazy<Option<T>>):Option<T>
+    return switch o {
+      case Some(v): o;
+      default: fallback.get();
     }
 
   /**

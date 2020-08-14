@@ -44,4 +44,22 @@ class Outcomes extends Base {
     asserts.assert(compare(Failure(Left(true)), outcomes[1].flatMap(function (x) return Failure(x + 2))));
     return asserts.done();
   }
+  
+  public function or() {
+    var success = Success(1);
+    var failure = Failure(true);
+        
+    asserts.assert(success.orNull() == 1);
+    asserts.assert(failure.orNull() == null);
+        
+    asserts.assert(success.or(5) == 1);
+    asserts.assert(failure.or(5) == 5);
+        
+    asserts.assert(success.orTry(Success(2)).match(Success(1)));
+    asserts.assert(failure.orTry(Success(2)).match(Success(2)));
+    asserts.assert(failure.orTry(Failure(false)).match(Failure(false)));
+    
+    return asserts.done();
+  }
+  
 }
