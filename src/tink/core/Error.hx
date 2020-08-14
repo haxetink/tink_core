@@ -108,8 +108,11 @@ class TypedError<T> {
   #if js
   static public inline function ofJsError(e:JsError, ?pos:Pos):Error
     return Error.withData(500, e.message, e, pos);
-  public inline function toJsError():JsError
-    return new TinkError(this);
+  public function toJsError():JsError
+    return switch Std.downcast(cast data, JsError) {
+      case null: new TinkError(this);
+      case e: e;
+    }
   #end
 
   @:noUsing static public function asError(v:Dynamic):Null<Error> {
