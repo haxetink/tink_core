@@ -6,6 +6,12 @@ import tink.core.Outcome;
 import tink.core.Promise;
 import tink.core.Signal.Gather;
 
+#if (haxe_ver >= 4.1)
+import Std.isOfType as is;
+#else
+import Std.is;
+#end
+
 #if js
 import js.lib.Error as JsError;
 import js.lib.Promise as JsPromise;
@@ -251,7 +257,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return lazy(v);
 
   @:noUsing static inline public function isFuture(maybeFuture: Dynamic)
-    return Std.is(maybeFuture, FutureObject);
+    return is(maybeFuture, FutureObject);
 
   #if python @:native('make') #end
   @:deprecated('use Future.irreversible() - or better yet: new Future()')
