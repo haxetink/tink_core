@@ -26,8 +26,7 @@ class Options extends Base {
   
   public function or() {
     var some = Some(1);
-    var none = None;
-        
+    var none:Option<Int> = None;
     asserts.assert(some.orNull() == 1);
     asserts.assert(none.orNull() == null);
         

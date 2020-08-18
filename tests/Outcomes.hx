@@ -47,8 +47,7 @@ class Outcomes extends Base {
   
   public function or() {
     var success = Success(1);
-    var failure = Failure(true);
-        
+    var failure:Outcome<Int, Bool> = Failure(true);
     asserts.assert(success.orNull() == 1);
     asserts.assert(failure.orNull() == null);
         
