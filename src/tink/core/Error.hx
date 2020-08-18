@@ -81,7 +81,7 @@ class TypedError<T> {
   }
 
   public inline function toPromise<X>():Promise<X>
-    return Promise.lift((this:Error));
+    return Promise.lift((cast this:Error));
 
   public function throwSelf():Dynamic
     return
