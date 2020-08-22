@@ -147,6 +147,9 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
       add(fire);
       return remove.bind(fire);
     });
+
+  static public function dead<X>():Signal<X>
+    return cast Disposed.INST;
 }
 
 private class Disposed implements SignalObject<Dynamic> {
@@ -205,11 +208,11 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
 
   static public function over<In, Out>(s:Signal<In>, activate):Signal<Out>
     return
-      if (s.disposed) return cast Disposed.INST;
+      if (s.disposed) Signal.dead();
       else {
         var ret = new Suspendable<Out>(activate);
         s.ondispose(ret.dispose);
-        return ret;
+        ret;
       }
 }
 

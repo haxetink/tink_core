@@ -4,11 +4,12 @@ import tink.core.Callback;
 import tink.core.Future;
 import tink.core.Signal;
 
+using tink.core.Outcome;
 using tink.core.Progress.TotalTools;
 using tink.core.Option;
 
 @:using(tink.core.Progress.ProgressTools)
-@:forward(result)
+@:forward(result, status)
 abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   static public final INIT = ProgressValue.ZERO;
 
@@ -23,11 +24,19 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   }
 
   public static function make<T>(f:(progress:(value:Float, total:Option<Float>)->Void, finish:(result:T)->Void)->CallbackLink):Progress<T>
-    return Future.irreversible(yield -> {
+    return Future.irreversible(yield -> {//TODO: make suspendable
       var ret = trigger();
       f(ret.progress, ret.finish);
       yield(ret.asProgress());
     });
+
+  public function map<R>(f:T->R):Progress<R>
+    return switch this.status {
+      case InProgress(v):
+        new ProgressObject(this.result.map(f), this.valueChanged, InProgress(v));
+      case Finished(f(_) => v):
+        new ProgressObject(v, Signal.dead(), Finished(v));
+    }
 
   @:to
   public inline function asFuture():Future<T>
@@ -46,6 +55,13 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
         }) & inner;
       })
     );
+
+  @:from
+  static inline function flatten<T>(v:Promise<Progress<Outcome<T, Error>>>):Progress<Outcome<T, Error>>
+    return promise(v).map(o -> switch o {
+      case Success(Success(v)): Success(v);
+      case Failure(e) | Success(Failure(e)): Failure(e);
+    });
 
   @:from
   static inline function future<T>(v:Future<Progress<T>>):Progress<T>
