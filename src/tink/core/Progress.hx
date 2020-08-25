@@ -1,15 +1,17 @@
 package tink.core;
 
+import tink.core.Disposable;
 import tink.core.Callback;
 import tink.core.Future;
 import tink.core.Signal;
+import tink.core.Outcome;
+import tink.core.Noise;
 
-using tink.core.Outcome;
 using tink.core.Progress.TotalTools;
 using tink.core.Option;
 
 @:using(tink.core.Progress.ProgressTools)
-@:forward(result, status)
+@:forward(result, status, valueChanged)
 abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   static public final INIT = ProgressValue.ZERO;
 
@@ -78,8 +80,52 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   }
 }
 
-private class ProgressObject<T> {
+private class SuspendableProgress<T> {
   public var status(default, null):ProgressStatus<T> = InProgress(ProgressValue.ZERO);
+  public final changed:Signal<ProgressStatus<T>>;
+  public final result:Future<T>;
+
+  var disposable:OwnedDisposable;
+
+  var wakeup:(progress:(value:Float, total:Option<Float>)->Void, finish:(result:T)->Void)->CallbackLink;
+
+  public function new(wakeup:(progress:(value:Float, total:Option<Float>)->Void, finish:(result:T)->Void)->CallbackLink, ?status) {
+    this.status = switch status {
+      case null: InProgress(ProgressValue.ZERO);
+      case v: v;
+    }
+
+    switch this.status {
+      case InProgress(_):
+        this.changed = new Signal(
+          fire -> wakeup(
+            (value, total) -> fire(status = InProgress(new ProgressValue(value, total))),
+            result -> {
+              fire(status = Finished(result));
+              disposable.dispose();
+            }
+          ),
+          d -> disposable = d
+        );
+
+        this.result = new Future(fire -> switch status {
+          case Finished(v): fire(v); null;
+          case InProgress(_): changed.handle(_ -> switch status {
+            case Finished(v): fire(v);
+            default:
+          });
+        });
+
+      case Finished(v):
+        this.changed = Signal.dead();
+        this.disposable = AlreadyDisposed.INST;
+        this.result = Future.sync(v);
+    }
+  }
+}
+
+private class ProgressObject<T> {
+  public var status(default, null):ProgressStatus<T>;
 
   public final result:Future<T>;
   public final valueChanged:Signal<ProgressValue>;
@@ -87,9 +133,9 @@ private class ProgressObject<T> {
   public function new(result, valueChanged, ?status) {
     this.result = result;
     this.valueChanged = valueChanged;
-    switch status {
-      case null:
-      case v: this.status = v;
+    this.status = switch status {
+      case null: InProgress(ProgressValue.ZERO);
+      case v: v;
     }
   }
 }
