@@ -84,6 +84,6 @@ class AlreadyDisposed implements OwnedDisposable {
 
   function new() {}
 
-  static public final INST = new AlreadyDisposed();
+  static public final INST:OwnedDisposable = new AlreadyDisposed();
 
 }
