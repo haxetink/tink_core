@@ -170,9 +170,9 @@ class ProgressTrigger<T> extends ProgressObject<T> {
       case Finished(_):
         // do nothing
       case _:
-        // TODO: clear signal handlers
         status = Finished(v);
         _result.trigger(v);
+        _valueChanged.dispose();
     }
   }
 }
