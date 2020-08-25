@@ -152,19 +152,9 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
     return cast Disposed.INST;
 }
 
-private class Disposed implements SignalObject<Dynamic> {
-
-  public var disposed(get, never):Bool;
-    inline function get_disposed()
-      return true;
-
-  function new() {}
+private class Disposed implements SignalObject<Dynamic> extends AlreadyDisposed {
 
   static public var INST(default, null):Signal<Dynamic> = new Disposed();
-
-  public function dispose() {}
-  public function ondispose(handler)
-    handler();//TODO: consider using Callback.defer
 
   public inline function listen(cb:Callback<Dynamic>):CallbackLink
     return null;

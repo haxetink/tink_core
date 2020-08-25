@@ -73,3 +73,17 @@ class SimpleDisposable implements OwnedDisposable {
 
   static function noop() {}
 }
+
+class AlreadyDisposed implements OwnedDisposable {
+
+  public var disposed(get, never):Bool;
+    function get_disposed() return true;
+
+  public function ondispose(d:()->Void) d();//TODO: consider using Callback.defer
+  public function dispose() {}
+
+  function new() {}
+
+  static public final INST = new AlreadyDisposed();
+
+}
