@@ -195,10 +195,11 @@ abstract Stack(Array<StackItem>) from Array<StackItem> to Array<StackItem> {
 
 #if js
 private class TinkError<T> extends JsError {
-	var data:TypedError<T>;
-	public function new(e:TypedError<T>) {
-		super(e.message);
-		this.data = e;
-	}
+  public final data:TypedError<T>;
+  public function new(e:TypedError<T>) {
+    super();
+    this.message = e.message;
+    this.data = e;
+  }
 }
 #end

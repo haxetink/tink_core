@@ -13,13 +13,22 @@ class Errors extends Base {
     var message = 'whatever';
     var jsError = new JsError(message);
     var err = Error.ofJsError(jsError);
-    asserts.assert(500 == err.code);
-    asserts.assert(message == err.message);
-    asserts.assert(jsError == err.data);
+    asserts.assert(err.code == 500);
+    asserts.assert(err.message == message);
+    asserts.assert(err.data == jsError);
     return asserts.done();
   }
   
   public function toJs() {
+    var message = 'whatever';
+    var err = new Error(message);
+    var jsError = err.toJsError();
+    asserts.assert(jsError.message == message);
+    asserts.assert((untyped jsError.data) == err);
+    return asserts.done();
+  }
+  
+  public function reuseNative() {
     var message = 'whatever';
     var js1 = new JsError(message);
     var err = Error.ofJsError(js1);
