@@ -5,18 +5,17 @@ import tink.core.Callback;
 import tink.core.Future;
 import tink.core.Signal;
 import tink.core.Outcome;
-import tink.core.Noise;
 
 using tink.core.Progress.TotalTools;
 using tink.core.Option;
 
 @:using(tink.core.Progress.ProgressTools)
-@:forward(result, status, valueChanged)
+@:forward(result, status, progressed, changed)
 abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   static public final INIT = ProgressValue.ZERO;
 
   public inline function listen(cb:Callback<ProgressValue>):CallbackLink
-    return this.valueChanged.handle(cb);
+    return this.progressed.handle(cb);
 
   public inline function handle(cb:Callback<T>):CallbackLink
     return this.result.handle(cb);
@@ -26,37 +25,29 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   }
 
   public static function make<T>(f:(progress:(value:Float, total:Option<Float>)->Void, finish:(result:T)->Void)->CallbackLink):Progress<T>
-    return Future.irreversible(yield -> {//TODO: make suspendable
-      var ret = trigger();
-      f(ret.progress, ret.finish);
-      yield(ret.asProgress());
-    });
+    return new SuspendableProgress(fire -> f(
+      (value, total) -> fire(InProgress(new ProgressValue(value, total))),
+      result -> fire(Finished(result))
+    ));
 
   public function map<R>(f:T->R):Progress<R>
-    return switch this.status {
-      case InProgress(v):
-        new ProgressObject(this.result.map(f), this.valueChanged, InProgress(v));
-      case Finished(f(_) => v):
-        new ProgressObject(v, Signal.dead(), Finished(v));
-    }
+    return new ProgressObject(this.changed.map(s -> s.map(f)), () -> this.status.map(f));
 
   @:to
   public inline function asFuture():Future<T>
     return this.result;
 
   @:from
-  static inline function promise<T>(v:Promise<Progress<T>>):Progress<Outcome<T, Error>>
-    return new ProgressObject<Outcome<T, Error>>(
-      v.next(p -> p.result),
-      new Signal(fire -> {
-        var inner = new CallbackLinkRef();
-        return v.handle(o -> switch o {
-          case Success(p):
-            inner.link = p.listen(fire);
-          case Failure(e):
-        }) & inner;
-      })
-    );
+  static function promise<T>(v:Promise<Progress<T>>):Progress<Outcome<T, Error>>
+    return new SuspendableProgress(fire -> {
+      final inner = new CallbackLinkRef();
+      v.handle(o -> switch o {
+        case Success(p):
+          inner.link = p.changed.handle(s -> fire(s.map(Success)));
+        case Failure(e):
+          fire(Finished(Failure(e)));
+      }) & inner;
+    });
 
   @:from
   static inline function flatten<T>(v:Promise<Progress<Outcome<T, Error>>>):Progress<Outcome<T, Error>>
@@ -66,115 +57,89 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
     });
 
   @:from
-  static inline function future<T>(v:Future<Progress<T>>):Progress<T>
-    return new ProgressObject<T>(
-      v.flatMap(p -> p.result),
-      new Signal(fire -> {
-        var inner = new CallbackLinkRef();
-        v.handle(p -> inner.link = p.listen(fire)) & inner;
-      })
-    );
+  static function future<T>(v:Future<Progress<T>>):Progress<T>
+    return new SuspendableProgress(fire -> {
+      final inner = new CallbackLinkRef();
+      v.handle(p -> inner.link = p.changed.handle(fire)) & inner;
+    });
 
   public inline function next(f) {
     return asFuture().next(f);
   }
 }
 
-private class SuspendableProgress<T> {
-  public var status(default, null):ProgressStatus<T> = InProgress(ProgressValue.ZERO);
-  public final changed:Signal<ProgressStatus<T>>;
-  public final result:Future<T>;
+private class SuspendableProgress<T> extends ProgressObject<T> {
 
-  var disposable:OwnedDisposable;
-
-  var wakeup:(progress:(value:Float, total:Option<Float>)->Void, finish:(result:T)->Void)->CallbackLink;
-
-  public function new(wakeup:(progress:(value:Float, total:Option<Float>)->Void, finish:(result:T)->Void)->CallbackLink, ?status) {
-    this.status = switch status {
-      case null: InProgress(ProgressValue.ZERO);
-      case v: v;
-    }
-
-    switch this.status {
+  function noop(_, _) return null;
+  public function new(wakeup:(fire:ProgressStatus<T>->Void)->CallbackLink, ?status) {
+    if (status == null)
+      status = InProgress(ProgressValue.ZERO);
+    var disposable = AlreadyDisposed.INST;
+    var changed = switch status {
+      case Finished(_):
+        Signal.dead();
       case InProgress(_):
-        this.changed = new Signal(
-          fire -> wakeup(
-            (value, total) -> fire(status = InProgress(new ProgressValue(value, total))),
-            result -> {
-              fire(status = Finished(result));
-              disposable.dispose();
-            }
-          ),
+        new Signal(
+          fire -> wakeup(s -> fire(status = s)),
           d -> disposable = d
         );
-
-        this.result = new Future(fire -> switch status {
-          case Finished(v): fire(v); null;
-          case InProgress(_): changed.handle(_ -> switch status {
-            case Finished(v): fire(v);
-            default:
-          });
-        });
-
-      case Finished(v):
-        this.changed = Signal.dead();
-        this.disposable = AlreadyDisposed.INST;
-        this.result = Future.sync(v);
     }
+    super(
+      changed,
+      () -> status
+    );
   }
 }
 
 private class ProgressObject<T> {
-  public var status(default, null):ProgressStatus<T>;
 
+  public var status(get, never):ProgressStatus<T>;
+    var get_status:Void->ProgressStatus<T>;
+
+  public final changed:Signal<ProgressStatus<T>>;
+  public final progressed:Signal<ProgressValue>;
   public final result:Future<T>;
-  public final valueChanged:Signal<ProgressValue>;
 
-  public function new(result, valueChanged, ?status) {
-    this.result = result;
-    this.valueChanged = valueChanged;
-    this.status = switch status {
-      case null: InProgress(ProgressValue.ZERO);
-      case v: v;
-    }
+  public function new(changed, get_status) {
+    this.changed = changed;
+    this.progressed = new Signal(fire -> changed.handle(s -> switch s {
+      case InProgress(v): fire(v);
+      default:
+    }));
+    this.get_status = get_status;
+    this.result = new Future(fire -> switch get_status() {
+      case Finished(v): fire(v); null;
+      default:
+        changed.handle(s -> switch s {
+          default:
+          case Finished(v): fire(v);
+        });
+    });
   }
 }
 
-class ProgressTrigger<T> extends ProgressObject<T> {
+final class ProgressTrigger<T> extends ProgressObject<T> {
 
-  var _result = new FutureTrigger();
-  var _valueChanged = new SignalTrigger();
+  var _status:ProgressStatus<T>;
+  var _changed = null;
 
   public function new(?status) {
-    super(_result, _valueChanged, status);
+    if (status == null)
+      _status = status = InProgress(ProgressValue.ZERO);
+    super(if (status.match(Finished(_))) Signal.dead() else _changed = Signal.trigger(), () -> _status);
   }
 
   public inline function asProgress():Progress<T>
     return this;
 
-  public function progress(v:Float, total:Option<Float>) {
-    switch status {
-      case Finished(_):
-        // do nothing
-      case InProgress(current):
-        if (current.value != v || !current.total.eq(total)) {
-          var pv = new Pair(v, total);
-          status = InProgress(pv);
-          _valueChanged.trigger(pv);
-        }
-    }
-  }
+  public function progress(v:Float, total:Option<Float>)
+    if (!_status.match(Finished(_)))
+      _changed.trigger(_status = InProgress(new ProgressValue(v, total)));
 
-  public function finish(v:T) {
-    switch status {
-      case Finished(_):
-        // do nothing
-      case _:
-        status = Finished(v);
-        _result.trigger(v);
-        _valueChanged.dispose();
-    }
-  }
+  public function finish(v:T)
+    if (!_status.match(Finished(_)))
+      _changed.trigger(_status = Finished(v));
+
 }
 
 @:pure
@@ -215,11 +180,22 @@ abstract UnitInterval(Float) from Float to Float {
 
 @:deprecated typedef ProgressType<T> = ProgressStatus<T>;
 
+@:using(tink.core.Progress.ProgressStatusTools)
 enum ProgressStatus<T> {
   InProgress(v:ProgressValue);
   Finished(v:T);
 }
 
+@:noCompletion
+class ProgressStatusTools {
+  static public function map<T, R>(p:ProgressStatus<T>, f:T->R)
+    return switch p {
+      case InProgress(v): InProgress(v);
+      case Finished(v): Finished(f(v));
+    }
+}
+
+@:noCompletion
 class TotalTools {
   public static function eq(a:Option<Float>, b:Option<Float>) {
     return switch [a, b] {
