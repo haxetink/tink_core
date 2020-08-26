@@ -94,20 +94,22 @@ private class SuspendableProgress<T> extends ProgressObject<T> {
 private class ProgressObject<T> {
 
   public var status(get, never):ProgressStatus<T>;
-    var get_status:Void->ProgressStatus<T>;
+    inline function get_status() return getStatus();
+
+  var getStatus:Void->ProgressStatus<T>;
 
   public final changed:Signal<ProgressStatus<T>>;
   public final progressed:Signal<ProgressValue>;
   public final result:Future<T>;
 
-  public function new(changed, get_status) {
+  public function new(changed, getStatus) {
     this.changed = changed;
     this.progressed = new Signal(fire -> changed.handle(s -> switch s {
       case InProgress(v): fire(v);
       default:
     }));
-    this.get_status = get_status;
-    this.result = new Future(fire -> switch get_status() {
+    this.getStatus = getStatus;
+    this.result = new Future(fire -> switch getStatus() {
       case Finished(v): fire(v); null;
       default:
         changed.handle(s -> switch s {
