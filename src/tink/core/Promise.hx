@@ -76,7 +76,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
       case [Failure(e), _] | [_, Failure(e)]: Promise.lift(e);
     }).flatMap(o -> o);
 
-  @:noCompletion @:op(a && b) static public function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
+  @:noCompletion @:op(a && b) static function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
     // return a.merge(b, Pair.new); // see https://github.com/HaxeFoundation/haxe/issues/9764
     return a.merge(b, (a, b) -> new Pair(a, b));
 
@@ -98,6 +98,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    * @param fallback A value to be used when all yields `None`
    * @return Promise<T>
    */
+  @:noUsing
   static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, fallback:Promise<R>):Promise<R> {
     return Future.irreversible(function(cb) {
       var iter = promises.iterator();
@@ -158,6 +159,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    *
    * @return Promise<T>
    */
+  @:noUsing
   static public function retry<T>(gen:()->Promise<T>, next:Next<{ attempt: Int, error:Error, elapsed:Float }, Noise>):Promise<T> {
     function stamp() return haxe.Timer.stamp() * 1000;
     var start = stamp();
@@ -172,6 +174,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   }
 
   #if js
+  @:noUsing
   @:from static public inline function ofJsPromise<A>(promise:JsPromise<A>):Promise<A>
     return Future.ofJsPromise(promise);
 
@@ -207,19 +210,23 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:from static inline function ofData<T>(d:T):Promise<T>
     return ofOutcome(Success(d));
 
-  public static inline function lazy<T>(p:Lazy<Promise<T>>):Promise<T>
+  @:noUsing
+  static public inline function lazy<T>(p:Lazy<Promise<T>>):Promise<T>
     return new Future(cb -> p.get().handle(cb));
 
+  @:noUsing
   static public function inParallel<T>(a:Array<Promise<T>>, ?concurrency:Int):Promise<Array<T>>
     return many(a, concurrency);
 
   static function many<T>(a:Array<Promise<T>>, ?concurrency:Int):Promise<Array<T>>
     return @:privateAccess Future.processMany((cast a:Array<Surprise<T, Error>>), concurrency, o -> o, o -> o);//TODO: raise issue for the cast
 
+  @:noUsing
   static public function inSequence<T>(a:Array<Promise<T>>):Promise<Array<T>>
     return many(a, 1);
 
   #if (!java || jvm)
+  @:noUsing
   static public function cache<T>(gen:()->Promise<Pair<T, Future<Noise>>>):()->Promise<T> {
     var p = null;
     return function() {

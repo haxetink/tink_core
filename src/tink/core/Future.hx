@@ -132,6 +132,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
   /**
    *  Casts a js Promise into a Surprise
    */
+  @:noUsing
   @:from static public function ofJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
     return Future.irreversible(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
@@ -149,7 +150,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return s;
 
   @:deprecated('use inSequence instead')
-  static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Gather)
+  @:noUsing @:noCompletion static public function ofMany<A>(futures:Array<Future<A>>, ?gather:Gather)
     return inSequence(futures);
 
 
@@ -157,14 +158,14 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    * Merges multiple futures into a `Future<Array<A>>`
    * The futures are processed simultaneously. Set concurrency to limit how many are processed at a time.
    */
-   static public function inParallel<T>(futures:Array<Future<T>>, ?concurrency:Int):Future<Array<T>>
+  @:noUsing static public function inParallel<T>(futures:Array<Future<T>>, ?concurrency:Int):Future<Array<T>>
     return many(futures, concurrency);//the `orNull` just pleases the typer
 
   /**
    * Merges multiple futures into a `Future<Array<A>>`
    * The futures are processed one at a time.
    */
-  static public function inSequence<T>(futures:Array<Future<T>>):Future<Array<T>>
+  @:noUsing static public function inSequence<T>(futures:Array<Future<T>>):Future<Array<T>>
     return many(futures, 1);
 
   static function many<X>(a:Array<Future<X>>, ?concurrency:Int)
@@ -270,58 +271,61 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    * `init` gets called, when the first handler is registered or `eager()` is called.
    * The future is never suspended again. When possible, use `new Future()` instead.
    */
+  @:noUsing
   static public function irreversible<A>(init:(A->Void)->Void):Future<A>
     return new SuspendableFuture(yield -> { init(yield); null; });
 
   /**
    *  Same as `first`
    */
-  @:noCompletion @:op(a || b) static public function or<A>(a:Future<A>, b:Future<A>):Future<A>
+  @:op(a || b) static function or<A>(a:Future<A>, b:Future<A>):Future<A>
     return a.first(b);
 
   /**
    *  Same as `first`, but use `Either` to handle the two different types
    */
-  @:noCompletion @:op(a || b) static public function either<A, B>(a:Future<A>, b:Future<B>):Future<Either<A, B>>
+  @:op(a || b) static function either<A, B>(a:Future<A>, b:Future<B>):Future<Either<A, B>>
     return a.map(Either.Left).first(b.map(Either.Right));
 
   /**
    *  Uses `Pair` to merge two futures
    */
-  @:noCompletion @:op(a && b) static public function and<A, B>(a:Future<A>, b:Future<B>):Future<Pair<A, B>>
+  @:op(a && b) static function and<A, B>(a:Future<A>, b:Future<B>):Future<Pair<A, B>>
     return a.merge(b, function (a, b) return new Pair(a, b));
 
-  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _tryFailingFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Surprise<R, F>)
+  @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryFailingFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Surprise<R, F>)
     return f.flatMap(function (o) return switch o {
       case Success(d): map(d);
       case Failure(f): Future.sync(Failure(f));
     });
 
-  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _tryFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Future<R>):Surprise<R, F>
+  @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Future<R>):Surprise<R, F>
     return f.flatMap(function (o) return switch o {
       case Success(d): map(d).map(Success);
       case Failure(f): Future.sync(Failure(f));
     });
 
-  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _tryFailingMap<D, F, R>(f:Surprise<D, F>, map:D->Outcome<R, F>)
+  @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryFailingMap<D, F, R>(f:Surprise<D, F>, map:D->Outcome<R, F>)
     return f.map(function (o) return o.flatMap(map));
 
-  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _tryMap<D, F, R>(f:Surprise<D, F>, map:D->R)
+  @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryMap<D, F, R>(f:Surprise<D, F>, map:D->R)
     return f.map(function (o) return o.map(map));
 
-  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _flatMap<T, R>(f:Future<T>, map:T->Future<R>)
+  @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _flatMap<T, R>(f:Future<T>, map:T->Future<R>)
     return f.flatMap(map);
 
-  @:deprecated('>> for futures is deprecated') @:noCompletion @:op(a >> b) static public function _map<T, R>(f:Future<T>, map:T->R)
+  @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _map<T, R>(f:Future<T>, map:T->R)
     return f.map(map);
 
   /**
    *  Creates a new `FutureTrigger`
    */
-  @:noUsing static public inline function trigger<A>():FutureTrigger<A>
+  @:noUsing
+  static public inline function trigger<A>():FutureTrigger<A>
     return new FutureTrigger();
 
-  @:noUsing static public function delay<T>(ms:Int, value:Lazy<T>):Future<T>
+  @:noUsing
+  static public function delay<T>(ms:Int, value:Lazy<T>):Future<T>
     return Future.irreversible(function(cb) haxe.Timer.delay(function() cb(value.get()), ms)).eager();
 
 }
