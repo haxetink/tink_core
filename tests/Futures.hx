@@ -108,7 +108,7 @@ class Futures extends Base {
     return asserts.done();
   }
 
-  public function issue43() {
+  public function issue143() {
     for (shouldHalt in [true, false]) {
       function tryGetData():Promise<{ foo: Int }> return shouldHalt ? Promise.NEVER : { foo: 123 };
       if (shouldHalt)
