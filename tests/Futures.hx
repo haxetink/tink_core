@@ -114,15 +114,27 @@ class Futures extends Base {
     var f1:Future<Int> = t1,
         f2:Future<Int> = t2;
 
-    var f = f1 || f2;
+    var f = (f1 || f2).eager();
     t1.trigger(1);
     t2.trigger(2);
-    f.handle(function(v) asserts.assert(v == 1));
-    var f = f1 && f2;
-    f.handle(function (p) {
-      asserts.assert(p.a == 1);
-      asserts.assert(p.b == 2);
-    });
+
+    asserts.assert(f.status.match(Ready(_.get() => 1)));
+    var f = (f1 && f2).eager();
+
+    asserts.assert(f.status.match(Ready(_.get() => {a : 1, b: 2 })));
+
+    var t1 = Future.trigger(),
+        t2 = Future.trigger();
+    var f1:Future<Int> = t1,
+        f2:Future<Noise> = t2;
+
+    t1.trigger(1);
+    t2.trigger(Noise);
+
+    var f = f1 || f2;
+
+    asserts.assert(f.status.match(Ready(_.get() => Left(1))));
+
     return asserts.done();
   }
 

@@ -17,7 +17,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
   static public final NOISE:Promise<Noise> = Future.sync(Success(Noise));
   @:deprecated('use Promise.NOISE instead') static public final NULL:Promise<Noise> = NOISE;
-  static public final NEVER:Promise<Noise> = Future.NEVER;
+  static public final NEVER:Promise<Never> = Future.NEVER;
 
   public inline function new(f:(T->Void)->(Error->Void)->CallbackLink)
     this = new Future(cb -> f(v -> cb(Success(v)), e -> cb(Failure(e))));
@@ -186,7 +186,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:from static function ofSpecific<T, E>(s:Surprise<T, TypedError<E>>):Promise<T>
     return (cast s : Surprise<T, Error>);
 
-  @:from static inline function fromNoise<T>(l:Promise<Noise>):Promise<Null<T>>
+  @:from static function fromNever<T>(l:Promise<Never>):Promise<T>
     return cast l;
 
   @:from static inline function ofTrigger<T>(f:FutureTrigger<Outcome<T, Error>>):Promise<T>

@@ -22,7 +22,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
   @:deprecated('use Future.NOISE instead') static public final NULL:Future<Noise> = NOISE;
-  static public final NEVER:Future<Noise> = (NeverFuture.inst:FutureObject<Noise>);
+  static public final NEVER:Future<Never> = (NeverFuture.inst:FutureObject<Never>);
 
   public var status(get, never):FutureStatus<T>;
     inline function get_status()
@@ -136,7 +136,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return Future.irreversible(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
 
-  @:from static inline function fromNoise<T>(l:Future<Noise>):Future<Null<T>>
+  @:from static inline function fromNever<T>(l:Future<Never>):Future<T>
     return cast l;
 
   @:from static inline function ofAny<T>(v:T):Future<T>
@@ -341,12 +341,12 @@ private interface FutureObject<T> {
   function eager():Void;
 }
 
-private class NeverFuture<T> implements FutureObject<T> {
-  public static var inst(default, null):NeverFuture<Noise> = new NeverFuture();
+private class NeverFuture implements FutureObject<Never> {
+  public static var inst(default, null):Future<Never> = new NeverFuture();
   function new() {}
-  public function getStatus():FutureStatus<T>
+  public function getStatus():FutureStatus<Never>
     return NeverEver;
-  public function handle(callback:Callback<T>):CallbackLink return null;
+  public function handle(callback:Callback<Never>):CallbackLink return null;
   public function eager() {};
 }
 

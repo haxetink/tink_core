@@ -26,6 +26,7 @@ typedef Signal<T> = tink.core.Signal<T>;
 typedef SignalTrigger<T> = tink.core.Signal.SignalTrigger<T>;
 
 typedef Noise = tink.core.Noise;
+typedef Never = tink.core.Noise.Never;
 
 typedef Error = tink.core.Error;
 typedef TypedError<T> = tink.core.Error.TypedError<T>;
