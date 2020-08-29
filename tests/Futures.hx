@@ -108,6 +108,18 @@ class Futures extends Base {
     return asserts.done();
   }
 
+  public function issue43() {
+    for (shouldHalt in [true, false]) {
+      function tryGetData():Promise<{ foo: Int }> return shouldHalt ? Promise.NEVER : { foo: 123 };
+      if (shouldHalt)
+        asserts.assert(tryGetData().status.match(NeverEver));
+      else
+        asserts.assert(tryGetData().status.match(Ready(_)));
+    }
+
+    return asserts.done();
+  }
+
   public function testOps() {
     var t1 = Future.trigger(),
         t2 = Future.trigger();
