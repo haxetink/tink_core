@@ -19,6 +19,7 @@ typedef Pos =
 //TODO: there's huge overlap with haxe.macro.Error
 typedef Error = TypedError<Any>;
 
+@:transitive
 enum abstract ErrorCode(Int) from Int to Int {
   var BadRequest = 400;
   var Unauthorized = 401;
