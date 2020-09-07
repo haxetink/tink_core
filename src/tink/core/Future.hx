@@ -469,7 +469,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
     }
 
   function arm()
-    link = wakeup(trigger);
+    link = wakeup(x -> trigger(x));
 
   public inline function eager() {
     switch status {
