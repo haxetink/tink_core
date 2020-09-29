@@ -33,7 +33,7 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
   public function map<R>(f:T->R):Progress<R>
     return new ProgressObject(this.changed.map(s -> s.map(f)), () -> this.status.map(f));
 
-  @:to
+  // @:to // enabling this will block the following flattening casts
   public inline function asFuture():Future<T>
     return this.result;
 
