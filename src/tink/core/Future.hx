@@ -134,7 +134,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    */
   @:noUsing
   @:from static public function ofJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
-    return Future.irreversible(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
+    return Future.irreversible(function(cb) promise.then(function(a) cb(Success(a)), function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
 
   @:from static inline function fromNever<T>(l:Future<Never>):Future<T>
