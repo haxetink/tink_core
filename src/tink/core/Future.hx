@@ -17,6 +17,13 @@ import js.lib.Error as JsError;
 import js.lib.Promise as JsPromise;
 #end
 
+/**
+  Representation of the result of a potentially asynchronous operation. It can be handled by registering
+  a callback using the `handle` method. These callbacks will be invoked as soon as the result becomes available.
+
+  Note that `Future` by itself doesn't differentiate successful and failed operations, because it doesn't always
+  make sense. See `Outcome` and `Promise` types that are designed to represent potential failures.
+**/
 @:transitive
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from FutureTrigger<T> {
 
@@ -28,8 +35,17 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     inline function get_status()
       return this.getStatus();
 
-  public inline function new(f:(T->Void)->CallbackLink)
-    this = new SuspendableFuture(f);
+  /**
+    Create a lazy and suspendable `Future` instance from a given `wakeup` function.
+
+    The `wakeup` function will be only called when the `Future` is handled for the first time
+    by using either `handle` or `eager` methods.
+
+    The `CallbackLink` returned by the `wakeup` function will be cancelled when the future
+    is suspended: either before it is triggered or when the last `handle` callback is removed.
+  **/
+  public inline function new(wakeup:(trigger:T->Void)->CallbackLink)
+    this = new SuspendableFuture(wakeup);
 
   /**
    *  Registers a callback to handle the future result.
