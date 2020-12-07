@@ -12,6 +12,12 @@ import js.lib.Error as JsError;
 import js.lib.Promise as JsPromise;
 #end
 
+/**
+  Representation of the outcome of a potentially asynchronous operation that can fail.
+
+  This type is a compile-time wrapper over `Future<Outcome<T, tink.core.Error>>` that provides
+  convenience API for dealing with failure outcomes.
+**/
 @:forward(status) @:transitive
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
 
