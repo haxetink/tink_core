@@ -32,7 +32,6 @@ abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
 }
 
 private interface LazyObject<T> extends Computable {
-  function isComputed():Bool;
   function get():T;
 }
 
