@@ -65,6 +65,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return this;
   }
 
+  @:to public function noise():Future<Noise>
+    return map(_ -> Noise);
+
   /**
    *  Creates a future that contains the first result from `this` or `that`
    */
