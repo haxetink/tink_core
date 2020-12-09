@@ -3,6 +3,11 @@ package tink.core;
 import haxe.ds.Option;
 import tink.core.Either;
 
+/**
+  Representation of the outcome of any kind of operation that can fail.
+
+  Values of this type automatically use the extension methods defined in `OutcomeTools`.
+**/
 @:using(tink.core.Outcome.OutcomeTools)
 enum Outcome<Data, Failure> {
   Success(data:Data);
