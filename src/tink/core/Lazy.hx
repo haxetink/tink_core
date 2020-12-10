@@ -78,7 +78,7 @@ private class LazyFunc<T> implements LazyObject<T> {
   public function isComputed()
     return this.f == null;
 
-  public function get()
+  public function get():T
     return result;
 
   public function compute() {
