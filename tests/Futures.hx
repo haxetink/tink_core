@@ -271,6 +271,6 @@ class Futures extends Base {
     var f = Future.sync(42);
     f.noise().handle(v -> asserts.assert(v == Noise));
     (f : Future<Noise>).handle(v -> asserts.assert(v == Noise));
-    return asserts;
+    return asserts.done();
   }
 }
