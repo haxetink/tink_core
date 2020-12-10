@@ -47,7 +47,7 @@ class SimpleDisposable implements OwnedDisposable {
   var disposeHandlers:Null<Array<()->Void>> = [];
 
   public var disposed(get, never):Bool;
-    function get_disposed()
+    inline function get_disposed()
       return disposeHandlers == null;
 
   public function ondispose(d:()->Void)
