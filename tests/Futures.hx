@@ -109,6 +109,7 @@ class Futures extends Base {
   }
 
   public function issue143() {
+    asserts.assert(Future.NEVER == cast Promise.NEVER);
     for (shouldHalt in [true, false]) {
       function tryGetData():Promise<{ foo: Int }> return shouldHalt ? Promise.NEVER : { foo: 123 };
       if (shouldHalt)
@@ -121,11 +122,8 @@ class Futures extends Base {
       function tryGetData()
         return Promise.lift(123).next(
           v -> shouldHalt ? Promise.NEVER : { foo: 123 }
-        );
-      if (shouldHalt)
-        asserts.assert(tryGetData().status.match(NeverEver));
-      else
-        asserts.assert(tryGetData().status.match(Ready(_)));
+        ).eager();
+      asserts.assert(tryGetData().status.match(Ready(_)) != shouldHalt);
     }
 
     return asserts.done();

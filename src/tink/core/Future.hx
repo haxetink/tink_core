@@ -29,7 +29,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
   @:deprecated('use Future.NOISE instead') static public final NULL:Future<Noise> = NOISE;
-  static public final NEVER:Future<Never> = new NeverFuture();
+  static public final NEVER:Future<Never> = (new NeverFuture():FutureObject<Never>);
 
   public var status(get, never):FutureStatus<T>;
     inline function get_status()
