@@ -66,7 +66,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
   }
 
   @:to public function noise():Future<Noise>
-    return map(_ -> Noise);
+    return 
+      if (status.match(NeverEver)) cast NEVER;
+      else map(_ -> Noise);
 
   /**
    *  Creates a future that contains the first result from `this` or `that`
