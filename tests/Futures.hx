@@ -129,6 +129,12 @@ class Futures extends Base {
     return asserts.done();
   }
 
+  public function issue153() {
+    asserts.assert((Future.NEVER:Future<Noise>) == (Future.NEVER:Future<Noise>));
+  
+    return asserts.done();
+  }
+
   public function testOps() {
     var t1 = Future.trigger(),
         t2 = Future.trigger();

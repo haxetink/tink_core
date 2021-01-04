@@ -65,6 +65,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return this;
   }
 
+  @:to static inline function neverNoise(f:Future<Never>):Future<Noise>
+    return cast f;
+
   @:to public function noise():Future<Noise>
     return map(_ -> Noise);
 
