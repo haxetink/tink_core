@@ -129,8 +129,9 @@ class Futures extends Base {
     return asserts.done();
   }
 
-  public function issue153() {
+  @:include public function issue153() {
     asserts.assert((Future.NEVER:Future<Noise>) == (Future.NEVER:Future<Noise>));
+    asserts.assert((Promise.NEVER:Promise<Noise>) == (Promise.NEVER:Promise<Noise>));
   
     return asserts.done();
   }
