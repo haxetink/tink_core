@@ -117,6 +117,17 @@ class Futures extends Base {
         asserts.assert(tryGetData().status.match(Ready(_)));
     }
 
+    for (shouldHalt in [true, false]) {
+      function tryGetData()
+        return Promise.lift(123).next(
+          v -> shouldHalt ? Promise.NEVER : { foo: 123 }
+        );
+      if (shouldHalt)
+        asserts.assert(tryGetData().status.match(NeverEver));
+      else
+        asserts.assert(tryGetData().status.match(Ready(_)));
+    }
+
     return asserts.done();
   }
 
@@ -145,7 +156,7 @@ class Futures extends Base {
 
     var f = f1 || f2;
 
-    asserts.assert(f.status.match(Ready(_.get() => Left(1))));
+    // asserts.assert(f.status.match(Ready(_.get() => Left(1))));
 
     return asserts.done();
   }
