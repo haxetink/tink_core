@@ -66,7 +66,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
   }
 
   @:to public function noise():Future<Noise>
-    return 
+    return
       if (status.match(NeverEver)) cast NEVER;
       else map(_ -> Noise);
 
@@ -158,7 +158,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return Future.irreversible(function(cb) promise.then(function(a) Callback.defer(cb.bind(Success(a))), function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
 
-  @:from static inline function fromNever<T>(l:Future<Never>):Future<T>
+  @:to static inline function neverToAny<T>(l:Future<Never>):Future<T>
     return cast l;
 
   @:from static inline function ofAny<T>(v:T):Future<T>
