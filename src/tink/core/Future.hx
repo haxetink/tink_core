@@ -180,7 +180,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    * The futures are processed simultaneously. Set concurrency to limit how many are processed at a time.
    */
   @:noUsing static public function inParallel<T>(futures:Array<Future<T>>, ?concurrency:Int):Future<Array<T>>
-    return many(futures, concurrency);//the `orNull` just pleases the typer
+    return many(futures, concurrency);
 
   /**
    * Merges multiple futures into a `Future<Array<A>>`
