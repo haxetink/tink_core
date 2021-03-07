@@ -17,19 +17,35 @@ import js.lib.Error as JsError;
 import js.lib.Promise as JsPromise;
 #end
 
+/**
+  Representation of the result of a potentially asynchronous operation. It can be handled by registering
+  a callback using the `handle` method. These callbacks will be invoked as soon as the result becomes available.
+
+  Note that `Future` by itself doesn't differentiate successful and failed operations, because it doesn't always
+  make sense. See `Outcome` and `Promise` types that are designed to represent potential failures.
+**/
 @:transitive
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from FutureTrigger<T> {
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
   @:deprecated('use Future.NOISE instead') static public final NULL:Future<Noise> = NOISE;
-  static public final NEVER:Future<Never> = (NeverFuture.inst:FutureObject<Never>);
+  static public final NEVER:Future<Never> = (new NeverFuture():FutureObject<Never>);
 
   public var status(get, never):FutureStatus<T>;
     inline function get_status()
       return this.getStatus();
 
-  public inline function new(f:(T->Void)->CallbackLink)
-    this = new SuspendableFuture(f);
+  /**
+    Create a lazy and suspendable `Future` instance from a given `wakeup` function.
+
+    The `wakeup` function will be only called when the `Future` is handled for the first time
+    by using either `handle` or `eager` methods.
+
+    The `CallbackLink` returned by the `wakeup` function will be cancelled when the future
+    is suspended: either before it is triggered or when the last `handle` callback is removed.
+  **/
+  public inline function new(wakeup:(trigger:T->Void)->CallbackLink)
+    this = new SuspendableFuture(wakeup);
 
   /**
    *  Registers a callback to handle the future result.
@@ -48,6 +64,11 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     this.eager();
     return this;
   }
+
+  @:to public function noise():Future<Noise>
+    return
+      if (status.match(NeverEver)) cast NEVER;
+      else map(_ -> Noise);
 
   /**
    *  Creates a future that contains the first result from `this` or `that`
@@ -134,10 +155,10 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    */
   @:noUsing
   @:from static public function ofJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
-    return Future.irreversible(function(cb) promise.then(function(a) cb(Success(a))).catchError(function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
+    return Future.irreversible(function(cb) promise.then(function(a) Callback.defer(cb.bind(Success(a))), function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
   #end
 
-  @:from static inline function fromNever<T>(l:Future<Never>):Future<T>
+  @:to static inline function neverToAny<T>(l:Future<Never>):Future<T>
     return cast l;
 
   @:from static inline function ofAny<T>(v:T):Future<T>
@@ -159,7 +180,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    * The futures are processed simultaneously. Set concurrency to limit how many are processed at a time.
    */
   @:noUsing static public function inParallel<T>(futures:Array<Future<T>>, ?concurrency:Int):Future<Array<T>>
-    return many(futures, concurrency);//the `orNull` just pleases the typer
+    return many(futures, concurrency);
 
   /**
    * Merges multiple futures into a `Future<Array<A>>`
@@ -346,8 +367,7 @@ private interface FutureObject<T> {
 }
 
 private class NeverFuture implements FutureObject<Never> {
-  public static var inst(default, null):Future<Never> = new NeverFuture();
-  function new() {}
+  public function new() {}
   public function getStatus():FutureStatus<Never>
     return NeverEver;
   public function handle(callback:Callback<Never>):CallbackLink return null;

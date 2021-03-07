@@ -142,7 +142,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
    *  Example: `var signal = Signal.ofClassical(emitter.addListener.bind(eventType), emitter.removeListener.bind(eventType));`
    */
-  static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather:Gather)
+  static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather:Gather):Signal<A>
     return new Suspendable<A>(function (fire) {
       add(fire);
       return remove.bind(fire);

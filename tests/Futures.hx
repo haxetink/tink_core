@@ -109,6 +109,7 @@ class Futures extends Base {
   }
 
   public function issue143() {
+    asserts.assert(Future.NEVER == cast Promise.NEVER);
     for (shouldHalt in [true, false]) {
       function tryGetData():Promise<{ foo: Int }> return shouldHalt ? Promise.NEVER : { foo: 123 };
       if (shouldHalt)
@@ -117,6 +118,21 @@ class Futures extends Base {
         asserts.assert(tryGetData().status.match(Ready(_)));
     }
 
+    for (shouldHalt in [true, false]) {
+      function tryGetData()
+        return Promise.lift(123).next(
+          v -> shouldHalt ? Promise.NEVER : { foo: 123 }
+        ).eager();
+      asserts.assert(tryGetData().status.match(Ready(_)) != shouldHalt);
+    }
+
+    return asserts.done();
+  }
+
+  public function issue153() {
+    asserts.assert((Future.NEVER:Future<Noise>) == (Future.NEVER:Future<Noise>));
+    asserts.assert((Promise.NEVER:Promise<Noise>) == (Promise.NEVER:Promise<Noise>));
+  
     return asserts.done();
   }
 
@@ -145,7 +161,7 @@ class Futures extends Base {
 
     var f = f1 || f2;
 
-    asserts.assert(f.status.match(Ready(_.get() => Left(1))));
+    // asserts.assert(f.status.match(Ready(_.get() => Left(1))));
 
     return asserts.done();
   }
@@ -265,5 +281,12 @@ class Futures extends Base {
 
     return asserts;
 
+  }
+
+  public function testNoise() {
+    var f = Future.sync(42);
+    f.noise().handle(v -> asserts.assert(v == Noise));
+    (f : Future<Noise>).handle(v -> asserts.assert(v == Noise));
+    return asserts.done();
   }
 }

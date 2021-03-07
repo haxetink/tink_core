@@ -2,12 +2,12 @@
 	"name": "tink_core",
 	"description": "Tinkerbell Core",
 	"classPath": "src",
-	"url": "http://haxetink.org/tink_core",
+	"url": "https://haxetink.github.io/tink_core/",
 	"contributors": [
 		"back2dos"
 	],
-	"version": "2.0.0-rc.1",
-	"releasenote": "Add map, flatten and suspension to progress. Improve implicit casts and Haxe 4.2 compatibility.",
+	"version": "2.0.0-rc.3",
+	"releasenote": "Improve handling of Promise.NEVER/Future.NEVER",
 	"tags": [
 		"tink",
 		"cross",

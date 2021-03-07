@@ -6,5 +6,9 @@ enum abstract Noise(Null<Dynamic>) {
     return Noise;
 }
 
-abstract Never(Noise) to Dynamic {
+#if (haxe_ver < 4.2)
+typedef Never = Dynamic;
+#else
+abstract Never(Dynamic) to Dynamic from Dynamic {
 }
+#end

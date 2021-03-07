@@ -12,12 +12,18 @@ import js.lib.Error as JsError;
 import js.lib.Promise as JsPromise;
 #end
 
+/**
+  Representation of the outcome of a potentially asynchronous operation that can fail.
+
+  This type is a compile-time wrapper over `Future<Outcome<T, tink.core.Error>>` that provides
+  convenience API for dealing with failure outcomes.
+**/
 @:forward(status) @:transitive
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
 
   static public final NOISE:Promise<Noise> = Future.sync(Success(Noise));
   @:deprecated('use Promise.NOISE instead') static public final NULL:Promise<Noise> = NOISE;
-  static public final NEVER:Promise<Never> = Future.NEVER;
+  static public final NEVER:Promise<Never> = cast Future.NEVER;
 
   public inline function new(f:(T->Void)->(Error->Void)->CallbackLink)
     this = new Future(cb -> f(v -> cb(Success(v)), e -> cb(Failure(e))));
@@ -53,7 +59,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return this.handle(cb);
 
   @:to public function noise():Promise<Noise>
-    return (this:Promise<T>).next(function (v) return Noise);
+    return 
+      if (this.status.match(NeverEver)) cast NEVER;
+      else (this:Promise<T>).next(function (v) return Noise);
 
   public function isSuccess():Future<Bool>
     return this.map(function (o) return o.isSuccess());

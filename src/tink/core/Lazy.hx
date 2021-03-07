@@ -32,7 +32,6 @@ abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
 }
 
 private interface LazyObject<T> extends Computable {
-  //function isComputed():Bool;//BUG CS does not like this
   function get():T;
 }
 
@@ -79,7 +78,7 @@ private class LazyFunc<T> implements LazyObject<T> {
   public function isComputed()
     return this.f == null;
 
-  public function get()
+  public function get():T
     return result;
 
   public function compute() {
