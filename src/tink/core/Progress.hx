@@ -70,7 +70,7 @@ abstract Progress<T>(ProgressObject<T>) from ProgressObject<T> {
 
 private class SuspendableProgress<T> extends ProgressObject<T> {
 
-  function noop(_, _) return null;
+  function noop(_, _0) return null;
   public function new(wakeup:(fire:ProgressStatus<T>->Void)->CallbackLink, ?status) {
     if (status == null)
       status = InProgress(ProgressValue.ZERO);

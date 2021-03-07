@@ -80,10 +80,10 @@ class TypedError<T> {
     #end
     return ret;
   }
-
+  #if js
   public inline function toPromise<X>():Promise<X>
     return Promise.lift((cast this:Error));
-
+  #end
   public function throwSelf():Dynamic
     return
       #if macro
