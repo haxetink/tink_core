@@ -145,7 +145,7 @@ final class ProgressTrigger<T> extends ProgressObject<T> {
 }
 
 @:pure
-abstract ProgressValue(Pair<Float, Option<Float>>) from Pair<Float, Option<Float>> {
+abstract ProgressValue(Pair<Float, Option<Float>>) from Pair<Float, Option<Float>> to Pair<Float, Option<Float>> {
   static public final ZERO = new ProgressValue(0, None);
 
   public var value(get, never):Float;
