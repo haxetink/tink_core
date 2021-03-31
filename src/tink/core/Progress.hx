@@ -178,6 +178,11 @@ abstract UnitInterval(Float) from Float to Float {
       case i: StringTools.rpad(s, '0', i + dp + 1) + '%';
     }
   }
+  
+  @:op(A+B) public static function add(a:UnitInterval, b:Float):Float;
+  @:op(A-B) public static function sub(a:UnitInterval, b:Float):Float;
+  @:op(A*B) public static function mul(a:UnitInterval, b:Float):Float;
+  @:op(A/B) public static function div(a:UnitInterval, b:Float):Float;
 }
 
 @:deprecated typedef ProgressType<T> = ProgressStatus<T>;
