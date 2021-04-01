@@ -121,7 +121,7 @@ class Futures extends Base {
     for (shouldHalt in [true, false]) {
       function tryGetData()
         return Promise.lift(123).next(
-          v -> shouldHalt ? Promise.NEVER : { foo: 123 }
+          v -> !shouldHalt ? { foo: 123 } : Promise.NEVER
         ).eager();
       asserts.assert(tryGetData().status.match(Ready(_)) != shouldHalt);
     }

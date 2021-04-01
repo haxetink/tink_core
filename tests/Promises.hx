@@ -1,5 +1,7 @@
 package;
 
+import tink.unit.*;
+
 using tink.CoreApi;
 
 @:asserts
@@ -186,6 +188,14 @@ class Promises extends Base {
     cache().handle(function(o) asserts.assert(getError(o) == 5));
 
     return asserts.done();
+  }
+  
+  @:include
+  public function never() {
+    return [
+      Assert.expectCompilerError(((null:Promise<{foo:String}>):Promise<Never>)),
+      Assert.expectCompilerError(((null:Promise<{foo:String}>):Promise<{bar:String}>)),
+    ];
   }
 
 }

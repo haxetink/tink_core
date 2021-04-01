@@ -9,6 +9,6 @@ enum abstract Noise(Null<Dynamic>) {
 #if (haxe_ver < 4.2)
 typedef Never = Dynamic;
 #else
-abstract Never(Dynamic) to Dynamic from Dynamic {
+abstract Never(Dynamic) to Dynamic  {
 }
 #end
