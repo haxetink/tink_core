@@ -190,7 +190,6 @@ class Promises extends Base {
     return asserts.done();
   }
   
-  @:include
   public function never() {
     return [
       Assert.expectCompilerError(((null:Promise<{foo:String}>):Promise<Never>)),
