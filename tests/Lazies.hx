@@ -22,6 +22,7 @@ class Lazies extends Base {
     }
     return asserts.done();
   }
+
   public function testLaziness() {
     var counter = 0;
 

@@ -5,7 +5,6 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -29,6 +28,7 @@ jobs:
           - cpp
           - js
           - java -D jvm
+          - cs -D erase-generics
 
     steps:
     - name: Check out repo
