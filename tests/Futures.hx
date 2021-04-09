@@ -136,6 +136,7 @@ class Futures extends Base {
     return asserts.done();
   }
 
+  #if !cs
   public function testOps() {
     var t1 = Future.trigger(),
         t2 = Future.trigger();
@@ -165,6 +166,7 @@ class Futures extends Base {
 
     return asserts.done();
   }
+  #end
 
   public function testMany() {
     var triggers = [for (i in 0...10) Future.trigger()];
@@ -214,6 +216,7 @@ class Futures extends Base {
     return asserts.done();
   }
 
+  #if !cs
   public function testNever() {
     var f:Future<Int> = Future.NEVER;
     f.handle(function () {}).cancel();
@@ -224,6 +227,7 @@ class Futures extends Base {
     foo();
     return asserts.done();
   }
+  #end
 
   public function testDelay() {
     var now = haxe.Timer.stamp();

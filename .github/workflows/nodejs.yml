@@ -29,6 +29,7 @@ jobs:
           - cpp
           - js
           - java -D jvm
+          - cs
 
     steps:
     - name: Check out repo

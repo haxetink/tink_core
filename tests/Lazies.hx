@@ -13,6 +13,7 @@ class Lazies extends Base {
     return asserts.done();
   }
 
+  #if !cs
   public function testNoise() {
     var l:Lazy<Null<Int>> = Lazy.NOISE;
     @:nullSafety(Off) {
@@ -22,6 +23,7 @@ class Lazies extends Base {
     }
     return asserts.done();
   }
+  #end
   public function testLaziness() {
     var counter = 0;
 
