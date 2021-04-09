@@ -28,7 +28,7 @@ jobs:
           - cpp
           - js
           - java -D jvm
-          - cs
+          - cs -D erase-generics
 
     steps:
     - name: Check out repo

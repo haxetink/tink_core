@@ -24,7 +24,6 @@ class Progresses {
     return asserts;
   }
 
-  #if !cs
   public function testFutureProgress() {
     var trigger = Progress.trigger();
     var progress:Progress<String> = Future.sync(trigger.asProgress());
@@ -42,9 +41,7 @@ class Progresses {
 
     return asserts;
   }
-  #end
 
-  #if !cs
   public function testPromiseProgress() {
     var trigger = Progress.trigger();
     var progress:Progress<Outcome<String, Error>> = Promise.resolve(trigger.asProgress());
@@ -70,7 +67,6 @@ class Progresses {
 
     return asserts;
   }
-  #end
 
   public function testMake() {
     var t = new SignalTrigger<ProgressStatus<String>>(),
