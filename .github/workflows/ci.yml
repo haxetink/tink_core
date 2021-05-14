@@ -1,6 +1,3 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
 name: CI
 
 on:
@@ -9,7 +6,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -63,3 +60,45 @@ jobs:
       
     - name: Run Test
       run: lix run travix ${{ matrix.target }}
+
+  release:
+    runs-on: ubuntu-latest
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/') # consider using the "release" event. see: https://docs.github.com/en/actions/reference/events-that-trigger-workflows#release
+    
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+    
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(yarn cache dir)"
+
+    - name: Cache Yarn
+      uses: actions/cache@v1
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+        
+    - name: Cache Haxe
+      uses: actions/cache@v1
+      with:
+        path: ~/haxe
+        key: haxe
+        
+    - name: Install Lix
+      uses: lix-pm/setup-lix@master
+      
+    - name: Install Haxe
+      run: lix install haxe stable
+    
+    - name: Install Haxe Libraries
+      run: lix download
+      
+    - name: Release to Haxelib
+      run: lix run travix release
+      env:
+        HAXELIB_AUTH: ${{ secrets.HAXELIB_AUTH }}
+    
