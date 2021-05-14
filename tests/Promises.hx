@@ -115,7 +115,7 @@ class Promises extends Base {
     }
 
   public function testDynamicNext() {
-    var p = Promise.lift('{"answer":42}');
+    var p = Promise.resolve('{"answer":42}');
     return
       p
         .next(haxe.Json.parse)
@@ -163,7 +163,7 @@ class Promises extends Base {
   public function testCache() {
     var v = 0;
     var expire = Future.trigger();
-    function gen() return Promise.lift(new Pair(v++, expire.asFuture()));
+    function gen() return Promise.resolve(new Pair(v++, expire.asFuture()));
     var cache = Promise.cache(gen);
     cache().handle(function(v) asserts.assert(v.match(Success(0))));
     cache().handle(function(v) asserts.assert(v.match(Success(0))));
@@ -177,7 +177,7 @@ class Promises extends Base {
     cache().handle(function(v) asserts.assert(v.match(Success(2))));
     cache().handle(function(v) asserts.assert(v.match(Success(3))));
 
-    function err() return Promise.lift(Error.withData('Fail', v++));
+    function err() return Promise.reject(Error.withData('Fail', v++));
     var cache = Promise.cache(err);
     function getError(o:Outcome<Dynamic, Error>):Int
       return switch o {
@@ -196,5 +196,7 @@ class Promises extends Base {
       Assert.expectCompilerError(((null:Promise<{foo:String}>):Promise<{bar:String}>)),
     ];
   }
+  
+  
 
 }

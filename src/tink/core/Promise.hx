@@ -81,7 +81,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   public function merge<A, R>(other:Promise<A>, merger:Combiner<T, A, R>, ?gather:Gather):Promise<R>
     return this.merge(other, (a, b) -> switch [a, b] {
       case [Success(a), Success(b)]: merger(a, b);
-      case [Failure(e), _] | [_, Failure(e)]: Promise.lift(e);
+      case [Failure(e), _] | [_, Failure(e)]: Promise.reject(e);
     }).flatMap(o -> o);
 
   @:noCompletion @:op(a && b) static function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
