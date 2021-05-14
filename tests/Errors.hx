@@ -37,4 +37,17 @@ class Errors extends Base {
     return asserts.done();
   }
   #end
+  
+  
+  public function toPromise() {
+    final e:TypedError<Int> = TypedError.typed(500, '', 42);
+    final p:Promise<Noise> = e.toPromise();
+    return p.map(function(o) return switch o {
+      case Success(_):
+        asserts.fail('expected failure');
+      case Failure(e):
+        asserts.assert(e.data == 42);
+        asserts.done();
+    });
+  }
 }
