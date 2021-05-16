@@ -51,8 +51,8 @@ jobs:
     - name: Cache Haxe
       uses: actions/cache@v1
       with:
-        path: ~/haxe
-        key: haxe
+        path: ${{ startsWith(runner.os, 'windows') && '%AppData%' || '~/haxe' }}
+        key: ${{ runner.os }}-haxe
         
     - name: Install Lix
       uses: lix-pm/setup-lix@master
@@ -90,8 +90,8 @@ jobs:
     - name: Cache Haxe
       uses: actions/cache@v1
       with:
-        path: ~/haxe
-        key: haxe
+        path: ${{ startsWith(runner.os, 'windows') && '%AppData%' || '~/haxe' }}
+        key: ${{ runner.os }}-haxe
         
     - name: Install Lix
       uses: lix-pm/setup-lix@master
