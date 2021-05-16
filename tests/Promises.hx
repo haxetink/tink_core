@@ -190,12 +190,14 @@ class Promises extends Base {
     return asserts.done();
   }
   
+  #if (haxe_ver >= 4.2)
   public function never() {
     return [
       Assert.expectCompilerError(((null:Promise<{foo:String}>):Promise<Never>)),
       Assert.expectCompilerError(((null:Promise<{foo:String}>):Promise<{bar:String}>)),
     ];
   }
+  #end
   
   
 
