@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "2.0.1",
-	"releasenote": "Fix `Error.toPromise()` on C#",
+	"version": "2.0.2",
+	"releasenote": "Compatibility with Haxe 4.0 and 4.1",
 	"tags": [
 		"tink",
 		"cross",
