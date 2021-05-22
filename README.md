@@ -1,7 +1,8 @@
 # Tinkerbell Core Library
 
 [![Build Status](https://github.com/haxetink/tink_core/actions/workflows/ci.yml/badge.svg)](https://github.com/haxetink/tink_core/actions)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/haxetink/public)
+[![Gitter](https://img.shields.io/gitter/room/haxetink/public?logo=gitter&)](https://gitter.im/haxetink/public)
+[![Discord](https://img.shields.io/discord/162395145352904705.svg?logo=discord)](https://discord.com/channels/162395145352904705/579634919576436736)
 
 The `tink_core` lib contains a set of lightweight tools for robust programming.
 
