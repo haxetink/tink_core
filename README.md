@@ -1,6 +1,6 @@
 # Tinkerbell Core Library
 
-[![Build Status](https://travis-ci.org/haxetink/tink_core.svg)](https://travis-ci.org/haxetink/tink_core)
+[![Build Status](https://github.com/haxetink/tink_core/actions/workflows/ci.yml/badge.svg)](https://github.com/haxetink/tink_core/actions)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/haxetink/public)
 
 The `tink_core` lib contains a set of lightweight tools for robust programming.
