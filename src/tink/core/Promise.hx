@@ -182,8 +182,11 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   }
 
   #if js
+  static public inline function ofJsPromise<A>(promise:JsPromise<A>, ?transformError:Any->Error):Promise<A>
+    return Future.ofJsPromise(promise, transformError);
+  
   @:noUsing
-  @:from static public inline function ofJsPromise<A>(promise:JsPromise<A>):Promise<A>
+  @:from static public inline function fromJsPromise<A>(promise:JsPromise<A>):Promise<A>
     return Future.ofJsPromise(promise);
 
   @:to public inline function toJsPromise():JsPromise<T>

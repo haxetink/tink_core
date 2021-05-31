@@ -154,8 +154,20 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    *  Casts a js Promise into a Surprise
    */
   @:noUsing
-  @:from static public function ofJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
-    return Future.irreversible(function(cb) promise.then(function(a) Callback.defer(cb.bind(Success(a))), function(e:JsError) cb(Failure(Error.withData(e.message, e)))));
+  static public function ofJsPromise<A>(promise:JsPromise<A>, ?transformError:Any->Error):Surprise<A, Error>
+    return Future.irreversible(
+      function(cb) promise.then(
+        function(a) Callback.defer(cb.bind(Success(a))),
+        function(e:Any) cb(Failure(switch transformError {
+          case null: Error.ofJsError(e);
+          case f: f(e);
+        }))
+      )
+    );
+  
+  @:noUsing
+  @:from static inline function fromJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
+    return ofJsPromise(promise);
   #end
 
   @:to static inline function neverToAny<T>(l:Future<Never>):Future<T>
