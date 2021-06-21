@@ -83,6 +83,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
       case [Success(a), Success(b)]: merger(a, b);
       case [Failure(e), _] | [_, Failure(e)]: Promise.reject(e);
     }).flatMap(o -> o);
+  
+  static inline public function irreversible<A>(f:(resolve:A->Void, reject:Error->Void)->Void):Promise<A>
+    return new Promise((res, rej) -> {f(res, rej); null;});
 
   @:noCompletion @:op(a && b) static function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
     // return a.merge(b, Pair.new); // see https://github.com/HaxeFoundation/haxe/issues/9764
