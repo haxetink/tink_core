@@ -143,6 +143,15 @@ class OutcomeTools {
       catch (e:Dynamic)
         Failure(report(e));
 
+  /**
+   *  Returns `true` if the outcome is `Success` and the filter function evaluates to `true`, otherwise `false`
+   */
+  static public function satisfies<D, F>(o:Outcome<D, F>, f:D->Bool)
+    return switch o {
+      case Success(d): f(d);
+      default: false;
+    }
+
   static public function flatten<D, F>(o:Outcome<Outcome<D, F>, F>):Outcome<D, F>
     return switch o {
       case Success(Success(d)): Success(d);
