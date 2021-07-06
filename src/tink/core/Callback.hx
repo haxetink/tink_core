@@ -39,7 +39,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
     #elseif tink_runloop
       tink.RunLoop.current.work(f);
     #elseif hxnodejs
-      js.Node.process.nextTick(f);
+      js.Node.setImmediate(f);
     #elseif luxe
       Luxe.timer.schedule(0, f);
     #elseif snow
