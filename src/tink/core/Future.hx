@@ -29,7 +29,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
   @:deprecated('use Future.NOISE instead') static public final NULL:Future<Noise> = NOISE;
-  static public final NEVER:Future<Never> = (new NeverFuture():FutureObject<Never>);
+  static public final NEVER:Future<Never> = (new FutureObject<Never>());
 
   public var status(get, never):FutureStatus<T>;
     inline function get_status()
@@ -378,53 +378,51 @@ enum FutureStatus<T> {
   NeverEver;
 }
 
-private interface FutureObject<T> {
-
-  function getStatus():FutureStatus<T>;
-  function handle(callback:Callback<T>):CallbackLink;
-  function eager():Void;
-}
-
-private class NeverFuture implements FutureObject<Never> {
+private class FutureObject<T> {
   public function new() {}
-  public function getStatus():FutureStatus<Never>
+  public function getStatus():FutureStatus<T>
     return NeverEver;
-  public function handle(callback:Callback<Never>):CallbackLink return null;
-  public function eager() {};
+  public function handle(callback:Callback<T>):CallbackLink
+    return null;
+  public function eager():Void {}
 }
 
-private class SyncFuture<T> implements FutureObject<T> {//TODO: there should be a way to get rid of this
+private class SyncFuture<T> extends FutureObject<T> {//TODO: there should be a way to get rid of this
 
   var value:Lazy<T>;
 
-  public function getStatus()
+  override public function getStatus()
     return Ready(value);
 
-  public inline function new(value)
+  public function new(value) {
+    super();
     this.value = value;
+  }
 
-  public function handle(cb:Callback<T>):CallbackLink {
+  override public function handle(cb:Callback<T>):CallbackLink {
     cb.invoke(value);
     return null;
   }
 
-  public function eager() {
+  override public function eager() {
     if (!value.computed)
       value.get();
   }
 }
 
-final class FutureTrigger<T> implements FutureObject<T> {
+final class FutureTrigger<T> extends FutureObject<T> {
   var status:FutureStatus<T> = Awaited;
   final list:CallbackList<T>;
 
-  public function new()
+  public function new() {
+    super();
     this.list = new CallbackList(true);
+  }
 
-  public function getStatus()
+  override public function getStatus()
     return status;
 
-  public function handle(callback:Callback<T>):CallbackLink
+  override public function handle(callback:Callback<T>):CallbackLink
     return switch status {
       case Ready(result):
         callback.invoke(result);
@@ -432,8 +430,6 @@ final class FutureTrigger<T> implements FutureObject<T> {
       case v:
         list.add(callback);
     }
-
-  public function eager() {}
 
   public inline function asFuture():Future<T>
     return this;
@@ -462,16 +458,17 @@ class JsPromiseTools {
 }
 #end
 
-private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has quite a bit of duplication with FutureTrigger
+private class SuspendableFuture<T> extends FutureObject<T> {//TODO: this has quite a bit of duplication with FutureTrigger
   final callbacks:CallbackList<T>;
   var status:FutureStatus<T> = Suspended;
   var link:CallbackLink;
   var wakeup:(T->Void)->CallbackLink;
 
-  public function getStatus()
+  override public function getStatus()
     return this.status;
 
   public function new(wakeup) {
+    super();
     this.wakeup = wakeup;
     this.callbacks = new CallbackList(true);
 
@@ -498,7 +495,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
         link.cancel();
     }
 
-  public function handle(callback:Callback<T>):CallbackLink
+  override public function handle(callback:Callback<T>):CallbackLink
     return switch status {
       case Ready(result):
         callback.invoke(result);
@@ -510,7 +507,7 @@ private class SuspendableFuture<T> implements FutureObject<T> {//TODO: this has 
   function arm()
     link = wakeup(x -> trigger(x));
 
-  public inline function eager() {
+  override public function eager() {
     switch status {
       case Suspended:
         status = EagerlyAwaited;
