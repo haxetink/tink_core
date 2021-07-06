@@ -132,7 +132,7 @@ class Futures extends Base {
   public function issue153() {
     asserts.assert((Future.NEVER:Future<Noise>) == (Future.NEVER:Future<Noise>));
     asserts.assert((Promise.NEVER:Promise<Noise>) == (Promise.NEVER:Promise<Noise>));
-  
+
     return asserts.done();
   }
 
@@ -289,4 +289,15 @@ class Futures extends Base {
     (f : Future<Noise>).handle(v -> asserts.assert(v == Noise));
     return asserts.done();
   }
+
+  #if (js && js.compat)
+  public function issue161() {
+    var f = Future.sync(42);
+    var p:js.lib.Promise<Int> = cast f;
+    return Promise.lift(p).next(v -> {
+      asserts.assert(v == 42);
+      asserts.done();
+    });
+  }
+  #end
 }

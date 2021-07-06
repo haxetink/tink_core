@@ -385,6 +385,28 @@ private class FutureObject<T> {
   public function handle(callback:Callback<T>):CallbackLink
     return null;
   public function eager():Void {}
+
+  #if (js && js.compat)
+  @:keep @:native('then') function then(onReject, onFulfill)
+    return promisify(this).then(onReject, onFulfill);
+
+  @:keep @:native('finally') function finally(f)
+    return promisify(this).finally(f);
+
+  @:keep @:native('catch') function _catch(f)
+    return promisify(this).catchError(f);
+
+  static function promisify(f:FutureObject<Any>):JsPromise<Any> {
+    return new JsPromise((resolve, reject) -> f.handle(v -> {
+      var isOutcome = try Type.getEnum(v) == Outcome catch (e:Dynamic) false;
+      if (isOutcome) switch (cast v:Outcome<Any, Error>) {
+        case Success(v): resolve(v);
+        case Failure(e): reject(e.toJsError());
+      }
+      else resolve(v);
+    }));
+  }
+  #end
 }
 
 private class SyncFuture<T> extends FutureObject<T> {//TODO: there should be a way to get rid of this

@@ -189,7 +189,7 @@ class Promises extends Base {
 
     return asserts.done();
   }
-  
+
   #if (haxe_ver >= 4.2)
   public function never() {
     return [
@@ -198,7 +198,16 @@ class Promises extends Base {
     ];
   }
   #end
-  
-  
+
+  #if (js && js.compat)
+  public function issue161() {
+    var f = Promise.lift(42);
+    var p:js.lib.Promise<Int> = cast f;
+    return Promise.lift(p).next(v -> {
+      asserts.assert(v == 42);
+      asserts.done();
+    });
+  }
+  #end
 
 }
