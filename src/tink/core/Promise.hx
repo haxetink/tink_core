@@ -55,11 +55,23 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
       case Failure(e): Failure(f(e));
     });
 
+  /**
+   * Add a side effect to be run before the promise is handled.
+   * Does not make the promise eager.
+   * Does nothing for promises that fail.
+   */
+  public inline function withSideEffect(c:Callback<T>):Promise<T>
+    return this.withSideEffect(o -> switch o {
+      case Success(data): c.invoke(data);
+      default:
+    });
+
+
   public inline function handle(cb:Callback<Outcome<T, Error>>):CallbackLink
     return this.handle(cb);
 
   @:to public function noise():Promise<Noise>
-    return 
+    return
       if (this.status.match(NeverEver)) cast NEVER;
       else (this:Promise<T>).next(function (v) return Noise);
 
@@ -83,7 +95,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
       case [Success(a), Success(b)]: merger(a, b);
       case [Failure(e), _] | [_, Failure(e)]: Promise.reject(e);
     }).flatMap(o -> o);
-  
+
   static inline public function irreversible<A>(f:(resolve:A->Void, reject:Error->Void)->Void):Promise<A>
     return new Promise((res, rej) -> {f(res, rej); null;});
 
@@ -187,7 +199,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   #if js
   static public inline function ofJsPromise<A>(promise:JsPromise<A>, ?transformError:Any->Error):Promise<A>
     return Future.ofJsPromise(promise, transformError);
-  
+
   @:noUsing
   @:from static public inline function fromJsPromise<A>(promise:JsPromise<A>):Promise<A>
     return Future.ofJsPromise(promise);

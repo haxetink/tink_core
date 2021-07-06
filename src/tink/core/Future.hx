@@ -119,6 +119,13 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
   public inline function next<R>(n:Next<T, R>):Promise<R>
     return flatMap(n);
 
+  /**
+   * Add a side effect to be run before the future is handled.
+   * Does not make the future eager.
+   */
+  public inline function withSideEffect(c:Callback<T>):Future<T>
+    return map(v -> { c.invoke(v); v; });
+
   @:deprecated('Gathering no longer has any effect')
   public inline function gather():Future<T>
     return this;
@@ -164,7 +171,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
         }))
       )
     );
-  
+
   @:noUsing
   @:from static inline function fromJsPromise<A>(promise:JsPromise<A>):Surprise<A, Error>
     return ofJsPromise(promise);
