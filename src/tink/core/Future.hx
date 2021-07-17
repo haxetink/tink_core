@@ -111,6 +111,10 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
           return outer.join(inner);
         });
     }
+    
+    
+  public inline function swap<R>(v:R):Future<R>
+    return map(_ -> v);
 
   /**
    *  Like `map` and `flatMap` but with a polymorphic transformer and return a `Promise`
