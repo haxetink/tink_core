@@ -57,12 +57,15 @@ interface LinkObject {
 }
 
 class CallbackLinkRef implements LinkObject {
-  public var link:CallbackLink;
+  public var link(default, set):CallbackLink;
+    inline function set_link(param) {
+      link.cancel();
+      return link = param;
+    }
   public function new() {}
   public function cancel()
     link.cancel();
 }
-
 
 abstract CallbackLink(LinkObject) from LinkObject {
 
