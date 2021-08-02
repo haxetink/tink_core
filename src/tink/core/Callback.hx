@@ -205,7 +205,7 @@ class CallbackList<T> extends SimpleDisposable {
   inline function drain()
     Callback.guardStackoverflow(ondrain);
 
-  public function add(cb:Callback<T>):CallbackLink {
+  public inline function add(cb:Callback<T>):CallbackLink {
     if (disposed) return null;
     var node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
     cells.push(node);
