@@ -233,7 +233,7 @@ final class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposab
   public inline function getLength()
     return handlers.length;
 
-	public inline function listen(cb)
+	public function listen(cb)
     return handlers.add(cb);
 
   /**
