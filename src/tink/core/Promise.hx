@@ -236,6 +236,9 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:from static inline function ofData<T>(d:T):Promise<T>
     return ofOutcome(Success(d));
 
+  public inline function asFuture():Future<Outcome<T, Error>>
+    return this;
+
   @:noUsing
   static public inline function lazy<T>(p:Lazy<Promise<T>>):Promise<T>
     return new Future(cb -> p.get().handle(cb));
