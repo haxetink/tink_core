@@ -392,15 +392,15 @@ private class FutureObject<T> {
 
   #if (js && js.compat)
   @:keep @:native('then') function then(onReject, onFulfill)
-    return promisify(this).then(onReject, onFulfill);
+    return promisify(#if (haxe < version("4.2.0")) cast #end this).then(onReject, onFulfill);
 
   @:keep @:native('finally') function finally(f)
-    return promisify(this).finally(f);
+    return promisify(#if (haxe < version("4.2.0")) cast #end this).finally(f);
 
   @:keep @:native('catch') function _catch(f)
-    return promisify(this).catchError(f);
+    return promisify(#if (haxe < version("4.2.0")) cast #end this).catchError(f);
 
-  static function promisify(f:FutureObject<Any>):JsPromise<Any> {
+  static function promisify(f:FutureObject<Any>):#if (haxe < version("4.2.0")) Dynamic #else JsPromise<Any> #end {
     return new JsPromise((resolve, reject) -> f.handle(v -> {
       var isOutcome = try Type.getEnum(v) == Outcome catch (e:Dynamic) false;
       if (isOutcome) switch (cast v:Outcome<Any, Error>) {
