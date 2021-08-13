@@ -38,6 +38,15 @@ class Errors extends Base {
   }
   #end
   
+  public function catchExceptions() {
+    return switch Error.catchExceptions(() -> throw 'foo') {
+      case Success(_):
+        asserts.fail('Expected failure');
+      case Failure(e):
+        asserts.assert(e.data == 'foo');
+        asserts.done();
+    }
+  }
   
   public function toPromise() {
     final e:TypedError<Int> = TypedError.typed(500, '', 42);
