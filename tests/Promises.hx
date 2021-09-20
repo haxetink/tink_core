@@ -140,6 +140,28 @@ class Promises extends Base {
     return asserts.done();
   }
 
+  public function testIterateError() {
+    inline function boolAnd(promises:Iterable<Promise<Bool>>, fallThroughOnError):Promise<Bool>
+      return Promise.iterate(promises, v -> v ? None : Some(false), true, fallThroughOnError);
+
+    inline function boolOr(promises:Iterable<Promise<Bool>>, fallThroughOnError):Promise<Bool>
+      return Promise.iterate(promises, v -> v ? Some(true) : None, false, fallThroughOnError);
+
+    final error = new Error('dummy');
+
+    boolAnd([error, true, true], false).handle(function(o) asserts.assert(o.match(Failure(_))));
+    boolAnd([error, false, true], false).handle(function(o) asserts.assert(o.match(Failure(_))));
+    boolOr([error, false, false], false).handle(function(o) asserts.assert(o.match(Failure(_))));
+    boolOr([error, false, true], false).handle(function(o) asserts.assert(o.match(Failure(_))));
+    
+    boolAnd([error, true, true], true).handle(function(o) asserts.assert(o.match(Success(true))));
+    boolAnd([error, false, true], true).handle(function(o) asserts.assert(o.match(Success(false))));
+    boolOr([error, false, false], true).handle(function(o) asserts.assert(o.match(Success(false))));
+    boolOr([error, false, true], true).handle(function(o) asserts.assert(o.match(Success(true))));
+
+    return asserts.done();
+  }
+
   public function test() {
     var p:Promise<Int> = 5;
     p = Success(5);

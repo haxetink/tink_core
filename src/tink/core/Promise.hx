@@ -122,7 +122,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    * @return Promise<T>
    */
   @:noUsing
-  static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, fallback:Promise<R>):Promise<R> {
+  static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, fallback:Promise<R>, ?fallThroughOnError = false):Promise<R> {
     return Future.irreversible(function(cb) {
       var iter = promises.iterator();
       function next() {
@@ -135,7 +135,8 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
                 case Failure(e): cb(Failure(e));
               });
             case Failure(e):
-              cb(Failure(e));
+              if(fallThroughOnError) next();
+              else cb(Failure(e));
           })
         else
           fallback.handle(cb);
