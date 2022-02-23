@@ -9,7 +9,7 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
-
+    continue-on-error: ${{ matrix.haxe-version == 'nightly' }}
     strategy:
       matrix:
         haxe-version:
