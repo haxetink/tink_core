@@ -42,7 +42,7 @@ class OutcomeTools {
       }
 
   /**
-   *  Extracts the value if the option is `Success`, otherwise `null`
+   *  Extracts the value if the outcome is `Success`, otherwise `null`
    */
   static public function orNull<D, F>(outcome: Outcome<D, F>):Null<D>
     return
@@ -56,7 +56,7 @@ class OutcomeTools {
     return or(outcome, fallback);
 
   /**
-   *  Extracts the value if the option is `Success`, uses the fallback value otherwise
+   *  Extracts the value if the outcome is `Success`, uses the fallback value otherwise
    */
   static public function or<D, F>(outcome: Outcome<D, F>, fallback: Lazy<D>):D
     return
@@ -66,7 +66,7 @@ class OutcomeTools {
       }
 
   /**
-   *  Extracts the value if the option is `Success`, uses the fallback `Outcome` otherwise
+   *  Extracts the value if the outcome is `Success`, uses the fallback `Outcome` otherwise
    */
   static public function orTry<D, F>(outcome: Outcome<D, F>, fallback: Lazy<Outcome<D, F>>):Outcome<D, F>
     return
@@ -75,7 +75,7 @@ class OutcomeTools {
         case Failure(_): fallback.get();
       }
   /**
-   *   Returns `true` if the outcome is `Some` and the value is equal to `v`, otherwise `false`
+   *   Returns `true` if the outcome is `Success` and the value is equal to `v`, otherwise `false`
    */
   static public function equals<D, F>(outcome:Outcome<D, F>, to: D):Bool
     return
