@@ -1,0 +1,4 @@
+-cp src
+--dce no
+-main CSharp
+--cs bin/cs
