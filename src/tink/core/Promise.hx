@@ -310,13 +310,13 @@ abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> to In->Promise<Ou
     }
 
   @:from static function ofSafe<In, Out>(f:In->Outcome<Out, Error>):Next<In, Out>
-    return x -> f(x);
+    return x -> Promise.lift(f(x));
 
   @:from static function ofSync<In, Out>(f:In->Future<Out>):Next<In, Out>
-    return x -> f(x);
+    return x -> Promise.lift(f(x));
 
   @:from static function ofSafeSync<In, Out>(f:In->Out):Next<In, Out>
-    return x -> f(x);
+    return x -> Promise.lift(f(x));
 
   @:op(a * b) static function _chain<A, B, C>(a:Next<A, B>, b:Next<B, C>):Next<A, C>
     return v -> a(v).next(b);
@@ -335,13 +335,13 @@ abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
 abstract Combiner<In1, In2, Out>(In1->In2->Promise<Out>) from In1->In2->Promise<Out> {
 
   @:from static function ofSync<In1, In2, Out>(f:In1->In2->Outcome<Out, Error>):Combiner<In1, In2, Out>
-    return (x1, x2) -> f(x1, x2);
+    return (x1, x2) -> Promise.lift(f(x1, x2));
 
   @:from static function ofSafe<In1, In2, Out>(f:In1->In2->Future<Out>):Combiner<In1, In2, Out>
-    return (x1, x2) -> f(x1, x2);
+    return (x1, x2) -> Promise.lift(f(x1, x2));
 
   @:from static function ofSafeSync<In1, In2, Out>(f:In1->In2->Out):Combiner<In1, In2, Out>
-    return (x1, x2) -> f(x1, x2);
+    return (x1, x2) -> Promise.lift(f(x1, x2));
 
 }
 
