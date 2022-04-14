@@ -109,9 +109,9 @@ class Futures extends Base {
   }
 
   public function issue143() {
-    asserts.assert(Future.NEVER == cast Promise.NEVER);
+    asserts.assert(Future.never() == Promise.never());
     for (shouldHalt in [true, false]) {
-      function tryGetData():Promise<{ foo: Int }> return shouldHalt ? Promise.NEVER : { foo: 123 };
+      function tryGetData():Promise<{ foo: Int }> return shouldHalt ? Promise.never() : { foo: 123 };
       if (shouldHalt)
         asserts.assert(tryGetData().status.match(NeverEver));
       else
@@ -121,7 +121,7 @@ class Futures extends Base {
     for (shouldHalt in [true, false]) {
       function tryGetData()
         return Promise.resolve(123).next(
-          v -> !shouldHalt ? { foo: 123 } : Promise.NEVER
+          v -> Promise.lift(!shouldHalt ? Promise.never(): { foo: 123 })
         ).eager();
       asserts.assert(tryGetData().status.match(Ready(_)) != shouldHalt);
     }
@@ -130,8 +130,8 @@ class Futures extends Base {
   }
 
   public function issue153() {
-    asserts.assert((Future.NEVER:Future<Noise>) == (Future.NEVER:Future<Noise>));
-    asserts.assert((Promise.NEVER:Promise<Noise>) == (Promise.NEVER:Promise<Noise>));
+    asserts.assert((Future.never():Future<Noise>) == (Future.never():Future<Noise>));
+    asserts.assert((Promise.never():Promise<Noise>) == (Promise.never():Promise<Noise>));
 
     return asserts.done();
   }
@@ -215,10 +215,10 @@ class Futures extends Base {
   }
 
   public function testNever() {
-    var f:Future<Int> = Future.NEVER;
+    var f:Future<Int> = Future.never();
     f.handle(function () {}).cancel();
     function foo<A>() {
-      var f:Future<A> = Future.NEVER;
+      var f:Future<A> = Future.never();
       f.handle(function () {}).cancel();
     }
     foo();

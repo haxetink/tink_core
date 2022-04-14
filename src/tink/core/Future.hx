@@ -28,8 +28,11 @@ import js.lib.Promise as JsPromise;
 abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from FutureTrigger<T> {
 
   static public final NOISE:Future<Noise> = Future.sync(Noise);
-  @:deprecated('use Future.NOISE instead') static public final NULL:Future<Noise> = NOISE;
-  static public final NEVER:Future<Never> = (new FutureObject<Never>());
+  static final NEVER_INST:Future<Dynamic> = (new FutureObject<Never>());
+  @:deprecated('use Future.never instead')
+  static public final NEVER:Future<Never> = cast NEVER_INST;
+  static public function never<T>():Future<T>
+    return cast NEVER_INST;
 
   public var status(get, never):FutureStatus<T>;
     inline function get_status()

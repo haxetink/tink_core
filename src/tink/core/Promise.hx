@@ -22,8 +22,11 @@ import js.lib.Promise as JsPromise;
 abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, Error> {
 
   static public final NOISE:Promise<Noise> = Future.sync(Success(Noise));
-  @:deprecated('use Promise.NOISE instead') static public final NULL:Promise<Noise> = NOISE;
-  static public final NEVER:Promise<Never> = cast Future.NEVER;
+  @:deprecated('Use Promise.never() instead')
+  static public final NEVER:Promise<Never> = never();
+
+  static public function never<T>():Promise<T>
+    return Future.never();
 
   public inline function new(f:(T->Void)->(Error->Void)->CallbackLink)
     this = new Future(cb -> f(v -> cb(Success(v)), e -> cb(Failure(e))));
