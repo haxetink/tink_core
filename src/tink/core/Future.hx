@@ -70,7 +70,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
 
   @:to public function noise():Future<Noise>
     return
-      if (status.match(NeverEver)) cast NEVER;
+      if (status.match(NeverEver)) never();
       else map(_ -> Noise);
 
   /**
@@ -93,7 +93,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    */
   public function map<A>(f:T->A, ?gather:Gather):Future<A>
     return switch status {
-      case NeverEver: cast NEVER;
+      case NeverEver: never();
       case Ready(l): new SyncFuture<A>(l.map(f));
       default: new SuspendableFuture<A>(fire -> this.handle(v -> fire(f(v))));
     }
@@ -104,7 +104,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    */
   public function flatMap<A>(next:T->Future<A>, ?gather:Gather):Future<A>
     return switch status {
-      case NeverEver: cast NEVER;
+      case NeverEver: never();
       case Ready(l):
         new SuspendableFuture<A>(fire -> next(l.get()).handle(v -> fire(v)));
       default:
@@ -114,8 +114,8 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
           return outer.join(inner);
         });
     }
-    
-    
+
+
   public inline function swap<R>(v:R):Future<R>
     return map(_ -> v);
 
@@ -142,7 +142,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    */
   public function merge<A, R>(that:Future<A>, combine:T->A->R):Future<R>
     return switch [status, that.status] {
-      case [NeverEver, _] | [_, NeverEver]: cast NEVER;
+      case [NeverEver, _] | [_, NeverEver]: never();
       default:
         new SuspendableFuture<R>(yield -> {
           function check(?v:Dynamic)

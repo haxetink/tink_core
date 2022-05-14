@@ -75,7 +75,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 
   @:to public function noise():Promise<Noise>
     return
-      if (this.status.match(NeverEver)) cast NEVER;
+      if (this.status.match(NeverEver)) never();
       else (this:Promise<T>).next(function (v) return Noise);
 
   public function isSuccess():Future<Bool>
