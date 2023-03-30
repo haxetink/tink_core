@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "2.0.2",
-	"releasenote": "Compatibility with Haxe 4.0 and 4.1",
+	"version": "2.1.0",
+	"releasenote": "Deprecate Promise.NEVER in favor of Promise.never(). Compatibility for Haxe 4.3",
 	"tags": [
 		"tink",
 		"cross",
