@@ -306,19 +306,19 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 @:callable
 abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> to In->Promise<Out> {
 
-  @:from extern inline static function ofDynamic<In>(f:In->Nonsense):Next<In, Dynamic> // Nonsense being non-existent, no function should ever unify with this, unless it returns Dynamic
+  @:from(ignoredByInference) extern inline static function ofDynamic<In>(f:In->Nonsense):Next<In, Dynamic> // Nonsense being non-existent, no function should ever unify with this, unless it returns Dynamic
     return function (x):Promise<Dynamic> {
       var d:Dynamic = f(x);
       return Future.sync(Success(d));
     }
 
-  @:from static function ofSafe<In, Out>(f:In->Outcome<Out, Error>):Next<In, Out>
+  @:from(ignoredByInference) static function ofSafe<In, Out>(f:In->Outcome<Out, Error>):Next<In, Out>
     return x -> Promise.lift(f(x));
 
-  @:from static function ofSync<In, Out>(f:In->Future<Out>):Next<In, Out>
+  @:from(ignoredByInference) static function ofSync<In, Out>(f:In->Future<Out>):Next<In, Out>
     return x -> Promise.lift(f(x));
 
-  @:from static function ofSafeSync<In, Out>(f:In->Out):Next<In, Out>
+  @:from(ignoredByInference) static function ofSafeSync<In, Out>(f:In->Out):Next<In, Out>
     return x -> Promise.lift(f(x));
 
   @:op(a * b) static function _chain<A, B, C>(a:Next<A, B>, b:Next<B, C>):Next<A, C>
@@ -330,20 +330,20 @@ private abstract Nonsense(Dynamic) {}
 
 @:callable
 abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
-  @:from static function ofSync<T>(f:Error->T):Recover<T>
+  @:from(ignoredByInference) static function ofSync<T>(f:Error->T):Recover<T>
     return e -> Future.sync(f(e));
 }
 
 @:callable
 abstract Combiner<In1, In2, Out>(In1->In2->Promise<Out>) from In1->In2->Promise<Out> {
 
-  @:from static function ofSync<In1, In2, Out>(f:In1->In2->Outcome<Out, Error>):Combiner<In1, In2, Out>
+  @:from(ignoredByInference) static function ofSync<In1, In2, Out>(f:In1->In2->Outcome<Out, Error>):Combiner<In1, In2, Out>
     return (x1, x2) -> Promise.lift(f(x1, x2));
 
-  @:from static function ofSafe<In1, In2, Out>(f:In1->In2->Future<Out>):Combiner<In1, In2, Out>
+  @:from(ignoredByInference) static function ofSafe<In1, In2, Out>(f:In1->In2->Future<Out>):Combiner<In1, In2, Out>
     return (x1, x2) -> Promise.lift(f(x1, x2));
 
-  @:from static function ofSafeSync<In1, In2, Out>(f:In1->In2->Out):Combiner<In1, In2, Out>
+  @:from(ignoredByInference) static function ofSafeSync<In1, In2, Out>(f:In1->In2->Out):Combiner<In1, In2, Out>
     return (x1, x2) -> Promise.lift(f(x1, x2));
 
 }
