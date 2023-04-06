@@ -14,7 +14,7 @@ abstract Lazy<T>(LazyObject<T>) from LazyObject<T> {
     return this.get();
   }
 
-  @:from static inline function fromNoise<T>(l:Lazy<Noise>):Lazy<Null<T>>
+  @:from(ignoredByInference) static inline function fromNoise<T>(l:Lazy<Noise>):Lazy<Null<T>>
     return cast l;
 
   @:from static public inline function ofFunc<T>(f:()->T):Lazy<T>
