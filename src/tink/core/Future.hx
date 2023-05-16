@@ -48,7 +48,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     is suspended: either before it is triggered or when the last `handle` callback is removed.
   **/
   public inline function new(wakeup:(trigger:T->Void)->CallbackLink)
-    this = new SuspendableFuture(wakeup);
+    this = new SuspendableFuture((yield, destroy) -> wakeup(yield));
 
   /**
    *  Registers a callback to handle the future result.
@@ -84,7 +84,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
          | [_, v = { status: Ready(_) }]:
          v;
       default:
-        new SuspendableFuture<T>(fire -> this.handle(fire) & that.handle(fire));
+        new SuspendableFuture<T>((yield, _) ->  this.handle(yield) & that.handle(yield));
     }
 
   /**
@@ -95,7 +95,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return switch status {
       case NeverEver: never();
       case Ready(l): new SyncFuture<A>(l.map(f));
-      default: new SuspendableFuture<A>(fire -> this.handle(v -> fire(f(v))));
+      default: new SuspendableFuture<A>((yield, _) -> this.handle(v -> yield(f(v))));
     }
 
   /**
@@ -106,12 +106,15 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return switch status {
       case NeverEver: never();
       case Ready(l):
-        new SuspendableFuture<A>(fire -> next(l.get()).handle(v -> fire(v)));
+        new SuspendableFuture<A>((yield, _) -> next(l.get()).handle(v -> yield(v)));
       default:
-        new SuspendableFuture<A>(function (yield) {
+        new SuspendableFuture<A>((yield, destroy) -> {
           final inner = new CallbackLinkRef();
-          final outer = this.handle(v -> inner.link = next(v).handle(yield));
-          return outer.join(inner);
+          final outer = this.handle(v -> switch next(v) {
+            case { status: NeverEver }: destroy();
+            case f: inner.link = f.handle(yield);
+          });
+          outer.join(inner);
         });
     }
 
@@ -144,7 +147,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return switch [status, that.status] {
       case [NeverEver, _] | [_, NeverEver]: never();
       default:
-        new SuspendableFuture<R>(yield -> {
+        new SuspendableFuture<R>((yield, _) -> {
           function check(?v:Dynamic)
             return switch [status, that.status] {
               case [Ready(a), Ready(b)]:
@@ -320,7 +323,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    */
   @:noUsing
   static public function irreversible<A>(init:(A->Void)->Void):Future<A>
-    return new SuspendableFuture(yield -> { init(yield); null; });
+    return new SuspendableFuture((yield, _) -> { init(yield); null; });
 
   /**
    *  Same as `first`
@@ -491,7 +494,7 @@ private class SuspendableFuture<T> extends FutureObject<T> {//TODO: this has qui
   final callbacks:CallbackList<T>;
   var status:FutureStatus<T> = Suspended;
   var link:CallbackLink;
-  var wakeup:(T->Void)->CallbackLink;
+  var wakeup:(yield:(result:T)->Void, destroy:()->Void)->CallbackLink;
 
   override public function getStatus()
     return this.status;
@@ -533,8 +536,13 @@ private class SuspendableFuture<T> extends FutureObject<T> {//TODO: this has qui
         callbacks.add(callback);
     }
 
+  function destroy() {
+    callbacks.dispose();
+    status = NeverEver;
+  }
+
   function arm()
-    link = wakeup(x -> trigger(x));
+    link = wakeup(x -> trigger(x), destroy);
 
   override public function eager() {
     switch status {
