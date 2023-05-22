@@ -88,3 +88,13 @@ As we see, some transformations return synchronously, others return promises, ot
 
 Promises and futures neatly complement each other in that one means an asynchronous operation that can fail, and the other an operation that can't fail. However promises and surprises compete over the same semantics. Obviously you will want to use surprises if the error type is anything other than `Error`. For everything else, you will probably find `Promise` to be easier to deal with. It works better with type inference that `>>` and also leads to saner error reporting. If you get type errors with `>>` then it tends to results in cascades of `Future<SomeInsanelyComplexTypeParameterHereThatSpansMultipleLines> should be Int`.
 
+## Can I Handle a JavaScript Promise?
+Working with external APIs it may be tempting to expect JavaScript promises to “just work”. Despite having the same name as a Tink Promise, JavaScript Promises are specific to that environment and must be converted using the "ofJsPromise" method prior to being handled using Tink conventions, e.g.:
+```
+Promise.ofJsPromise(as.uploadFromFile(AZURE_STORAGE_CONNECTION_STRING,"test"))
+    .next(function(r:BlobUploadCommonResponse){
+        trace("response:"+r._response.request.url);
+        trace("status:"+r._response.status);
+        return (r);
+    });
+```
