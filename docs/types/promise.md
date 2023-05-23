@@ -86,5 +86,5 @@ As we see, some transformations return synchronously, others return promises, ot
 
 ## Promise vs Surprise
 
-Promises and futures neatly complement each other in that one means an asynchronous operation that can fail, and the other an operation that can't fail. However promises and surprises compete over the same semantics. Obviously you will want to use surprises if the error type is anything other than `Error`. For everything else, you will probably find `Promise` to be easier to deal with. It works better with type inference that `>>` and also leads to saner error reporting. If you get type errors with `>>` then it tends to results in cascades of `Future<SomeInsanelyComplexTypeParameterHereThatSpansMultipleLines> should be Int`.
+Promises and futures neatly complement each other in that one means an asynchronous operation that can fail, and the other an operation that can't fail. However promises and surprises compete over the same semantics. Obviously you will want to use surprises if the error type is anything other than `Error`. For everything else, you will probably find `Promise` to be easier to deal with. It works better with type inference than `>>` and also leads to saner error reporting. If you get type errors with `>>` then it tends to results in cascades of `Future<SomeInsanelyComplexTypeParameterHereThatSpansMultipleLines> should be Int`.
 
