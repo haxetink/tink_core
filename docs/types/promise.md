@@ -90,7 +90,8 @@ Promises and futures neatly complement each other in that one means an asynchron
 
 ## Can I Handle a JavaScript Promise?
 Working with external APIs it may be tempting to expect JavaScript promises to “just work”. Despite having the same name as a Tink Promise, JavaScript Promises are specific to that environment and must be converted using the "ofJsPromise" method prior to being handled using Tink conventions, e.g.:
-```
+
+```haxe
 Promise.ofJsPromise(as.uploadFromFile(AZURE_STORAGE_CONNECTION_STRING,"test"))
     .next(function(r:BlobUploadCommonResponse){
         trace("response:"+r._response.request.url);
