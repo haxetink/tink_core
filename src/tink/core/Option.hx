@@ -42,11 +42,11 @@ class OptionTools {
     }
   
   /**
-   *  Extracts the value if the option is `Some`, uses the fallback value otherwise
+   *  Returns the option if it is `Some`, otherwise the fallback option
    */
   static public inline function orTry<T>(o:Option<T>, fallback:Lazy<Option<T>>):Option<T>
     return switch o {
-      case Some(v): o;
+      case Some(_): o;
       default: fallback.get();
     }
 
