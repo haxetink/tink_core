@@ -1,5 +1,6 @@
 package tink.core;
 
+@:using(tink.core.Option.OptionTools)
 typedef Option<T> = haxe.ds.Option<T>;
 
 class OptionTools {
