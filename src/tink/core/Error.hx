@@ -44,6 +44,14 @@ enum abstract ErrorCode(Int) from Int to Int {
   var InsufficientStorage = 507;
   var BandwidthLimitExceeded = 509;
 
+  var PrivateConstructor = 10010;
+  var VirtualMethod = 10011;
+  var NullPointer = 10012;
+  var IllegalArgument = 10013;
+  var UnsupportedOperation = 10014;
+  var IllegalState = 10015;
+  var OperationCancelled = 10016;
+  var AssertionFailure = 10017;
 }
 
 class TypedError<T> {
