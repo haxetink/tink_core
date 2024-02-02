@@ -231,7 +231,7 @@ class CallbackList<T> extends SimpleDisposable {
         final errors = [];
         var length = cells.length;
         for (i in 0...length)
-          try cells[i].invoke(data) catch (err) errors.push(err);
+          try cells[i].invoke(data) catch (err:Dynamic) errors.push(err);
 
         busy = false;
 
