@@ -226,9 +226,12 @@ class CallbackList<T> extends SimpleDisposable {
         if (destructive)
           dispose();
 
+        // Invoke all the cells, even if some of them throw exceptions. Another option would be to fail fast,
+        // but I think it's not nice to let one rogue cell mess things up for all the others.
+        final errors = [];
         var length = cells.length;
         for (i in 0...length)
-          cells[i].invoke(data);
+          try cells[i].invoke(data) catch (err) errors.push(err);
 
         busy = false;
 
@@ -240,6 +243,22 @@ class CallbackList<T> extends SimpleDisposable {
 
           if (queue.length > 0)
             queue.shift()();
+        }
+
+        #if debug_tink
+          #if js
+            function dump(str) js.Browser.console.error(str);
+          #elseif sys
+            function dump(str) Sys.stderr().writeString('${str}\n');
+          #else
+            function dump(str) trace(str);
+          #end
+          for (i => err in errors) dump('Callback $i barfed: $err');
+        #end
+        switch errors.length {
+          case 0:
+          case 1: throw errors[0];
+          case _: throw errors;
         }
       }
     });
