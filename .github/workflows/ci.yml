@@ -25,7 +25,7 @@ jobs:
           - php
           # - cpp # TODO: figure out the hxcpp situation
           - js
-          - java -D jvm
+          # - java -D jvm # TODO: this longer works, travix need to support jvm target
           - cs -D erase-generics
         exclude:
           - haxe-version: 4.0.5
