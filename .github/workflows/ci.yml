@@ -23,7 +23,7 @@ jobs:
           - neko
           - python
           - php
-          - cpp
+          # - cpp # TODO: figure out the hxcpp situation
           - js
           - java -D jvm
           - cs -D erase-generics
