@@ -60,8 +60,6 @@ jobs:
 
     - name: Run Test
       run: lix run travix ${{ matrix.target }}
-      env:
-        PUPPETEER_ARGS: --no-sandbox,--disable-setuid-sandbox
 
   release:
     runs-on: ubuntu-latest
