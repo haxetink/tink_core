@@ -232,4 +232,22 @@ class Promises extends Base {
   }
   #end
 
+  
+  public function andCall() {
+    return Promise.resolve(42).and(Promise.resolve('foo'))
+      .next(v -> {
+        asserts.assert(v.a == 42);
+        asserts.assert(v.b == 'foo');
+        return asserts.done();
+      });
+  }
+  
+  public function andOp() {
+    return (Promise.resolve(42) && Promise.resolve('foo'))
+      .next(v -> {
+        asserts.assert(v.a == 42);
+        asserts.assert(v.b == 'foo');
+        return asserts.done();
+      });
+  }
 }

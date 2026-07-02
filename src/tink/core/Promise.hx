@@ -102,9 +102,8 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   static inline public function irreversible<A>(f:(resolve:A->Void, reject:Error->Void)->Void):Promise<A>
     return new Promise((res, rej) -> {f(res, rej); null;});
 
-  @:noCompletion @:op(a && b) static function and<A, B>(a:Promise<A>, b:Promise<B>):Promise<Pair<A, B>>
-    // return a.merge(b, Pair.new); // see https://github.com/HaxeFoundation/haxe/issues/9764
-    return a.merge(b, (a, b) -> new Pair(a, b));
+  @:op(a && b) public function and<B>(b:Promise<B>):Promise<Pair<T, B>>
+    return abstract.merge(b, Pair.new);
 
   /**
    * Given an Iterable (e.g. Array) of Promises, handle them one by one with the `yield` function until one of them yields `Some` value

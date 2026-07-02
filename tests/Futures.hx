@@ -300,4 +300,23 @@ class Futures extends Base {
     });
   }
   #end
+  
+  
+  public function andCall() {
+    return Future.sync(42).and(Future.sync('foo'))
+      .next(v -> {
+        asserts.assert(v.a == 42);
+        asserts.assert(v.b == 'foo');
+        return asserts.done();
+      });
+  }
+  
+  public function andOp() {
+    return (Future.sync(42) && Future.sync('foo'))
+      .next(v -> {
+        asserts.assert(v.a == 42);
+        asserts.assert(v.b == 'foo');
+        return asserts.done();
+      });
+  }
 }
