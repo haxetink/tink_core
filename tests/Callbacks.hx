@@ -5,6 +5,7 @@ import tink.unit.Assert.*;
 using tink.CoreApi;
 
 @:asserts
+@:timeout(20000)
 class Callbacks extends Base {
   public function testInvoke() {
     var calls = 0;
