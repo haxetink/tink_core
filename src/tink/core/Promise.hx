@@ -103,7 +103,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return new Promise((res, rej) -> {f(res, rej); null;});
 
   @:op(a && b) public function and<B>(b:Promise<B>):Promise<Pair<T, B>>
-    return abstract.merge(b, Pair.new);
+    return merge(b, Pair.new);
 
   /**
    * Given an Iterable (e.g. Array) of Promises, handle them one by one with the `yield` function until one of them yields `Some` value

@@ -342,7 +342,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
    */
   
   @:op(a && b) public function and<B>(b:Future<B>):Future<Pair<T, B>>
-    return abstract.merge(b, Pair.new);
+    return merge(b, Pair.new);
 
   @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryFailingFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Surprise<R, F>)
     return f.flatMap(function (o) return switch o {
