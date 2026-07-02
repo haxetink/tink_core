@@ -18,7 +18,7 @@ abstract PhysicalType<T>(Either<Class<T>, Enum<T>>) {
 
   public function check(v:T)
     return
-      Std.is(v, this.getParameters()[0]);
+      Std.isOfType(v, this.getParameters()[0]);
 
   @:from static public function ofClass<C>(c:Class<C>)
     return new PhysicalType(Left(c));
