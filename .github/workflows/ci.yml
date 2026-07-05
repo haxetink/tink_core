@@ -24,7 +24,7 @@ jobs:
           - neko
           - python
           - php
-          # - cpp # TODO: figure out the hxcpp situation
+          - cpp
           - js
           - jvm
 
