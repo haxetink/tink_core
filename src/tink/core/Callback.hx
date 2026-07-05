@@ -28,29 +28,27 @@ abstract Callback<T>(T->Void) from (T->Void) {
   static function drainOverflow()
     if (!draining) {
       draining = true;
-      Error.tryFinally(() -> {
-        while (overflow.length > 0) {
-          var fn = overflow.shift();
-          var rest = overflow;
-          // give the item a clean queue so its own nested guarded
-          // calls run synchronously until it hits the wall itself
-          overflow = [];
-          Error.tryFinally(
-            () -> guardStackoverflow(fn),
-            () -> overflow = overflow.concat(rest)
-          );
-        }
-      }, () -> draining = false);
+      while (overflow.length > 0) {
+        var fn = overflow.shift();
+        var rest = overflow;
+        // give the item a clean queue so its own nested guarded
+        // calls run synchronously until it hits the wall itself
+        overflow = [];
+        guardStackoverflow(fn);
+        overflow = overflow.concat(rest);
+      }
+      draining = false;
     }
 
+  // Note: behavior is unspecified if `fn` throws,
+  // pending https://github.com/haxetink/tink_core/issues/165
   extern static public inline function guardStackoverflow(fn:()->Void):Void
     if (overflow.length == 0 && depth < MAX_DEPTH) {
       depth++;
-      Error.tryFinally(fn, () -> {
-        depth--;
-        if (depth == 0)
-          drainOverflow();
-      });
+      fn();
+      depth--;
+      if (depth == 0)
+        drainOverflow();
     }
     else overflow.push(fn);
 
