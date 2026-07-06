@@ -64,7 +64,7 @@ class SimpleDisposable implements OwnedDisposable {
       case null:
       case v:
         disposeHandlers = null;
-        var f = f;
+        final f = f;
         this.f = noop;//TODO: stack overflow guard
         f();
         for (h in v)

@@ -36,7 +36,7 @@ As some point you may wish to recover from the error case of a promise and conti
 @:callable
 abstract Recover<T>(Error->Future<T>) from Error->Future<T> {
   @:from static function ofSync<T>(f:Error->T):Recover<T>
-    return function (e) return Future.sync(f(e));
+    return e -> Future.sync(f(e));
 }
 ```
 
@@ -64,19 +64,19 @@ What this achieves is that we may chain operations on promises in a similarly fl
 function requestUrl(url:String):Promise<String> { ... };
 
 requestUrl('http://host.tld/some.xml')
-  .next(function (s:String) 
+  .next((s:String) -> 
     try return Xml.parse(s)
     catch (e:Dynamic) return new Error('Invalid XML: $s')
   )
-  .next(function (x:Xml) return
+  .next((x:Xml) ->
     x.firstElement().getAttribute('url')
   )
   .next(requestUrl)
-  .next(function (data:String) return Future.async(function (cb) {
-    var div = document.createDivElement();
-    var span = document.createSpanElement();
+  .next((data:String) -> Future.async(cb -> {
+    final div = document.createDivElement();
+    final span = document.createSpanElement();
     span.innerHTML = 'Proceed?';
-    var accept = document.createButtonElement();
+    final accept = document.createButtonElement();
     accept.innerHTML = 'Yes';
     accept.onclick = cb.bind(data);
   }));

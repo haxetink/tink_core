@@ -9,9 +9,9 @@ class Options extends Base {
     
     throws(
       asserts,
-      function () None.sure(),
+      () -> None.sure(),
       Error,
-      function (e) return e.message == 'Some value expected but none found'
+      e -> e.message == 'Some value expected but none found'
     );
     
     return asserts.done();
@@ -25,8 +25,8 @@ class Options extends Base {
   }
   
   public function or() {
-    var some = Some(1);
-    var none:Option<Int> = None;
+    final some = Some(1);
+    final none:Option<Int> = None;
     asserts.assert(some.orNull() == 1);
     asserts.assert(none.orNull() == null);
         

@@ -75,7 +75,7 @@ private class SuspendableProgress<T> extends ProgressObject<T> {
     if (status == null)
       status = InProgress(ProgressValue.ZERO);
     var disposable = AlreadyDisposed.INST;
-    var changed = switch status {
+    final changed = switch status {
       case Finished(_):
         Signal.dead();
       case InProgress(_):
@@ -158,7 +158,7 @@ abstract ProgressValue(Pair<Float, Option<Float>>) from Pair<Float, Option<Float
    * Normalize to 0-1 range
    */
   public inline function normalize():Option<UnitInterval>
-    return total.map(function(v) return value / v);
+    return total.map(v -> value / v);
 
   inline function get_value()
     return this.a;
@@ -169,9 +169,9 @@ abstract ProgressValue(Pair<Float, Option<Float>>) from Pair<Float, Option<Float
 
 abstract UnitInterval(Float) from Float to Float {
   public function toPercentageString(dp:Int) {
-    var m = Math.pow(10, dp);
-    var v = Math.round(this * m * 100) / m;
-    var s = Std.string(v);
+    final m = Math.pow(10, dp);
+    final v = Math.round(this * m * 100) / m;
+    final s = Std.string(v);
     return switch s.indexOf('.') {
       case -1: s + '.' + StringTools.lpad('', '0', dp) + '%';
       case i if (s.length - i > dp): s.substr(0, dp + i + 1) + '%';

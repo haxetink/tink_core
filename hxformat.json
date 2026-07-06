@@ -1,0 +1,46 @@
+{
+	"indentation": {
+		"character": "  ",
+		"tabWidth": 2,
+		"trailingWhitespace": false
+	},
+	"sameLine": {
+		"functionBody": "keep",
+		"anonFunctionBody": "keep",
+		"ifBody": "keep",
+		"elseBody": "keep",
+		"forBody": "keep",
+		"whileBody": "keep",
+		"doWhileBody": "keep",
+		"tryBody": "keep",
+		"catchBody": "keep",
+		"caseBody": "keep",
+		"expressionCase": "keep",
+		"returnBody": "keep",
+		"returnBodySingleLine": "keep"
+	},
+	"wrapping": {
+		"maxLineLength": 160,
+		"callParameter": { "defaultWrap": "keep" },
+		"arrayWrap": { "defaultWrap": "keep" },
+		"objectLiteral": { "defaultWrap": "keep" },
+		"methodChain": { "defaultWrap": "keep" },
+		"opBoolChain": { "defaultWrap": "keep" },
+		"opAddSubChain": { "defaultWrap": "keep" }
+	},
+	"emptyLines": {
+		"finalNewline": false,
+		"maxAnywhereInFile": 2
+	},
+	"whitespace": {
+		"ifPolicy": "after",
+		"forPolicy": "none",
+		"whilePolicy": "none",
+		"catchPolicy": "after",
+		"doPolicy": "after",
+		"objectFieldColonPolicy": "after",
+		"colonPolicy": "none",
+		"arrowFunctionsPolicy": "around",
+		"binopPolicy": "around"
+	}
+}

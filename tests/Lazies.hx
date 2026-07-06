@@ -14,11 +14,11 @@ class Lazies extends Base {
   }
 
   public function testNoise() {
-    var l:Lazy<Null<Int>> = Lazy.NOISE;
+    final l:Lazy<Null<Int>> = Lazy.NOISE;
     @:nullSafety(Off) {
       asserts.assert(l.get() == null);
-      var l:Lazy<Int> = Lazy.NOISE;
-      asserts.assert(l.get() == (cast null:Int));
+      final l2:Lazy<Int> = Lazy.NOISE;
+      asserts.assert(l2.get() == (cast null:Int));
     }
     return asserts.done();
   }
@@ -38,14 +38,14 @@ class Lazies extends Base {
 
     function test(i:Lazy<Int>, expected:Int) {
       counter = 0;
-      var j = i.map(double);
+      final j = i.map(double);
       asserts.assert(0 == counter);
       asserts.assert(j.get() == expected);
       j.get();
       asserts.assert(1 == counter);
 
       counter = 0;
-      var k = i.flatMap(lazyDouble);
+      final k = i.flatMap(lazyDouble);
       asserts.assert(0 == counter);
       asserts.assert(k.get() == expected);
       k.get();
@@ -53,7 +53,7 @@ class Lazies extends Base {
     }
 
     test(7, 14);
-    test(function () return 11, 22);
+    test(() -> 11, 22);
 
     return asserts.done();
   }

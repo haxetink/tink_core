@@ -26,7 +26,7 @@ class Player {
 
 class Main {
   static function main() {
-    var player = new Player();
+    final player = new Player();
     
     // Register a handler on the signal
     player.damanged.handle(v -> trace('Damaged ${v}HP!');
@@ -63,7 +63,7 @@ abstract Signal<T> {
 
 A `Signal` quite simply invokes `Callback`s that are registered using `handle` whenever an event occurs.
 
-There is significant similarity between `Signal` and `Future`. It's best to read up on futures if you haven't done so yet. You may also notice `next`, which at any time will create a future corresponding to the *next* occurence of the signal. So if you only want to do something on the next occurence, you would do `someSignal.next().handle(function (data) {})`.
+There is significant similarity between `Signal` and `Future`. It's best to read up on futures if you haven't done so yet. You may also notice `next`, which at any time will create a future corresponding to the *next* occurence of the signal. So if you only want to do something on the next occurence, you would do `someSignal.next().handle(data -> {})`.
 
 ### Why use signals?
 
@@ -110,9 +110,9 @@ Here's an example of just that:
 class Clock {
   public var tick(default, null):Signal<Noise>;
   public function new() {
-    var s = Signal.trigger();//<-- this trigger is never passed outside the constructor
-    var t = new Timer(1000);
-    t.run = function () s.trigger(Noise);
+    final s = Signal.trigger();//<-- this trigger is never passed outside the constructor
+    final t = new Timer(1000);
+    t.run = () -> s.trigger(Noise);
     this.tick = s;
   }
 }
@@ -129,10 +129,10 @@ First of all, `map` comes from the functional term of mapping. The idea is to us
 Secondly, we have `join` that allows us to join two signals of the same type into one. Here's an example of what that might look like, where we assume that we have a `plusButton` and a `minusButton` on our GUI and they each have a signal called `clicked`:
 
 ```haxe
-var delta = 
+final delta = 
   plusButton.clicked
-    .map(function (_) return 1)
-    .join(minusButton.clicked.map(function (_) return -1));
+    .map(_ -> 1)
+    .join(minusButton.clicked.map(_ -> -1));
 
 $type(delta);//tink.core.Signal<Int>
 ```

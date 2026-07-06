@@ -8,9 +8,9 @@ using tink.CoreApi;
 class Callbacks extends Base {
   public function testInvoke() {
     var calls = 0;
-    var cbs:Array<Callback<Int>> = [
-      function () calls++,
-      function (_) calls++
+    final cbs:Array<Callback<Int>> = [
+      () -> calls++,
+      _ -> calls++
     ];
     cbs.push(cbs.copy());
 
@@ -23,8 +23,8 @@ class Callbacks extends Base {
 
   public function testGuarding()
     return Future.irreversible(done -> {
-      var i = 100000,
-          finished = true;
+      var i = 100000;
+      final finished = true;
       function rec()
         if (--i == 0) {
           asserts.assert(finished);
@@ -43,7 +43,7 @@ class Callbacks extends Base {
 
     Callback.defer(count);
     Callback.defer(count);
-    Callback.defer(function () {
+    Callback.defer(() -> {
       asserts.assert(counter == 2);
       asserts.done();
     });
@@ -54,7 +54,7 @@ class Callbacks extends Base {
 
   public function testSimpleLink() {
     var calls = 0;
-    var link:CallbackLink = function () calls++;
+    final link:CallbackLink = () -> calls++;
     link.cancel();
     link.cancel();
     asserts.assert(calls == 1);
@@ -62,13 +62,13 @@ class Callbacks extends Base {
   }
 
   public function testLinkPair() {
-    var calls = 0,
-      calls1 = 0,
-      calls2 = 0;
+    var calls = 0;
+    var calls1 = 0;
+    var calls2 = 0;
 
-    var link1:CallbackLink = function () { calls++; calls1++; }
-    var link2:CallbackLink = function () { calls++; calls2++; }
-    var link = link1 & link2;
+    final link1:CallbackLink = () -> { calls++; calls1++; }
+    final link2:CallbackLink = () -> { calls++; calls2++; }
+    final link = link1 & link2;
 
     link.cancel();
     asserts.assert(calls == 2);
@@ -87,16 +87,16 @@ class Callbacks extends Base {
   }
 
   public function testList() {
-    var cb = new CallbackList();
+    final cb = new CallbackList();
 
     asserts.assert(cb.length == 0);
 
-    var calls = 0,
-        calls1 = 0,
-        calls2 = 0;
+    var calls = 0;
+    var calls1 = 0;
+    var calls2 = 0;
 
-    var link1 = cb.add(function () { calls++; calls1++; } ),
-        link2 = cb.add(function (_) { calls++; calls2++; });
+    final link1 = cb.add(() -> { calls++; calls1++; });
+    final link2 = cb.add(_ -> { calls++; calls2++; });
 
     asserts.assert(cb.length == 2);
 
@@ -125,19 +125,19 @@ class Callbacks extends Base {
 
   @:describe("null CallbackLink should be noop and not crash")
   public function testNullCallbackLink() {
-    var link:CallbackLink = null;
+    final link:CallbackLink = null;
     link.cancel();
 
-    var fn:()->Void = link;
+    final fn:()->Void = link;
     fn();
 
-    var cb:Callback<Noise> = link;
+    final cb:Callback<Noise> = link;
     cb.invoke(Noise);
 
-    var pair = link & link;
+    final pair = link & link;
     pair.cancel();
 
-    var many:CallbackLink = [link, link];
+    final many:CallbackLink = [link, link];
     many.cancel();
 
     return asserts.done();
@@ -158,7 +158,7 @@ class Callbacks extends Base {
     });
 
     for (i in 0...100)
-      for (link in [for (i in 0...1 + Std.random(20)) list.add(function () {})])
+      for (link in [for (i in 0...1 + Std.random(20)) list.add(() -> {})])
         link.cancel();
 
     asserts.assert(list.length == 0);

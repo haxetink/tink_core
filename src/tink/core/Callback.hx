@@ -11,7 +11,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
     return this;
 
   static var depth = 0;
-  static inline var MAX_DEPTH = #if (eval || python || interp) 100 #else 500 #end;
+  static final MAX_DEPTH = #if (eval || python || interp) 100 #else 500 #end;
 
   // When the guarded call stack is exhausted, continuations are parked here
   // and executed when the stack unwinds, so that synchronous delivery chains
@@ -29,8 +29,8 @@ abstract Callback<T>(T->Void) from (T->Void) {
     if (!draining) {
       draining = true;
       while (overflow.length > 0) {
-        var fn = overflow.shift();
-        var rest = overflow;
+        final fn = overflow.shift();
+        final rest = overflow;
         // give the item a clean queue so its own nested guarded
         // calls run synchronously until it hits the wall itself
         overflow = [];
@@ -56,13 +56,14 @@ abstract Callback<T>(T->Void) from (T->Void) {
     guardStackoverflow(() -> this(data));
 
   @:from static inline function fromNiladic<A>(f:()->Void):Callback<A>
-    return #if js cast f #else function (_) f() #end;
+    return #if js cast f #else _ -> f() #end;
 
   @:from static function fromMany<A>(callbacks:Array<Callback<A>>):Callback<A>
     return
-      function (v:A)
+      (v:A) -> {
         for (callback in callbacks)
           callback.invoke(v);
+      };
 
   @:noUsing static public function defer(f:()->Void) {
     #if macro
@@ -125,7 +126,7 @@ abstract CallbackLink(LinkObject) from LinkObject {
     return new LinkPair(this, b);
 
   @:from static public function fromMany(callbacks:Array<CallbackLink>)
-    return fromFunction(function () {
+    return fromFunction(() -> {
       if (callbacks != null)
         for (cb in callbacks) cb.cancel();
       else
@@ -187,7 +188,7 @@ private class ListCell<T> implements LinkObject {
 
   public inline function cancel()
     if (list != null) {
-      var list = this.list;
+      final list = this.list;
       clear();
       @:privateAccess list.release();
     }
@@ -208,13 +209,13 @@ class CallbackList<T> extends SimpleDisposable {
   public var busy(default, null):Bool = false;
 
   public function new(destructive = false) {
-    super(function () if (!busy) destroy());
+    super(() -> if (!busy) destroy());
     this.destructive = destructive;
     this.cells = [];
   }
 
-  public var ondrain:()->Void = function () {}
-  public var onfill:()->Void = function () {}
+  public var ondrain:()->Void = () -> {}
+  public var onfill:()->Void = () -> {}
 
   inline function release()
     if (--used <= cells.length >> 1)
@@ -242,7 +243,7 @@ class CallbackList<T> extends SimpleDisposable {
 
   public inline function add(cb:Callback<T>):CallbackLink {
     if (disposed) return null;
-    var node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
+    final node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
     cells.push(node);
     if (used++ == 0) onfill();
     return node;
@@ -261,7 +262,7 @@ class CallbackList<T> extends SimpleDisposable {
         if (destructive)
           dispose();
 
-        var length = cells.length;
+        final length = cells.length;
         for (i in 0...length)
           cells[i].invoke(data);
 
