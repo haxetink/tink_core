@@ -505,15 +505,18 @@ private class SuspendableFuture<T> extends FutureObject<T> {//TODO: this has qui
     this.wakeup = wakeup;
     this.callbacks = new CallbackList(true);
 
-    callbacks.ondrain = function () if (status == Awaited) {
+    // guarded here (rather than in CallbackList) because arming/disarming
+    // walks up potentially long future chains, while futures may resolve
+    // asynchronously anyway, so deferring the walk is semantically sound
+    callbacks.ondrain = () -> Callback.guardStackoverflow(() -> if (status == Awaited) {
       status = Suspended;
       link.cancel();
       link = null;
-    }
-    callbacks.onfill = function () if (status == Suspended) {
+    });
+    callbacks.onfill = () -> Callback.guardStackoverflow(() -> if (status == Suspended) {
       status = Awaited;
       arm();
-    }
+    });
   }
 
   function trigger(value:T)

@@ -11,15 +11,46 @@ abstract Callback<T>(T->Void) from (T->Void) {
     return this;
 
   static var depth = 0;
-  static inline var MAX_DEPTH = #if eval 200 #elseif (python || interp) 100 #else 500 #end;
+  static inline var MAX_DEPTH = #if (eval || python || interp) 100 #else 500 #end;
 
+  // When the guarded call stack is exhausted, continuations are parked here
+  // and executed when the stack unwinds, so that synchronous delivery chains
+  // are never split across macro-tasks (splitting them loses signal events
+  // fired in between, see SignalStream). Two invariants keep delivery order
+  // identical to fully synchronous execution:
+  //   1. once anything is parked, all subsequent guarded calls park behind it
+  //      (nothing may overtake a parked continuation), and
+  //   2. continuations parked while a drained item runs are processed before
+  //      the remainder of the queue (depth-first order).
+  static var overflow:Array<()->Void> = [];
+  static var draining = false;
+
+  static function drainOverflow()
+    if (!draining) {
+      draining = true;
+      while (overflow.length > 0) {
+        var fn = overflow.shift();
+        var rest = overflow;
+        // give the item a clean queue so its own nested guarded
+        // calls run synchronously until it hits the wall itself
+        overflow = [];
+        guardStackoverflow(fn);
+        overflow = overflow.concat(rest);
+      }
+      draining = false;
+    }
+
+  // Note: behavior is unspecified if `fn` throws,
+  // pending https://github.com/haxetink/tink_core/issues/165
   extern static public inline function guardStackoverflow(fn:()->Void):Void
-    if (depth < MAX_DEPTH) {
+    if (overflow.length == 0 && depth < MAX_DEPTH) {
       depth++;
       fn();
       depth--;
+      if (depth == 0)
+        drainOverflow();
     }
-    else Callback.defer(fn);
+    else overflow.push(fn);
 
   public function invoke(data:T):Void
     guardStackoverflow(() -> this(data));
@@ -202,14 +233,18 @@ class CallbackList<T> extends SimpleDisposable {
     }
   }
 
+  // onfill/ondrain are state synchronization hooks and must run synchronously:
+  // deferring them under guardStackoverflow leaves observers with stale state
+  // (e.g. a Suspendable signal that is not activated when `handle` returns).
+  // Recursion-prone implementations (see SuspendableFuture) guard themselves.
   inline function drain()
-    Callback.guardStackoverflow(ondrain);
+    ondrain();
 
   public inline function add(cb:Callback<T>):CallbackLink {
     if (disposed) return null;
     var node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
     cells.push(node);
-    if (used++ == 0) Callback.guardStackoverflow(onfill);
+    if (used++ == 0) onfill();
     return node;
   }
 
