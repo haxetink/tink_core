@@ -11,7 +11,7 @@ abstract Callback<T>(T->Void) from (T->Void) {
     return this;
 
   static var depth = 0;
-  static final MAX_DEPTH = #if (eval || python || interp) 100 #else 500 #end;
+  static inline final MAX_DEPTH = #if (eval || python || interp) 100 #else 500 #end;
 
   // When the guarded call stack is exhausted, continuations are parked here
   // and executed when the stack unwinds, so that synchronous delivery chains
