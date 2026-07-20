@@ -99,7 +99,7 @@ Now let's say that we know for a fact, that all these JSONs contain arrays of st
 
 ```haxe
 function loadJson(url:String):Future<String>
-  return loadFromUrl(url).map(haxe.Json.parse).map(function (a) return a[0]);
+  return loadFromUrl(url).map(haxe.Json.parse).map(a -> a[0]);
 ```
 
 Or let's try something else. Loading information from wikipedia.
@@ -107,7 +107,7 @@ Or let's try something else. Loading information from wikipedia.
 ```haxe
 function loadWikiDescription(article:String):Future<Null<String>> 
   return 
-    loadFromUrl('http://en.wikipedia.org/wiki/$article').map(function (html:String) 
+    loadFromUrl('http://en.wikipedia.org/wiki/$article').map((html:String) -> 
       return
         if (html.indexOf('Wikipedia does not have an article with this exact name') != -1) null;
         else html.split('<p>').pop().split('</p>').shift();
@@ -120,8 +120,8 @@ Now let's assume that we want to load an article that is specified in a config, 
 
 ```haxe
 loadJson('config.json').map(
-  function (config: { article:String }):Future<Null<String>>
-    return loadWikiDescription(config.article)
+  (config: { article:String }):Future<Null<String>> ->
+    loadWikiDescription(config.article)
 );
 ```
 
@@ -130,8 +130,8 @@ so the resulting future will in fact be of type `Future<Future<Null<String>>>` w
 
 ```haxe
 Future.flatten(loadJson('config.json').map(
-  function (config: { article:String }) 
-    return loadWikiDescription(config.article)
+  (config: { article:String }) -> 
+    loadWikiDescription(config.article)
 ));
 ```
 
@@ -139,8 +139,8 @@ Now because this is a lot to write for a rather common situation, we have `flatM
 
 ```haxe
 loadJson('config.json').flatMap(
-  function (config: { article:String }) 
-    return loadWikiDescription(config.article)
+  (config: { article:String }) -> 
+    loadWikiDescription(config.article)
 );
 ```
 
@@ -152,13 +152,13 @@ To compose futures, you have three basic options:
 
 1. `first` - take two futures of the same type and construct one that yields the result of whichever future finishes first. Example: `loadFrom(source1).first(loadFrom(source2))`
 2. `fromMany` - take an array of futures and transform it to a single future of an array of the results. In fact you've seen this in action in "Why use futures?"
-3. `merge` - take two futures and merge them together by means of a function. Example: `loadFrom(source1).merge(loadFrom(source2), function (r1, r2) return r1 + r2)`
+3. `merge` - take two futures and merge them together by means of a function. Example: `loadFrom(source1).merge(loadFrom(source2), (r1, r2) -> r1 + r2)`
 
 Now you may want to use `first` on futures of different types. Here's how that would work:
 
 ```haxe
-var x:Future<X> = ...; 
-var y:Future<Y> = ...; 
+final x:Future<X> = ...; 
+final y:Future<Y> = ...; 
 
 $type(x.map(Either.Left).first(y.map(Either.Right)));//Future<Either<X, Y>>
 ``` 
@@ -172,9 +172,9 @@ Let's examine a naive implementation of `map`:
 ```haxe
 function map<In, Out>(future:Future<In>, transform:In->Out):Future<Out>
   return new Future(
-    function (callback:Callback<Out>):CallbackLink
-      return f.handle(
-        function (data:In) callback.invoke(transform(data))
+    (callback:Callback<Out>):CallbackLink ->
+      f.handle(
+        (data:In) -> callback.invoke(transform(data))
       )
   )
 ```
@@ -184,13 +184,13 @@ What this does is to create a future that deals with a `callback` by registering
 Example:
 
 ```haxe
-var f = Future.sync('foo'),
-  array = [];
+final f = Future.sync('foo');
+final array = [];
 
-var mapped = map(f, array.push);
-mapped.handle(function (x) trace(x));//1
+final mapped = map(f, array.push);
+mapped.handle(x -> trace(x));//1
 trace(array);//[foo]
-mapped.handle(function (x) trace(x));//2
+mapped.handle(x -> trace(x));//2
 trace(array);//[foo, foo]
 ```
 
@@ -225,8 +225,8 @@ Or if we wanted to achieve the same in one step:
 
 ```haxe
 function loadFromUrl(url:String)
-  return Future.async(function (handler:String->Void) {
-    var h = new haxe.Http(url);
+  return Future.async((handler:String->Void) -> {
+    final h = new haxe.Http(url);
     h.onData = handler;
     h.send();
   });
@@ -236,10 +236,10 @@ A fair question to ask would be, how to deal with errors. Quite simply, we will 
 
 ```haxe
 function loadFromUrl(url:String):Future<Outcome<String, String>>
-  return Future.async(function (handler:Outcome<String, String>->Void) {
-    var h = new haxe.Http(url);
-    h.onData = function (data:String) handler(Success(data));
-    h.onError = function (error:String) handler(Failure(error));
+  return Future.async((handler:Outcome<String, String>->Void) -> {
+    final h = new haxe.Http(url);
+    h.onData = (data:String) -> handler(Success(data));
+    h.onError = (error:String) -> handler(Failure(error));
     h.send();
   });
 ```
@@ -257,9 +257,9 @@ function loadFromUrl(url:String)
 The first version just gets the data synchronously and then "lifts" it to become a `Future`. The second version constructs a lazy future, i.e. the operation is executed when you register the first callback. Example:
 
 ```haxe
-var load = loadFromUrl('http://example.com/');//no requests have been made yet
-load.handle(function (data) {});//now the request is made
-load.handle(function (data) {});//the data is already available, so no request is made
+final load = loadFromUrl('http://example.com/');//no requests have been made yet
+load.handle(data -> {});//now the request is made
+load.handle(data -> {});//the data is already available, so no request is made
 ```
 
 Lazyness of course is something that you may want in async scenarios. For that reason `Future.async` has a `lazy` parameter that you can set to `true`.
@@ -288,8 +288,8 @@ Evidently, `>>` is quite supercharged. Let's examine an example from above once 
 
 ```haxe
 loadJson('config.json').flatMap(
-  function (config: { article:String }) 
-    return loadWikiDescription(config.article)
+  (config: { article:String }) -> 
+    loadWikiDescription(config.article)
 );
 ```
 
@@ -297,8 +297,8 @@ We can now write it as this:
 
 ```haxe
 loadJson('config.json') >> 
-  function (config: { article:String }) 
-    return loadWikiDescription(config.article);
+  (config: { article:String }) -> 
+    loadWikiDescription(config.article);
 ```
 
 Apart from shaving off a few characters, we achieved something else entirely. This piece of code is *significantly* more flexible. If `loadJson` starts returning a `Surprise` because the maintainer added error handling, our code remains unaffected. The overloaded `>>` operator will lift the transformation to the right context. The same applies for `loadWikiDescription`. With this syntax it no longer matters whether it returns a `Surprise` or just a `Future` or even just a plain value. 

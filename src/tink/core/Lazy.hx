@@ -43,7 +43,7 @@ private interface Computable {
 
 private class LazyConst<T> implements LazyObject<T> {
 
-  var value:T;
+  final value:T;
 
   public function isComputed():Bool
     return true;
@@ -92,7 +92,7 @@ private class LazyFunc<T> implements LazyObject<T> {
           case null:
           case cur:
             from = null;
-            var stack = [];
+            final stack = [];
             while (cur != null && !cur.isComputed()) {
               stack.push(cur);
               cur = cur.underlying();

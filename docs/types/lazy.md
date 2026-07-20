@@ -32,14 +32,14 @@ class Test {
   }
     
   static function main() {
-    var l1 = lazyInt(),
-        l2 = lazyInt();
+    final l1 = lazyInt();
+    final l2 = lazyInt();
       
     trace("before any access");
     trace(l1.get());//traces "generating" and the random value
     trace(l1.get());//traces the same value
       
-    var l3 = l2.flatMap(lazyToString);
+    final l3 = l2.flatMap(lazyToString);
     trace("before printing l3");
     trace(l3.get());
     /**

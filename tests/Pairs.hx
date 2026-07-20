@@ -5,7 +5,7 @@ using tink.CoreApi;
 @:asserts
 class Pairs extends Base {
   public function test() {
-    var c = new Pair(new Pair(1, 2), new Pair(3, 4));
+    final c = new Pair(new Pair(1, 2), new Pair(3, 4));
     
     asserts.assert(1 == c.a.a);
     asserts.assert(2 == c.a.b);

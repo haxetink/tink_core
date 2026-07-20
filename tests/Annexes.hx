@@ -7,7 +7,7 @@ using tink.CoreApi;
 @:asserts
 class Annexes extends Base {
   public function testAll() {
-    var car = new Car();
+    final car = new Car();
     return assert(car.parts.get(Engine) == car.parts.get(Engine));
   }
 }

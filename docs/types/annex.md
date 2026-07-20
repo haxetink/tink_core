@@ -28,7 +28,7 @@ class ObservationProtocol {
   public function new(person:Person) {}
 }
 
-var johnDoe = new Person("John Doe");
+final johnDoe = new Person("John Doe");
 johnDoe.about.get(ObservationProtocol);//gives us the same ...
 johnDoe.about.get(ObservationProtocol);//... protocol every time
 ```
@@ -73,7 +73,7 @@ class PersonEvents {
 
 using PersonEvents;
 
-johnDoe.on("died", function (_) trace("oh no!"));
+johnDoe.on("died", _ -> trace("oh no!"));
 johnDoe.fire(new openfl.events.Event("died"));//traces "oh no!"
 ```
 

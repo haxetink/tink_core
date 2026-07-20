@@ -165,8 +165,8 @@ private abstract OutcomeMapper<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Out
     return this.f(o);
 
   @:from static function withSameError<In, Out, Error>(f:In->Outcome<Out, Error>):OutcomeMapper<In, Error, Out, Error> {
-    return new OutcomeMapper(function (o)
-      return switch o {
+    return new OutcomeMapper(o ->
+      switch o {
         case Success(d): f(d);
         case Failure(f): Failure(f);
       }
@@ -174,8 +174,8 @@ private abstract OutcomeMapper<DIn, FIn, DOut, FOut>({ f: Outcome<DIn, FIn>->Out
   }
 
   @:from static function withEitherError<DIn, FIn, DOut, FOut>(f:DIn->Outcome<DOut, FOut>):OutcomeMapper<DIn, FIn, DOut, Either<FIn, FOut>> {
-    return new OutcomeMapper(function (o)
-      return switch o {
+    return new OutcomeMapper(o ->
+      switch o {
         case Success(d):
           switch f(d) {
             case Success(d): Success(d);

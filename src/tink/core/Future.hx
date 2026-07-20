@@ -173,9 +173,9 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
   @:noUsing
   static public function ofJsPromise<A>(promise:JsPromise<A>, ?transformError:Any->Error):Surprise<A, Error>
     return Future.irreversible(
-      function(cb) promise.then(
-        function(a) Callback.defer(cb.bind(Success(a))),
-        function(e:Any) cb(Failure(switch transformError {
+      cb -> promise.then(
+        a -> Callback.defer(cb.bind(Success(a))),
+        (e:Any) -> cb(Failure(switch transformError {
           case null: Error.ofJsError(e);
           case f: f(e);
         }))
@@ -225,18 +225,18 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return switch a {
       case []: Future.sync(lift(Success([])));
       default: new Future(yield -> {
-        var links = new Array<CallbackLink>(),
-            ret = [for (x in a) (null:X)],
-            index = 0,
-            pending = 0,
-            done = false,
-            concurrency = switch concurrency {
-              case null: a.length;
-              case v:
-                if (v < 1) 1;
-                else if (v > a.length) a.length;
-                else v;
-            };
+        final links = new Array<CallbackLink>();
+        final ret = [for (x in a) (null:X)];
+        var index = 0;
+        var pending = 0;
+        var done = false;
+        final concurrency = switch concurrency {
+          case null: a.length;
+          case v:
+            if (v < 1) 1;
+            else if (v > a.length) a.length;
+            else v;
+        };
 
         inline function fire(v) {
           done = true;
@@ -258,7 +258,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
             while (index < ret.length) {
 
               var index = index++;
-              var p = a[index];
+              final p = a[index];
 
               function check(o:In)
                 switch fn(o) {
@@ -278,7 +278,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
                 default:
                   pending++;
                   links.push(
-                    p.handle(function (o) {
+                    p.handle(o -> {
                       pending--;
                       check(o);
                       if (!done) step();
@@ -302,7 +302,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
 
   /**
    *  Creates a sync future.
-   *  Example: `var i = Future.sync(1); // Future<Int>`
+   *  Example: `final i = Future.sync(1); // Future<Int>`
    */
   @:noUsing static inline public function sync<A>(v:A):Future<A>
     return lazy(v);
@@ -313,7 +313,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
   #if python @:native('make') #end
   @:deprecated('use Future.irreversible() - or better yet: new Future()')
   @:noUsing static public function async<A>(init:(A->Void)->Void, ?lazy = false):Future<A> {
-    var ret = irreversible(init);
+    final ret = irreversible(init);
     return if (lazy) ret else ret.eager();
   }
   /**
@@ -345,22 +345,22 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
     return merge(b, Pair.new);
 
   @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryFailingFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Surprise<R, F>)
-    return f.flatMap(function (o) return switch o {
+    return f.flatMap(o -> switch o {
       case Success(d): map(d);
       case Failure(f): Future.sync(Failure(f));
     });
 
   @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryFlatMap<D, F, R>(f:Surprise<D, F>, map:D->Future<R>):Surprise<R, F>
-    return f.flatMap(function (o) return switch o {
+    return f.flatMap(o -> switch o {
       case Success(d): map(d).map(Success);
       case Failure(f): Future.sync(Failure(f));
     });
 
   @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryFailingMap<D, F, R>(f:Surprise<D, F>, map:D->Outcome<R, F>)
-    return f.map(function (o) return o.flatMap(map));
+    return f.map(o -> o.flatMap(map));
 
   @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _tryMap<D, F, R>(f:Surprise<D, F>, map:D->R)
-    return f.map(function (o) return o.map(map));
+    return f.map(o -> o.map(map));
 
   @:deprecated('>> for futures is deprecated') @:op(a >> b) static function _flatMap<T, R>(f:Future<T>, map:T->Future<R>)
     return f.flatMap(map);
@@ -377,7 +377,7 @@ abstract Future<T>(FutureObject<T>) from FutureObject<T> to FutureObject<T> from
 
   @:noUsing
   static public function delay<T>(ms:Int, value:Lazy<T>):Future<T>
-    return Future.irreversible(function(cb) haxe.Timer.delay(function() cb(value.get()), ms)).eager();
+    return Future.irreversible(cb -> haxe.Timer.delay(() -> cb(value.get()), ms)).eager();
 
 }
 
@@ -409,7 +409,7 @@ private class FutureObject<T> {
 
   static function promisify(f:FutureObject<Any>):#if (haxe < version("4.2.0")) Dynamic #else JsPromise<Any> #end {
     return new JsPromise((resolve, reject) -> f.handle(v -> {
-      var isOutcome = try Type.getEnum(v) == Outcome catch (e:Dynamic) false;
+      final isOutcome = try Type.getEnum(v) == Outcome catch (e:Dynamic) false;
       if (isOutcome) switch (cast v:Outcome<Any, Error>) {
         case Success(v): resolve(v);
         case Failure(e): reject(e.toJsError());
@@ -422,7 +422,7 @@ private class FutureObject<T> {
 
 private class SyncFuture<T> extends FutureObject<T> {//TODO: there should be a way to get rid of this
 
-  var value:Lazy<T>;
+  final value:Lazy<T>;
 
   override public function getStatus()
     return Ready(value);
@@ -524,7 +524,7 @@ private class SuspendableFuture<T> extends FutureObject<T> {//TODO: this has qui
       case Ready(_):
       default:
         status = Ready(value);
-        var link = this.link;
+        final link = this.link;
         this.link = null;
         wakeup = null;
         callbacks.invoke(value);

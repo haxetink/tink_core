@@ -61,7 +61,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
       else if (that.disposed) this;
       else new Suspendable<T>(
         fire -> {
-          var cb:Callback<T> = fire;
+          final cb:Callback<T> = fire;
           handle(cb) & that.handle(cb);
         },
         self -> {
@@ -82,8 +82,8 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    * Creates a future that yields the next value matched by the provided selector.
    */
    public function pickNext<R>(selector:T->Option<R>):Future<R> {
-    var ret = Future.trigger(),
-        link:CallbackLink = null;
+    final ret = Future.trigger();
+    var link:CallbackLink = null;
 
     link = this.listen(v -> switch selector(v) {
       case None:
@@ -110,7 +110,7 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    *  Transforms this signal and makes it emit `Noise`
    */
   public function noise():Signal<Noise>
-    return map(function (_) return Noise);
+    return map(_ -> Noise);
 
   /**
    *  Creates a new signal which stores the result internally.
@@ -140,10 +140,10 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
 
   /**
    *  Creates a `Signal` from classic signals that has the semantics of `addListener` and `removeListener`
-   *  Example: `var signal = Signal.ofClassical(emitter.addListener.bind(eventType), emitter.removeListener.bind(eventType));`
+   *  Example: `final signal = Signal.ofClassical(emitter.addListener.bind(eventType), emitter.removeListener.bind(eventType));`
    */
   static public function ofClassical<A>(add:(A->Void)->Void, remove:(A->Void)->Void, ?gather:Gather):Signal<A>
-    return new Suspendable<A>(function (fire) {
+    return new Suspendable<A>(fire -> {
       add(fire);
       return remove.bind(fire);
     });
@@ -181,8 +181,8 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
     this.activate = activate;
     this.init = init;
 
-    handlers.ondrain = function () subscription.cancel();
-    handlers.onfill = function () {
+    handlers.ondrain = () -> subscription.cancel();
+    handlers.onfill = () -> {
       switch init {
         case null:
         case f:
@@ -200,7 +200,7 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
     return
       if (s.disposed) Signal.dead();
       else {
-        var ret = new Suspendable<Out>(activate);
+        final ret = new Suspendable<Out>(activate);
         s.ondispose(ret.dispose);
         ret;
       }

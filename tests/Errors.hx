@@ -10,9 +10,9 @@ import js.lib.Error as JsError;
 class Errors extends Base {
   #if js
   public function ofJs() {
-    var message = 'whatever';
-    var jsError = new JsError(message);
-    var err = Error.ofJsError(jsError);
+    final message = 'whatever';
+    final jsError = new JsError(message);
+    final err = Error.ofJsError(jsError);
     asserts.assert(err.code == 500);
     asserts.assert(err.message == message);
     asserts.assert(err.data == jsError);
@@ -20,19 +20,19 @@ class Errors extends Base {
   }
   
   public function toJs() {
-    var message = 'whatever';
-    var err = new Error(message);
-    var jsError = err.toJsError();
+    final message = 'whatever';
+    final err = new Error(message);
+    final jsError = err.toJsError();
     asserts.assert(jsError.message == message);
     asserts.assert((untyped jsError.data) == err);
     return asserts.done();
   }
   
   public function reuseNative() {
-    var message = 'whatever';
-    var js1 = new JsError(message);
-    var err = Error.ofJsError(js1);
-    var js2 = err.toJsError();
+    final message = 'whatever';
+    final js1 = new JsError(message);
+    final err = Error.ofJsError(js1);
+    final js2 = err.toJsError();
     asserts.assert(js1 == js2);
     return asserts.done();
   }
@@ -51,7 +51,7 @@ class Errors extends Base {
   public function toPromise() {
     final e:TypedError<Int> = TypedError.typed(500, '', 42);
     final p:Promise<Noise> = e.toPromise();
-    return p.map(function(o) return switch o {
+    return p.map(o -> switch o {
       case Success(_):
         asserts.fail('expected failure');
       case Failure(e):

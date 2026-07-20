@@ -10,15 +10,15 @@ class Outcomes extends Base {
     
     throws(
       asserts,
-      function () Failure('four').sure(),
+      () -> Failure('four').sure(),
       String,
-      function (f) return f == 'four'
+      f -> f == 'four'
     );
     throws(
       asserts,
-      function () Failure(new Error('test')).sure(),
+      () -> Failure(new Error('test')).sure(),
       Error,
-      function (e) return e.message == 'test'
+      e -> e.message == 'test'
     );
     
     return asserts.done();
@@ -32,22 +32,22 @@ class Outcomes extends Base {
   }
   
   public function testFlatMap() {
-    var outcomes = [
+    final outcomes = [
       Success(5), 
       Failure(true)
     ];
         
-    asserts.assert(compare(Success(3), outcomes[0].flatMap(function (x) return Success(x - 2))));
-    asserts.assert(compare(Failure(true), outcomes[1].flatMap(function (x) return Success(x - 2))));
+    asserts.assert(compare(Success(3), outcomes[0].flatMap(x -> Success(x - 2))));
+    asserts.assert(compare(Failure(true), outcomes[1].flatMap(x -> Success(x - 2))));
     
-    asserts.assert(compare(Failure(Right(7)), outcomes[0].flatMap(function (x) return Failure(x + 2))));
-    asserts.assert(compare(Failure(Left(true)), outcomes[1].flatMap(function (x) return Failure(x + 2))));
+    asserts.assert(compare(Failure(Right(7)), outcomes[0].flatMap(x -> Failure(x + 2))));
+    asserts.assert(compare(Failure(Left(true)), outcomes[1].flatMap(x -> Failure(x + 2))));
     return asserts.done();
   }
   
   public function or() {
-    var success = Success(1);
-    var failure:Outcome<Int, Bool> = Failure(true);
+    final success = Success(1);
+    final failure:Outcome<Int, Bool> = Failure(true);
     asserts.assert(success.orNull() == 1);
     asserts.assert(failure.orNull() == null);
         

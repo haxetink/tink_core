@@ -53,7 +53,7 @@ class TypedError<T> {
   public var pos(default, null):Null<Pos>;
   public var callStack(default, null):Stack;
   public var exceptionStack(default, null):Stack;
-  var isTinkError = true;
+  final isTinkError = true;
 
   public function new(?code:ErrorCode = InternalError, message, ?pos) {
     this.code = code;
@@ -101,7 +101,7 @@ class TypedError<T> {
   }
 
   static public function typed<A>(?code:ErrorCode, message:String, data:A, ?pos:Pos):TypedError<A> {
-    var ret = new TypedError(code, message, pos);
+    final ret = new TypedError(code, message, pos);
     ret.data = data;
     return ret;
   }
@@ -130,7 +130,7 @@ class TypedError<T> {
       try
         Success(f())
       catch (ex:Dynamic) {
-        var e = asError(ex); // this tempvar sidesteps https://github.com/HaxeFoundation/haxe/issues/9617
+        final e = asError(ex); // this tempvar sidesteps https://github.com/HaxeFoundation/haxe/issues/9617
         Failure(
           switch e {
             case null:
@@ -145,7 +145,7 @@ class TypedError<T> {
 
   static public function reporter(?code:ErrorCode, message:String, ?pos:Pos):Dynamic->Error
     return
-      function (e:Dynamic) return Error.withData(code, message, e, pos);
+      (e:Dynamic) -> Error.withData(code, message, e, pos);
 
   static public inline function rethrow(any:Dynamic):Dynamic {
     #if neko
@@ -170,7 +170,7 @@ class TypedError<T> {
       return null;
     #else
     try {
-      var ret = f();
+      final ret = f();
       cleanup();
       return ret;
     }

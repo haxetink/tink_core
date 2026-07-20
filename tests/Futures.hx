@@ -7,30 +7,30 @@ class Futures extends Base {
   public function testSync() {
     var f = Future.sync(4);
     var x = -4;
-    f.handle(function (v) x = v);
+    f.handle(v -> { x = v; });
     asserts.assert(4 == x);
     f = 12;
-    f.map(function (v) return v * 2).handle(function (v) x = v);
+    f.map(v -> v * 2).handle(v -> { x = v; });
     asserts.assert(24 == x);
     return asserts.done();
   }
 
   public function testOfAsyncCall() {
-    var callbacks:Array<Int->Void> = [];
+    final callbacks:Array<Int->Void> = [];
     function fake(callback:Int->Void) {
       callbacks.push(callback);
     }
     function trigger()
       for (c in callbacks) c(4);
 
-    var f = Future.irreversible(fake).eager();
+    final f = Future.irreversible(fake).eager();
 
     var calls = 0;
 
-    var link1 = f.handle(function () calls++),
-        link2 = f.handle(function () calls++);
+    final link1 = f.handle(() -> calls++);
+    final link2 = f.handle(() -> calls++);
 
-    f.handle(function (v) {
+    f.handle(v -> {
       asserts.assert(4 == v);
       calls++;
     });
@@ -51,11 +51,11 @@ class Futures extends Base {
 
     t = Future.trigger();
 
-    var f:Future<Int> = t;
+    final f:Future<Int> = t;
 
     var calls = 0;
 
-    f.handle(function (v) {
+    f.handle(v -> {
       asserts.assert(4 == v);
       calls++;
     });
@@ -67,11 +67,11 @@ class Futures extends Base {
   }
 
   public function testFlatten() {
-    var f = Future.sync(Future.sync(4));
-    var flat = Future.flatten(f),
-      calls = 0;
+    final f = Future.sync(Future.sync(4));
+    final flat = Future.flatten(f);
+    var calls = 0;
 
-    flat.handle(function (v) {
+    flat.handle(v -> {
       asserts.assert(4 == v);
       calls++;
     });
@@ -81,9 +81,9 @@ class Futures extends Base {
   }
 
   public function issue131() {
-    var future = new Future(yield -> null);
+    final future = new Future(yield -> null);
     asserts.assert(future.status.match(Suspended));
-    var link = future.handle(_ -> {});
+    final link = future.handle(_ -> {});
     asserts.assert(!future.status.match(Suspended));
     link.cancel();
     asserts.assert(future.status.match(Suspended));
@@ -91,14 +91,14 @@ class Futures extends Base {
   }
 
   public function issue142() {
-    var t1 = Future.trigger(),
-        t2 = Future.trigger(),
-        t3 = Future.trigger();
+    final t1 = Future.trigger();
+    final t2 = Future.trigger();
+    final t3 = Future.trigger();
 
     t2.trigger(42);
     t3.trigger(Failure(new Error('haha!')));
 
-    var a = [
+    final a = [
       Promise.lift(t1),
       Promise.lift(t2),
       Promise.lift(t3),
@@ -137,48 +137,48 @@ class Futures extends Base {
   }
 
   public function testOps() {
-    var t1 = Future.trigger(),
-        t2 = Future.trigger();
-    var f1:Future<Int> = t1,
-        f2:Future<Int> = t2;
+    final t1 = Future.trigger();
+    final t2 = Future.trigger();
+    final f1:Future<Int> = t1;
+    final f2:Future<Int> = t2;
 
-    var f = (f1 || f2).eager();
+    final fOr = (f1 || f2).eager();
     t1.trigger(1);
     t2.trigger(2);
 
-    asserts.assert(f.status.match(Ready(_.get() => 1)));
-    var f = (f1 && f2).eager();
+    asserts.assert(fOr.status.match(Ready(_.get() => 1)));
+    final fAnd = (f1 && f2).eager();
 
-    asserts.assert(f.status.match(Ready(_.get() => {a : 1, b: 2 })));
+    asserts.assert(fAnd.status.match(Ready(_.get() => {a : 1, b: 2 })));
 
-    var t1 = Future.trigger(),
-        t2 = Future.trigger();
-    var f1:Future<Int> = t1,
-        f2:Future<Noise> = t2;
+    final t1b = Future.trigger();
+    final t2b = Future.trigger();
+    final f1b:Future<Int> = t1b;
+    final f2b:Future<Noise> = t2b;
 
-    t1.trigger(1);
-    t2.trigger(Noise);
+    t1b.trigger(1);
+    t2b.trigger(Noise);
 
-    var f = f1 || f2;
+    final fb = f1b || f2b;
 
-    // asserts.assert(f.status.match(Ready(_.get() => Left(1))));
+    // asserts.assert(fb.status.match(Ready(_.get() => Left(1))));
 
     return asserts.done();
   }
 
   public function testMany() {
-    var triggers = [for (i in 0...10) Future.trigger()];
-    var futures = [for (t in triggers) t.asFuture()];
+    final triggers = [for (i in 0...10) Future.trigger()];
+    final futures = [for (t in triggers) t.asFuture()];
 
-    var read1 = false,
-        read2 = false;
+    var read1 = false;
+    var read2 = false;
 
-    var lazy1 = Future.lazy(function () {
+    final lazy1 = Future.lazy(() -> {
       read1 = true;
       return 10;
     });
 
-    var lazy2 = Future.lazy(function () {
+    final lazy2 = Future.lazy(() -> {
       read2 = true;
       return 10;
     });
@@ -191,17 +191,17 @@ class Futures extends Base {
         if (index < a.length) a[index] + sum(a, index + 1);
         else 0;
 
-    var f = Future.inSequence(futures).map(sum.bind(_, 0)),
-        f2 = Future.inSequence(futures).map(sum.bind(_, 0));
+    final f = Future.inSequence(futures).map(sum.bind(_, 0));
+    final f2 = Future.inSequence(futures).map(sum.bind(_, 0));
 
     asserts.assert(!read1);
     asserts.assert(!read2);
 
-    f.handle(function(v) asserts.assert(v == 65));
-    f2.handle(function(v) asserts.assert(v == 65));
+    f.handle(v -> asserts.assert(v == 65));
+    f2.handle(v -> asserts.assert(v == 65));
 
     var handled = false;
-    f.handle(function () handled = true);
+    f.handle(() -> handled = true);
 
     asserts.assert(!handled);
     asserts.assert(read1);
@@ -215,22 +215,22 @@ class Futures extends Base {
   }
 
   public function testNever() {
-    var f:Future<Int> = Future.never();
-    f.handle(function () {}).cancel();
+    final f:Future<Int> = Future.never();
+    f.handle(() -> {}).cancel();
     function foo<A>() {
-      var f:Future<A> = Future.never();
-      f.handle(function () {}).cancel();
+      final f:Future<A> = Future.never();
+      f.handle(() -> {}).cancel();
     }
     foo();
     return asserts.done();
   }
 
   public function testDelay() {
-    var now = haxe.Timer.stamp();
+    final now = haxe.Timer.stamp();
     var resolved = false;
-    Future.delay(500, Noise).handle(function(_) {
+    Future.delay(500, Noise).handle(_ -> {
       resolved = true;
-      var dt = haxe.Timer.stamp() - now;
+      final dt = haxe.Timer.stamp() - now;
       asserts.assert(dt > .4); // it may not be very exact
       asserts.assert(dt < .6); // it may not be very exact
       asserts.done();
@@ -247,30 +247,30 @@ class Futures extends Base {
     var cancelled1 = false;
     var cancelled2 = false;
 
-    var f1 = new Future(cb -> {
-      var timer = haxe.Timer.delay(function() {
+    final f1 = new Future(cb -> {
+      final timer = haxe.Timer.delay(() -> {
         triggered1 = true;
         cb(1);
       }, 50);
-      function() {
+      () -> {
         cancelled1 = true;
         timer.stop();
       }
     });
-    var f2 = new Future(cb -> {
-      var timer = haxe.Timer.delay(function() {
+    final f2 = new Future(cb -> {
+      final timer = haxe.Timer.delay(() -> {
         triggered2 = true;
         cb(2);
       }, 100);
-      function() {
+      () -> {
         cancelled2 = true;
         timer.stop();
       }
     });
 
-    f1.first(f2).handle(function(o) {
+    f1.first(f2).handle(o -> {
       asserts.assert(o == 1);
-      Callback.defer(function() {
+      Callback.defer(() -> {
         asserts.assert(triggered1);
         asserts.assert(cancelled1);
         asserts.assert(!triggered2);
@@ -284,7 +284,7 @@ class Futures extends Base {
   }
 
   public function testNoise() {
-    var f = Future.sync(42);
+    final f = Future.sync(42);
     f.noise().handle(v -> asserts.assert(v == Noise));
     (f : Future<Noise>).handle(v -> asserts.assert(v == Noise));
     return asserts.done();
@@ -292,8 +292,8 @@ class Futures extends Base {
 
   #if (js && js.compat)
   public function issue161() {
-    var f = Future.sync(42);
-    var p:js.lib.Promise<Int> = cast f;
+    final f = Future.sync(42);
+    final p:js.lib.Promise<Int> = cast f;
     return Promise.lift(p).next(v -> {
       asserts.assert(v == 42);
       asserts.done();

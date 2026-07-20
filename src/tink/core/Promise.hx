@@ -41,19 +41,19 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return this.flatMap(f);
 
   public inline function tryRecover(f:Next<Error, T>):Promise<T>
-    return this.flatMap(function (o) return switch o {
+    return this.flatMap(o -> switch o {
       case Success(d): Future.sync(o);
       case Failure(e): f(e);
     });
 
   public inline function recover(f:Recover<T>):Future<T>
-    return this.flatMap(function (o) return switch o {
+    return this.flatMap(o -> switch o {
       case Success(d): Future.sync(d);
       case Failure(e): f(e);
     });
 
   public function mapError(f:Error->Error):Promise<T>
-    return this.map(function(o) return switch o {
+    return this.map(o -> switch o {
       case Success(_): o;
       case Failure(e): Failure(f(e));
     });
@@ -76,13 +76,13 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:to public function noise():Promise<Noise>
     return
       if (this.status.match(NeverEver)) never();
-      else (this:Promise<T>).next(function (v) return Noise);
+      else (this:Promise<T>).next(_ -> Noise);
 
   public function isSuccess():Future<Bool>
-    return this.map(function (o) return o.isSuccess());
+    return this.map(o -> o.isSuccess());
 
   public function next<R>(f:Next<T, R>, ?gather:Gather):Promise<R>
-    return this.flatMap(function (o) return switch o {
+    return this.flatMap(o -> switch o {
       case Success(d): f(d);
       case Failure(f): Future.sync(Failure(f));
     });
@@ -125,13 +125,13 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    */
   @:noUsing
   static public function iterate<A, R>(promises:Iterable<Promise<A>>, yield:Next<A, Option<R>>, fallback:Promise<R>, ?fallThroughOnError = false):Promise<R> {
-    return Future.irreversible(function(cb) {
-      var iter = promises.iterator();
+    return Future.irreversible(cb -> {
+      final iter = promises.iterator();
       function next() {
         if(iter.hasNext())
-          iter.next().handle(function(o) switch o {
+          iter.next().handle(o -> switch o {
             case Success(v):
-              yield(v).handle(function(o) switch o {
+              yield(v).handle(o -> switch o {
                 case Success(Some(ret)): cb(Success(ret));
                 case Success(None): next();
                 case Failure(e): cb(Failure(e));
@@ -161,7 +161,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    *   Some usage examples:
    *     - wait longer for later attempts and stop after a limit:
    *     ```haxe
-   *     function (info) return switch info.attempt {
+   *     info -> switch info.attempt {
    *         case 10: info.error;
    *         case v: Future.delay(v * 1000, Noise);
    *     }
@@ -169,7 +169,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    *
    *     - bail out on error codes that are fatal:
    *     ```haxe
-   *     function (info) return switch info.error.code {
+   *     info -> switch info.error.code {
    *       case Forbidden : info.error; // in this case new attempts probably make no sense
    *       default: Future.delay(1000, Noise);
    *     }
@@ -178,7 +178,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
    *     - and also actually timeout:
    *     ```haxe
    *     // with using DateTools
-   *     function (info) return
+   *     info ->
    *       if (info.elapsed > 2.minutes()) info.error
    *       else Future.delay(1000, Noise);
    *     ```
@@ -188,15 +188,14 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:noUsing
   static public function retry<T>(gen:()->Promise<T>, next:Next<{ attempt: Int, error:Error, elapsed:Float }, Noise>):Promise<T> {
     function stamp() return haxe.Timer.stamp() * 1000;
-    var start = stamp();
-    return (function attempt(count:Int) {
+    final start = stamp();
+    function attempt(count:Int):Promise<T> {
       return gen().tryRecover(
-        function (error) {
-          return next({ attempt: count, error: error, elapsed: stamp() - start })
-            .next(function (_) return attempt(count + 1));
-        }
+        error -> next({ attempt: count, error: error, elapsed: stamp() - start })
+          .next(_ -> attempt(count + 1))
       );
-    })(1);
+    }
+    return attempt(1);
   }
 
   #if js
@@ -208,7 +207,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
     return Future.ofJsPromise(promise);
 
   @:to public inline function toJsPromise():JsPromise<T>
-    return new JsPromise(function(resolve, reject) this.handle(function(o) switch o {
+    return new JsPromise((resolve, reject) -> this.handle(o -> switch o {
       case Success(v): resolve(v);
       case Failure(e): reject(e.toJsError());
     }));
@@ -261,12 +260,12 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
   @:noUsing
   static public function cache<T>(gen:()->Promise<Pair<T, Future<Noise>>>):()->Promise<T> {
     var p = null;
-    return function() {
+    return () -> {
       var ret = p;
       if(ret == null) {
         var sync = false;
-        ret = gen().next(function(o) {
-          o.b.handle(function(_) {
+        ret = gen().next(o -> {
+          o.b.handle(_ -> {
             sync = true;
             p = null;
           });
@@ -274,7 +273,7 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
         });
         if(!sync) p = ret;
       }
-      return ret.map(function(o) {
+      return ret.map(o -> {
         if(!o.isSuccess()) p = null;
         return o;
       });
@@ -306,8 +305,8 @@ abstract Promise<T>(Surprise<T, Error>) from Surprise<T, Error> to Surprise<T, E
 abstract Next<In, Out>(In->Promise<Out>) from In->Promise<Out> to In->Promise<Out> {
 
   @:from(ignoredByInference) extern inline static function ofDynamic<In>(f:In->Nonsense):Next<In, Dynamic> // Nonsense being non-existent, no function should ever unify with this, unless it returns Dynamic
-    return function (x):Promise<Dynamic> {
-      var d:Dynamic = f(x);
+    return (x:In) -> {
+      final d:Dynamic = f(x);
       return Future.sync(Success(d));
     }
 

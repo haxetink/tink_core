@@ -17,9 +17,9 @@ class Signals extends Base {
   }
 
   public function testNext() {
-    var next = signal1.nextTime();
+    final next = signal1.nextTime();
     var value = null;
-    next.handle(function (v) value = v);
+    next.handle(v -> { value = v; });
     handlers1.trigger('foo');
     asserts.assert('foo' == value);
     handlers1.trigger('bar');
@@ -29,17 +29,17 @@ class Signals extends Base {
 
   public function testSuspendable() {
 
-    var active = false,
-        d = null,
-        counter = 0,
-        initialized = 0,
-        received = -1;
+    var active = false;
+    var d = null;
+    var counter = 0;
+    var initialized = 0;
+    var received = -1;
 
-    var s = new Signal(
-      function (fire) {
+    final s = new Signal(
+      fire -> {
         fire(counter++);
         active = true;
-        return function () active = false;
+        return () -> active = false;
       },
       v -> {
         initialized++;
@@ -90,15 +90,15 @@ class Signals extends Base {
   }
 
   public function testJoin() {
-    var s = signal1.join(signal2);
+    final s = signal1.join(signal2);
 
     asserts.assert(0 == handlers1.getLength());
     asserts.assert(0 == handlers2.getLength());
 
     var calls = 0;
 
-    var link1 = s.handle(function () calls++),
-        link2 = s.handle(function () calls++);
+    final link1 = s.handle(() -> calls++);
+    final link2 = s.handle(() -> calls++);
 
     asserts.assert(1 == handlers1.getLength());
     asserts.assert(1 == handlers2.getLength());
@@ -124,16 +124,16 @@ class Signals extends Base {
   }
 
   public function testMap() {
-    var mapCalls = 0,
-        last = null;
-    var s = signal1.map(function (v) { mapCalls++; return last = v + v; } );
+    var mapCalls = 0;
+    var last = null;
+    final s = signal1.map(v -> { mapCalls++; return last = v + v; });
 
     asserts.assert(0 == handlers1.getLength());
 
     var calls = 0;
 
-    var link1 = s.handle(function () calls++),
-      link2 = s.handle(function () calls++);
+    final link1 = s.handle(() -> calls++);
+    final link2 = s.handle(() -> calls++);
 
     asserts.assert(1 == handlers1.getLength());
 
@@ -154,29 +154,29 @@ class Signals extends Base {
   }
 
   public function testFlatMap() {
-    var mapCalls = 0,
-      out = '',
-      inQueueData = [for (i in 1...1000) Std.string(i)],
-      inQueue = [];
+    var mapCalls = 0;
+    var out = '';
+    final inQueueData = [for (i in 1...1000) Std.string(i)];
+    final inQueue = [];
 
     function make() {
-      var f = Future.trigger();
-      var data = inQueueData.shift();
-      inQueue.push(function () f.trigger(data));
+      final f = Future.trigger();
+      final data = inQueueData.shift();
+      inQueue.push(() -> f.trigger(data));
       return f.asFuture();
     }
     function step()
       inQueue.shift()();
 
-    var s = signal1.flatMap(function (v1) { mapCalls++; return make().map(function (v2) return v1 + v2); });
+    final s = signal1.flatMap(v1 -> { mapCalls++; return make().map(v2 -> v1 + v2); });
 
     asserts.assert(0 == handlers1.getLength());
 
     var calls = 0;
 
-    var link1 = s.handle(function () calls++),
-      link2 = s.handle(function () calls++),
-      link3 = s.handle(function (v) out += v);
+    final link1 = s.handle(() -> calls++);
+    final link2 = s.handle(() -> calls++);
+    final link3 = s.handle(v -> out += v);
 
     asserts.assert(1 == handlers1.getLength());
 
@@ -217,11 +217,11 @@ class Signals extends Base {
   }
 
   public function testGenerate() {
-    var s = Signal.generate(fire -> {
+    final s = Signal.generate(fire -> {
       fire('42');
       handlers1.listen(fire);
     });
-    var a = [];
+    final a = [];
     s.handle(a.push);
     s.handle(a.push);
     asserts.assert('42' == a.join(','));

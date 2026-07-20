@@ -82,7 +82,7 @@ class OptionTools {
    *  Returns `true` if the option is `Some` and the value is equal to `v`, otherwise `false`
    */
   static public inline function equals<T>(o:Option<T>, v:T):Bool
-    return satisfies(o, function (found) return found == v);
+    return satisfies(o, found -> found == v);
     
   /**
    *  Transforms the option value with a transform function
@@ -124,7 +124,7 @@ class OptionTools {
 }
 
 class OptionIter<T> {
-  var value:T;
+  final value:T;
   var alive = true;
   
   public inline function new(o:Option<T>) 
