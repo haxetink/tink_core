@@ -129,9 +129,13 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
    * An alternative to `new Signal()` if you have no `CallbackLink` to return.
    * Other than that, it behaves exactly the same.
    */
-  static public function generate<T>(generator:(T->Void)->Void, ?init):Signal<T>
-    return new Signal<T>(fire -> { generator(fire); null; }, init);
-
+  static public function generate<T>(generator:(T->Void)->Void, ?init):Signal<T> {
+    var create:Null<(T->Void)->Void> = generator;
+    return new Signal<T>(fire -> switch create {
+      case null: null;
+      case fn: create = null; fn(fire); null;
+    });
+  }
   /**
    *  Creates a new `SignalTrigger`
    */
