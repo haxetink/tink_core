@@ -65,8 +65,9 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
           handle(cb) & that.handle(cb);
         },
         self -> {
+          final dispose = Suspendable.disposeWeakly(self);
           function release()
-            if (this.disposed && that.disposed) self.dispose();
+            if (this.disposed && that.disposed) dispose();
           this.ondispose(release);
           that.ondispose(release);
         }
@@ -200,12 +201,30 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
   public function listen(cb)
     return handlers.add(cb);
 
+  /**
+   * A source keeps its dispose handlers until it is disposed itself, which a long-lived trigger never is. Holding the
+   * derived signal weakly lets it be collected once nothing references it; one that is listened to is kept by its
+   * subscription to the source anyway. Other targets keep a strong reference.
+   */
+  static public function disposeWeakly(d:OwnedDisposable):()->Void {
+    #if js
+    if (js.Syntax.typeof(js.Lib.global.WeakRef) != 'undefined') {
+      final ref = new js.lib.WeakRef(d);
+      return () -> switch ref.deref() {
+        case null:
+        case v: v.dispose();
+      }
+    }
+    #end
+    return d.dispose;
+  }
+
   static public function over<In, Out>(s:Signal<In>, activate):Signal<Out>
     return
       if (s.disposed) Signal.dead();
       else {
         final ret = new Suspendable<Out>(activate);
-        s.ondispose(ret.dispose);
+        s.ondispose(disposeWeakly(ret));
         ret;
       }
 }

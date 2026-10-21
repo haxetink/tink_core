@@ -231,4 +231,49 @@ class Signals extends Base {
 
     return asserts.done();
   }
+
+  #if nodejs // derived signals are only held weakly on js
+  public function testDerivedReleasedWhileSourceLives() {
+    final gc:()->Void =
+      try {
+        js.Lib.require('v8').setFlagsFromString('--expose-gc');
+        js.Lib.require('vm').runInNewContext('gc');
+      }
+      catch (e:Dynamic) null;
+    if (gc == null) {
+      asserts.assert(true, 'no way to force a collection');
+      return asserts.done();
+    }
+
+    // count collections with a FinalizationRegistry: a WeakRef would keep its target alive while it is being checked
+    var collected = 0;
+    final registry:Dynamic = js.Syntax.code('new FinalizationRegistry({0})', (_:Dynamic) -> collected++);
+
+    var attempts = 0;
+    function check() {
+      gc();
+      haxe.Timer.delay(() ->
+        if (collected < 39 && ++attempts < 20) check();
+        else {
+          // Haxe's generated '$_' temp keeps the last object it bound a method of, so one may survive
+          asserts.assert(collected >= 39);
+          asserts.done();
+        }, 10);
+    }
+
+    // in a later task: node keeps the targets of WeakRefs created while the main script runs
+    haxe.Timer.delay(() -> {
+      for (i in 0...20) {
+        final mapped = signal1.map(v -> v + i);
+        final joined = mapped.join(signal2.filter(v -> v.length > i));
+        joined.handle(_ -> {}).cancel();
+        registry.register(mapped, i);
+        registry.register(joined, i);
+      }
+      check();
+    }, 0);
+
+    return asserts;
+  }
+  #end
 }
