@@ -85,13 +85,22 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
     final ret = Future.trigger();
     var link:CallbackLink = null;
 
-    link = this.listen(v -> switch selector(v) {
-      case None:
-      case Some(v):
-        ret.trigger(v);
-    });
+    function listen()
+      link = this.listen(v -> switch selector(v) {
+        case None:
+        case Some(v):
+          link.cancel();
+          ret.trigger(v);
+      });
 
-    ret.handle(link);
+    // Listen from the start, so a value fired before the first `handle` is not missed, but stop once the future has
+    // been handled and every handler is gone again (e.g. the losing side of `||`), and listen again if it is handled again.
+    @:privateAccess {
+      ret.list.ondrain = () -> { link.cancel(); link = null; }
+      ret.list.onfill = () -> if (link == null) listen();
+    }
+
+    listen();
 
     return ret.asFuture();
   }
