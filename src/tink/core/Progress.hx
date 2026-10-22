@@ -127,7 +127,8 @@ final class ProgressTrigger<T> extends ProgressObject<T> {
 
   public function new(?status) {
     if (status == null)
-      _status = status = InProgress(ProgressValue.ZERO);
+      status = InProgress(ProgressValue.ZERO);
+    _status = status;
     super(if (status.match(Finished(_))) Signal.dead() else _changed = Signal.trigger(), () -> _status);
   }
 

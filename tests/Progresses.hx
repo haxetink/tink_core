@@ -24,6 +24,20 @@ class Progresses {
     return asserts;
   }
 
+  public function testTriggerWithInitialStatus() {
+    final running = new ProgressTrigger(InProgress(new ProgressValue(.5, None)));
+    asserts.assert(running.status.match(InProgress({ value: .5 })));
+    running.finish('done');
+    asserts.assert(running.status.match(Finished('done')));
+
+    final finished = new ProgressTrigger(Finished('early'));
+    asserts.assert(finished.status.match(Finished('early')));
+    finished.finish('late');
+    asserts.assert(finished.status.match(Finished('early')));
+
+    return asserts.done();
+  }
+
   public function testFutureProgress() {
     final trigger = Progress.trigger();
     final progress:Progress<String> = Future.sync(trigger.asProgress());
