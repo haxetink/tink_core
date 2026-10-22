@@ -8,6 +8,7 @@ class RunTests {
     Runner.run(TestBatch.make([
       new Annexes(),
       new Callbacks(),
+      new Disposables(),
       new Errors(),
       new Futures(),
       new Lazies(),

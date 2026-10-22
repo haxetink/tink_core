@@ -1,3 +1,3 @@
 -cp ${SCOPE_DIR}/./src
--D tink_core=2.1.1
+-D tink_core=3.0.0-alpha
 --macro Sys.println("haxe_libraries/tink_core.hxml:2: [Warning] Using dev version of library tink_core")

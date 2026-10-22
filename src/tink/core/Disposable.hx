@@ -1,5 +1,7 @@
 package tink.core;
 
+import tink.core.Callback;
+
 /**
  *
  * An object that will be disposed at the end of life cycle.
@@ -28,7 +30,11 @@ package tink.core;
  */
 interface Disposable {
   var disposed(get, never):Bool;
-  function ondispose(d:()->Void):Void;
+  /**
+   * Registers a handler to be invoked upon disposal, or immediately if already disposed.
+   * @return A `CallbackLink` that unregisters the handler
+   */
+  function ondispose(d:()->Void):CallbackLink;
 }
 
 /**
@@ -44,20 +50,39 @@ interface OwnedDisposable extends Disposable {
  */
 class SimpleDisposable implements OwnedDisposable {
   var f:()->Void;
-  var disposeHandlers:Null<Array<()->Void>> = [];
+  var disposeHandlers:Null<Array<DisposeHandler>> = [];
+  var activeDisposeHandlers = 0;
 
   public var disposed(get, never):Bool;
     inline function get_disposed()
       return disposeHandlers == null;
 
-  public function ondispose(d:()->Void)
-    switch disposeHandlers {
-      case null: d();
-      case v: v.push(d);
+  public function ondispose(d:()->Void):CallbackLink
+    return switch disposeHandlers {
+      case null:
+        d();
+        null;
+      case v:
+        final h = new DisposeHandler(d, this);
+        v.push(h);
+        activeDisposeHandlers++;
+        h;
     }
 
   public function new(dispose)
     this.f = dispose;
+
+  function releaseDisposeHandler()
+    switch disposeHandlers {
+      case null:
+      case v:
+        if (--activeDisposeHandlers <= v.length >> 1) {
+          var i = 0;
+          for (h in v)
+            if (h.active) v[i++] = h;
+          v.resize(i);
+        }
+    }
 
   public function dispose()
     switch disposeHandlers {
@@ -68,10 +93,42 @@ class SimpleDisposable implements OwnedDisposable {
         this.f = noop;//TODO: stack overflow guard
         f();
         for (h in v)
-          h();
+          h.invoke();
     }
 
   static function noop() {}
+}
+
+private class DisposeHandler implements LinkObject {
+  var f:Null<()->Void>;
+  var owner:Null<SimpleDisposable>;
+
+  public var active(get, never):Bool;
+    inline function get_active()
+      return f != null;
+
+  public function new(f, owner) {
+    this.f = f;
+    this.owner = owner;
+  }
+
+  public function invoke()
+    switch f {
+      case null:
+      case fn:
+        f = null;
+        owner = null;
+        fn();
+    }
+
+  public function cancel()
+    switch owner {
+      case null:
+      case o:
+        f = null;
+        owner = null;
+        @:privateAccess o.releaseDisposeHandler();
+    }
 }
 
 class AlreadyDisposed implements OwnedDisposable {
@@ -79,7 +136,10 @@ class AlreadyDisposed implements OwnedDisposable {
   public var disposed(get, never):Bool;
     function get_disposed() return true;
 
-  public function ondispose(d:()->Void) d();//TODO: consider using Callback.defer
+  public function ondispose(d:()->Void):CallbackLink {
+    d();//TODO: consider using Callback.defer
+    return null;
+  }
   public function dispose() {}
 
   function new() {}

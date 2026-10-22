@@ -6,8 +6,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "2.1.1",
-	"releasenote": "Improve Lazy for Haxe 4.3.",
+	"version": "3.0.0-alpha",
+	"releasenote": "Disposable.ondispose returns a CallbackLink. Derived signals no longer leak into their source.",
 	"tags": [
 		"tink",
 		"cross",

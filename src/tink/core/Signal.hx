@@ -188,7 +188,7 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
     handlers.dispose();
 
   public inline function ondispose(handler)
-    handlers.ondispose(handler);
+    return handlers.ondispose(handler);
 
   public function new(activate, ?init) {
     this.activate = activate;
@@ -232,7 +232,7 @@ final class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposab
     handlers.dispose();
 
   public function ondispose(d)
-    handlers.ondispose(d);
+    return handlers.ondispose(d);
 
   /**
    *  Emits a value for this signal
