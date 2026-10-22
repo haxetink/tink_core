@@ -282,4 +282,64 @@ class Signals extends Base {
     });
     return asserts;
   }
+
+  function linked(trigger:SignalTrigger<String>)
+    return @:privateAccess trigger.handlers.activeDisposeHandlers;
+
+  public function testUnusedDerivedSignalsAreReleased() {
+    for (i in 0...100) {
+      signal1.select(v -> if (v == 'foo') Some(v) else None);
+      signal1.map(v -> v.length).filter(v -> v > 1);
+      signal1.join(signal2).handle(_ -> {}).cancel();
+    }
+    asserts.assert(linked(handlers1) == 0);
+    asserts.assert(linked(handlers2) == 0);
+    asserts.assert(@:privateAccess handlers1.handlers.disposeHandlers.length == 0);
+    asserts.assert(@:privateAccess handlers2.handlers.disposeHandlers.length == 0);
+    return asserts.done();
+  }
+
+  public function testDerivedSignalsAreDisposedWithSource() {
+    final log = [];
+    final idle = signal1.map(v -> v.length);
+    final active = signal1.map(v -> v.length);
+    final watched = signal1.map(v -> v.length);
+    final chained = signal1.map(v -> v.length).filter(v -> v > 1);
+
+    final link = active.handle(v -> log.push('active:$v'));
+    chained.handle(v -> log.push('chained:$v'));
+    final watch = watched.ondispose(() -> log.push('watched disposed'));
+    asserts.assert(linked(handlers1) == 3);
+
+    handlers1.trigger('a');
+    handlers1.trigger('ab');
+    asserts.assert(log.join(',') == 'active:1,active:2,chained:2');
+
+    link.cancel();
+    asserts.assert(linked(handlers1) == 2);
+    watch.cancel();
+    asserts.assert(linked(handlers1) == 1);
+    watched.ondispose(() -> log.push('watched disposed'));
+    asserts.assert(linked(handlers1) == 2);
+
+    handlers1.dispose();
+    asserts.assert(log.join(',') == 'active:1,active:2,chained:2,watched disposed');
+    asserts.assert(idle.disposed && active.disposed && watched.disposed && chained.disposed);
+
+    var late = false;
+    idle.ondispose(() -> late = true);
+    asserts.assert(late);
+    return asserts.done();
+  }
+
+  public function testJoinDisposal() {
+    final joined = signal1.join(signal2);
+    var disposed = false;
+    joined.ondispose(() -> disposed = true);
+    handlers1.dispose();
+    asserts.assert(!disposed && !joined.disposed);
+    handlers2.dispose();
+    asserts.assert(disposed && joined.disposed);
+    return asserts.done();
+  }
 }

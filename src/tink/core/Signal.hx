@@ -64,12 +64,8 @@ abstract Signal<T>(SignalObject<T>) from SignalObject<T> {
           final cb:Callback<T> = fire;
           handle(cb) & that.handle(cb);
         },
-        self -> {
-          function release()
-            if (this.disposed && that.disposed) self.dispose();
-          this.ondispose(release);
-          that.ondispose(release);
-        }
+        null,
+        new Joint(this, that)
       );
 
   /**
@@ -178,24 +174,47 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
   final handlers = new CallbackList<T>();
   final activate:(fire:T->Void)->CallbackLink;
 
+  // A signal derived from a source is disposed along with it. To not be kept alive by the source
+  // when no longer in use, it only registers with the source while it has handlers of any kind.
+  final source:Null<Disposable>;
+  var sourceLink:CallbackLink;
+  var retainers = 0;
+
   var init:Null<OwnedDisposable->Void>;
   var subscription:CallbackLink;
 
   public var disposed(get, never):Bool;
-    inline function get_disposed() return handlers.disposed;
+    inline function get_disposed()
+      return handlers.disposed || (source != null && source.disposed);
 
-  public function dispose()
+  public function dispose() {
+    sourceLink.cancel();
     handlers.dispose();
+  }
 
-  public inline function ondispose(handler)
-    return handlers.ondispose(handler);
+  public function ondispose(handler:()->Void):CallbackLink
+    return
+      if (source == null) handlers.ondispose(handler);
+      else if (disposed) {
+        handler();
+        null;
+      }
+      else {
+        retain();
+        handlers.ondispose(handler) & release;
+      }
 
-  public function new(activate, ?init) {
+  public function new(activate, ?init, ?source) {
     this.activate = activate;
     this.init = init;
+    this.source = source;
 
-    handlers.ondrain = () -> subscription.cancel();
+    handlers.ondrain = () -> {
+      subscription.cancel();
+      if (source != null) release();
+    }
     handlers.onfill = () -> {
+      if (source != null) retain();
       switch init {
         case null:
         case f:
@@ -206,17 +225,49 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
     }
   }
 
-  public function listen(cb)
-    return handlers.add(cb);
+  function retain()
+    if (retainers++ == 0)
+      sourceLink = source.ondispose(dispose);
 
-  static public function over<In, Out>(s:Signal<In>, activate):Signal<Out>
+  function release()
+    if (--retainers == 0) {
+      sourceLink.cancel();
+      sourceLink = null;
+    }
+
+  public function listen(cb)
+    return
+      if (disposed) null;
+      else handlers.add(cb);
+
+  static public function over<In, Out>(s:SignalObject<In>, activate):Signal<Out>
     return
       if (s.disposed) Signal.dead();
-      else {
-        final ret = new Suspendable<Out>(activate);
-        s.ondispose(ret.dispose);
-        ret;
+      else new Suspendable<Out>(activate, s);
+}
+
+private class Joint<T> implements Disposable {
+  final a:Signal<T>;
+  final b:Signal<T>;
+
+  public var disposed(get, never):Bool;
+    inline function get_disposed()
+      return a.disposed && b.disposed;
+
+  public function new(a, b) {
+    this.a = a;
+    this.b = b;
+  }
+
+  public function ondispose(d:()->Void):CallbackLink {
+    var done = false;
+    function check()
+      if (!done && disposed) {
+        done = true;
+        d();
       }
+    return a.ondispose(check) & b.ondispose(check);
+  }
 }
 
 final class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposable {
