@@ -231,4 +231,55 @@ class Signals extends Base {
 
     return asserts.done();
   }
+
+  function watched() {
+    final state = { active: false, fire: (null:Int->Void) };
+    final signal = new Signal<Int>(fire -> {
+      state.active = true;
+      state.fire = fire;
+      () -> state.active = false;
+    });
+    return { signal: signal, state: state };
+  }
+
+  public function testNextTimeBeforeHandle() {
+    final next = signal1.nextTime();
+    handlers1.trigger('foo');
+    var value = null;
+    next.handle(v -> value = v);
+    asserts.assert('foo' == value);
+    return asserts.done();
+  }
+
+  public function testNextTimeStopsListening() {
+    final w = watched();
+    final next = w.signal.nextTime(v -> v > 1);
+    asserts.assert(w.state.active);
+
+    next.handle(_ -> {}).cancel();
+    asserts.assert(!w.state.active);
+
+    var value = 0;
+    next.handle(v -> value = v);
+    asserts.assert(w.state.active);
+    w.state.fire(1);
+    w.state.fire(2);
+    asserts.assert(2 == value);
+    asserts.assert(!w.state.active);
+    return asserts.done();
+  }
+
+  public function testNextTimeRaceLoser() {
+    final loser = watched();
+    var value = null;
+    (signal1.nextTime() || loser.signal.nextTime().map(Std.string)).handle(v -> value = v);
+    handlers1.trigger('foo');
+    asserts.assert('foo' == value);
+    // queued behind whatever Callback's stack overflow guard parked (interp/eval/python guard at depth 100)
+    Callback.guardStackoverflow(() -> {
+      asserts.assert(!loser.state.active);
+      asserts.done();
+    });
+    return asserts;
+  }
 }
