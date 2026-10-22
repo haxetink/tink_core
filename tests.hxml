@@ -1,4 +1,7 @@
 -cp ./tests/
+
+-D no-deprecation-warnings
+
 -main RunTests
 -lib tink_unittest
 -lib deep_equal

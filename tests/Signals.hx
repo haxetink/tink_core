@@ -16,6 +16,38 @@ class Signals extends Base {
     return Noise;
   }
 
+  // Activating a derived signal costs one level of guard depth per link, and the
+  // trigger that follows costs one more. Close enough to `MAX_DEPTH`, the delivery
+  // is therefore parked, and an observer reading the value synchronously after
+  // `trigger` - as `Progresses::testPromiseProgress` does - sees nothing. See #180.
+  @:include
+  public function testActivationIsSynchronous() {
+    // runs `f` with `Callback.depth` at `target`, however deep we already are
+    function atDepth(target:Int, f:()->Void) {
+      function rec()
+        if (@:privateAccess Callback.depth >= target) f();
+        else Callback.guardStackoverflow(rec);
+      rec();
+    }
+
+    final ceiling = @:privateAccess Callback.MAX_DEPTH;
+    final derived = signal1.map(v -> v);
+
+    var seen = null,
+        ran = false;
+
+    atDepth(ceiling - 1, () -> {
+      ran = true;
+      derived.handle(v -> seen = v);
+      handlers1.trigger('foo');
+    });
+
+    asserts.assert(ran, 'never reached depth ${ceiling - 1}');
+    asserts.assert(seen == 'foo', 'saw $seen');
+
+    return asserts.done();
+  }
+
   public function testNext() {
     final next = signal1.nextTime();
     var value = null;
@@ -87,6 +119,46 @@ class Signals extends Base {
     asserts.assert(!active);
 
     return asserts.done();
+  }
+
+  // Registering a handler on a chain of derived signals activates every link in
+  // it, and each activation happens inside the previous one, so the recursion is
+  // as deep as the chain is long. Nothing bounds it by `MAX_DEPTH` the way
+  // guarded calls are, so a long enough chain overflows the stack before
+  // `handle` returns. See #180.
+  public function testDeepChainActivation() {
+    final limit = @:privateAccess Callback.MAX_DEPTH;
+    final length = limit * 2;
+    var nested = 0,
+        deepest = 0;
+
+    function derive(inner:Signal<Int>):Signal<Int>
+      return new Signal<Int>(fire -> {
+        if (++nested > deepest) deepest = nested;
+        final link = inner.handle(fire);
+        nested--;
+        return link;
+      });
+
+    final source:SignalTrigger<Int> = Signal.trigger();
+    var last:Signal<Int> = source;
+    for (i in 0...length) last = derive(last);
+
+    var received = -1;
+    last.handle(v -> received = v);
+
+    asserts.assert(deepest <= limit, 'activating a chain of $length links nested $deepest deep');
+
+    source.trigger(42);
+
+    // firing the chain does outgrow the guard, so the tail of the delivery is
+    // parked until the queue is drained, which happens after this method returns
+    Callback.defer(() -> {
+      asserts.assert(received == 42, 'received $received');
+      asserts.done();
+    });
+
+    return asserts;
   }
 
   public function testJoin() {

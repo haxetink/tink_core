@@ -168,8 +168,7 @@ private class ListCell<T> implements LinkObject {
   }
 
   public inline function invoke(data)
-    if (list != null)
-      cb(data);
+    if (list != null) cb(data);
 
   public inline function clear() {
     cb = null;
@@ -225,13 +224,13 @@ class CallbackList<T> extends SimpleDisposable {
   }
 
   inline function drain()
-    ondrain();
+    Callback.guardStackoverflow(ondrain);
 
   public inline function add(cb:Callback<T>):CallbackLink {
     if (disposed) return null;
     final node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
     cells.push(node);
-    if (used++ == 0) onfill();
+    if (used++ == 0) Callback.guardStackoverflow(onfill);
     return node;
   }
 
