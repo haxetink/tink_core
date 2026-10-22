@@ -16,35 +16,76 @@ class Signals extends Base {
     return Noise;
   }
 
-  // Activating a derived signal costs one level of guard depth per link, and the
-  // trigger that follows costs one more. Close enough to `MAX_DEPTH`, the delivery
-  // is therefore parked, and an observer reading the value synchronously after
-  // `trigger` - as `Progresses::testPromiseProgress` does - sees nothing. See #180.
-  @:include
-  public function testActivationIsSynchronous() {
-    // runs `f` with `Callback.depth` at `target`, however deep we already are
-    function atDepth(target:Int, f:()->Void) {
-      function rec()
-        if (@:privateAccess Callback.depth >= target) f();
-        else Callback.guardStackoverflow(rec);
-      rec();
-    }
+  // runs `f` with `Callback.depth` at `target`, however deep we already are
+  static function atDepth(target:Int, f:()->Void) {
+    function rec()
+      if (@:privateAccess Callback.depth >= target) f();
+      else Callback.guardStackoverflow(rec);
+    rec();
+  }
 
+  // Activating a derived signal costs one level of guard depth per link, and the trigger that follows
+  // costs one more. Close enough to `MAX_DEPTH`, delivery is therefore deferred. See #180.
+  public function testAfterTriggerAtDepthLimit() {
     final ceiling = @:privateAccess Callback.MAX_DEPTH;
     final derived = signal1.map(v -> v);
+    final future = Future.trigger();
+    final log = [];
 
-    var seen = null,
-        ran = false;
-
+    var deferred:Null<Bool> = null;
     atDepth(ceiling - 1, () -> {
-      ran = true;
-      derived.handle(v -> seen = v);
-      handlers1.trigger('foo');
+      derived.handle(v -> log.push('signal:$v'));
+      future.handle(v -> log.push('future:$v'));
+      handlers1.trigger('foo', () -> log.push('after signal'));
+      future.trigger('bar', () -> {
+        log.push('after future');
+        asserts.assert(deferred == true, 'delivery is deferred at the depth limit');
+        asserts.assert(log.join(',') == 'signal:foo,after signal,future:bar,after future', log.join(','));
+        asserts.done();
+      });
+      deferred = log.length == 0;
     });
 
-    asserts.assert(ran, 'never reached depth ${ceiling - 1}');
-    asserts.assert(seen == 'foo', 'saw $seen');
+    return asserts;
+  }
 
+  public function testAfterTriggerWhenTriggeredDuringDelivery() {
+    final log = [];
+    var first = true;
+    signal1.handle(v -> {
+      log.push(v);
+      if (first) {
+        first = false;
+        handlers1.trigger('b', () -> log.push('after b'));
+        log.push('triggered b');
+      }
+    });
+    handlers1.trigger('a', () -> log.push('after a'));
+    asserts.assert(log.join(',') == 'a,triggered b,b,after b,after a');
+    return asserts.done();
+  }
+
+  public function testAfterTriggerWhenDisposedDuringDelivery() {
+    final log = [];
+    signal1.handle(v -> {
+      log.push(v);
+      if (v == 'a') {
+        handlers1.trigger('b', () -> log.push('after b'));
+        handlers1.dispose();
+      }
+    });
+    handlers1.trigger('a', () -> log.push('after a'));
+    handlers1.trigger('c', () -> log.push('after c'));
+    asserts.assert(log.join(',') == 'a,after b,after a,after c');
+    return asserts.done();
+  }
+
+  public function testTriggerAsCallback() {
+    final log = [];
+    signal2.handle(v -> log.push(v));
+    signal1.handle(handlers2);
+    handlers1.trigger('foo');
+    asserts.assert(log.join(',') == 'foo');
     return asserts.done();
   }
 

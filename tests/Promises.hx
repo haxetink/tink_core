@@ -6,6 +6,28 @@ using tink.CoreApi;
 
 @:asserts
 class Promises extends Base {
+  public function testTriggerAsCallback() {
+    final p:PromiseTrigger<Int> = Promise.trigger();
+    Promise.resolve(1).handle(p);
+    var value = 0;
+    p.asPromise().handle(o -> value = o.sure());
+    asserts.assert(value == 1);
+    return asserts.done();
+  }
+
+  public function testAfterTrigger() {
+    final log = [];
+    final p:PromiseTrigger<Int> = Promise.trigger();
+    p.asPromise().handle(o -> log.push(switch o {
+      case Success(v): 'success:$v';
+      case Failure(e): 'failure:${e.message}';
+    }));
+    asserts.assert(p.resolve(1, () -> log.push('after resolve')));
+    asserts.assert(!p.reject(new Error('nope'), () -> log.push('after reject')));
+    asserts.assert(log.join(',') == 'success:1,after resolve,after reject');
+    return asserts.done();
+  }
+
   public function testRecover() {
     final p:Promise<Int> = new Error("test");
     p.recover(_ -> 4).handle(v -> asserts.assert(v == 4));

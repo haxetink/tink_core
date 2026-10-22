@@ -468,14 +468,19 @@ final class FutureTrigger<T> extends FutureObject<T> {
     return this;
 
   /**
-   *  Triggers a value for this future
+   *  Triggers a value for this future. Delivery to the handlers is not guaranteed to be synchronous,
+   *  so `afterTrigger` can be passed to run once all of them have been invoked.
+   *  @return `false` if the future was already triggered, in which case `afterTrigger` runs right away
    */
-  public function trigger(result:T):Bool
+  public function trigger(result:T, ?afterTrigger:()->Void):Bool
     return switch status {
-      case Ready(_): false;
+      case Ready(_):
+        if (afterTrigger != null)
+          Callback.guardStackoverflow(afterTrigger);
+        false;
       default:
         status = Ready(result);
-        list.invoke(result);
+        list.invoke(result, afterTrigger);
         true;
     }
 }

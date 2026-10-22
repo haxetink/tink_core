@@ -221,7 +221,7 @@ private class Suspendable<T> implements SignalObject<T> implements OwnedDisposab
           init = null;
           f(this);
       }
-      subscription = activate(handlers.invoke);
+      subscription = activate(v -> handlers.invoke(v));
     }
   }
 
@@ -286,10 +286,11 @@ final class SignalTrigger<T> implements SignalObject<T> implements OwnedDisposab
     return handlers.ondispose(d);
 
   /**
-   *  Emits a value for this signal
+   *  Emits a value for this signal. Delivery to the handlers is not guaranteed to be synchronous,
+   *  so `afterTrigger` can be passed to run once all of them have been invoked.
    */
-  public inline function trigger(event:T)
-    handlers.invoke(event);
+  public inline function trigger(event:T, ?afterTrigger:()->Void)
+    handlers.invoke(event, afterTrigger);
 
   /**
    *  Gets the number of handlers registered

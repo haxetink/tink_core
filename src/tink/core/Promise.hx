@@ -352,11 +352,13 @@ abstract PromiseTrigger<T>(FutureTrigger<Outcome<T, Error>>) from FutureTrigger<
   public inline function new()
     this = Future.trigger();
 
-  public inline function resolve(v:T)
-    return this.trigger(Success(v));
+  public inline function resolve(v:T, ?afterTrigger:()->Void)
+    return this.trigger(Success(v), afterTrigger);
 
-  public inline function reject(e:Error)
-    return this.trigger(Failure(e));
+  public inline function reject(e:Error, ?afterTrigger:()->Void)
+    return this.trigger(Failure(e), afterTrigger);
 
   @:to public inline function asPromise():Promise<T> return this.asFuture();
+
+  @:to inline function toCallback():Callback<Outcome<T, Error>> return this;
 }

@@ -6,6 +6,18 @@ using tink.CoreApi;
 class Progresses {
   public function new() {}
 
+  public function testAfterTrigger() {
+    final log = [];
+    final p:ProgressTrigger<String> = Progress.trigger();
+    p.asProgress().listen(v -> log.push('progress'));
+    p.asProgress().handle(v -> log.push('result:$v'));
+    p.progress(.5, None, () -> log.push('after progress'));
+    p.finish('done', () -> log.push('after finish'));
+    p.progress(1, None, () -> log.push('after late progress'));
+    asserts.assert(log.join(',') == 'progress,after progress,result:done,after finish,after late progress');
+    return asserts.done();
+  }
+
   public function testProgress() {
     final trigger = Progress.trigger();
     final progress = trigger.asProgress();

@@ -55,6 +55,12 @@ abstract Callback<T>(T->Void) from (T->Void) {
           callback.invoke(v);
       };
 
+  @:from static inline function fromSignalTrigger<A>(trigger:tink.core.Signal.SignalTrigger<A>):Callback<A>
+    return v -> trigger.trigger(v);
+
+  @:from static inline function fromFutureTrigger<A>(trigger:tink.core.Future.FutureTrigger<A>):Callback<A>
+    return v -> trigger.trigger(v);
+
   @:noUsing static public function defer(f:()->Void) {
     #if macro
       f();
@@ -214,13 +220,18 @@ class CallbackList<T> extends SimpleDisposable {
     for (c in cells)
       c.clear();
 
-    queue = null;
+    final queue = this.queue;
+    this.queue = null;
     cells = null;
 
     if (used > 0) {
       used = 0;
       drain();
     }
+
+    // queued invocations no longer deliver anything, but their `after` must still run
+    for (f in queue)
+      f();
   }
 
   inline function drain()
@@ -234,12 +245,20 @@ class CallbackList<T> extends SimpleDisposable {
     return node;
   }
 
-  public function invoke(data:T)
+  /**
+   * Invokes all callbacks with `data`. Delivery is not guaranteed to be synchronous, because
+   * it is deferred when the call stack gets too deep, or when invoked while already invoking.
+   * The optional `after` is called once all callbacks have been invoked, including whatever
+   * they in turn deferred.
+   */
+  public function invoke(data:T, ?after:()->Void)
     Callback.guardStackoverflow(() -> {
       if (disposed) {}
       else if (busy) {
-        if (destructive != true)
-          queue.push(invoke.bind(data));
+        if (destructive != true) {
+          queue.push(invoke.bind(data, after));
+          return;
+        }
       }
       else {
         busy = true;
@@ -254,7 +273,7 @@ class CallbackList<T> extends SimpleDisposable {
         busy = false;
 
         if (disposed)
-          destroy();//TODO: perhaps something should be done with non empty queue
+          destroy();
         else {
           if (used < cells.length)
             compact();
@@ -263,6 +282,8 @@ class CallbackList<T> extends SimpleDisposable {
             queue.shift()();
         }
       }
+      if (after != null)
+        Callback.guardStackoverflow(after);
     });
 
   function compact()
@@ -291,6 +312,7 @@ class CallbackList<T> extends SimpleDisposable {
 
   //TODO: probably want to make this private
   public function clear():Void {
+    if (disposed) return;
     if (busy)
       queue.push(clear);
     for (cell in cells)

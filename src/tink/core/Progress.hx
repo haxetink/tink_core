@@ -134,13 +134,24 @@ final class ProgressTrigger<T> extends ProgressObject<T> {
   public inline function asProgress():Progress<T>
     return this;
 
-  public function progress(v:Float, total:Option<Float>)
-    if (!_status.match(Finished(_)))
-      _changed.trigger(_status = InProgress(new ProgressValue(v, total)));
+  /**
+   *  Delivery to the handlers is not guaranteed to be synchronous, so `afterTrigger` can be passed
+   *  to run once all of them have been invoked (or right away, if this progress is already finished).
+   */
+  public function progress(v:Float, total:Option<Float>, ?afterTrigger:()->Void)
+    update(InProgress(new ProgressValue(v, total)), afterTrigger);
 
-  public function finish(v:T)
+  /**
+   *  See `progress` for `afterTrigger`.
+   */
+  public function finish(v:T, ?afterTrigger:()->Void)
+    update(Finished(v), afterTrigger);
+
+  function update(status:ProgressStatus<T>, afterTrigger:Null<()->Void>)
     if (!_status.match(Finished(_)))
-      _changed.trigger(_status = Finished(v));
+      _changed.trigger(_status = status, afterTrigger);
+    else if (afterTrigger != null)
+      Callback.guardStackoverflow(afterTrigger);
 
 }
 

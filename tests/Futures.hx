@@ -66,6 +66,25 @@ class Futures extends Base {
     return asserts.done();
   }
 
+  public function testAfterTrigger() {
+    final f:FutureTrigger<Int> = Future.trigger();
+    final log = [];
+    f.handle(v -> log.push('$v'));
+    asserts.assert(f.trigger(1, () -> log.push('after 1')));
+    asserts.assert(!f.trigger(2, () -> log.push('after 2')));
+    asserts.assert(log.join(',') == '1,after 1,after 2');
+    return asserts.done();
+  }
+
+  public function testTriggerAsCallback() {
+    final f:FutureTrigger<Int> = Future.trigger();
+    Future.sync(1).handle(f);
+    var value = 0;
+    f.handle(v -> value = v);
+    asserts.assert(value == 1);
+    return asserts.done();
+  }
+
   public function testFlatten() {
     final f = Future.sync(Future.sync(4));
     final flat = Future.flatten(f);
