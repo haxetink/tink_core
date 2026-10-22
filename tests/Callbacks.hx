@@ -35,6 +35,67 @@ class Callbacks extends Base {
         rec();
     });
 
+  // Runs `f` at the point where the guarded call stack is exhausted, i.e. with a
+  // non-empty overflow queue, so that every guarded call made by `f` is parked.
+  // Recurses under the guard until one of its own guarded calls fails to run.
+  function atStackLimit(f:()->Void) {
+    var reached = false;
+    function recurse():Bool {
+      if (reached) return false;
+      var ran = false;
+      Callback.guardStackoverflow(() -> {
+        ran = true;
+        if (recurse()) {
+          reached = true;
+          f();
+        }
+      });
+      return !ran;
+    }
+    recurse();
+  }
+
+  public function testOverflowOrder() {
+    final order = [];
+
+    atStackLimit(() -> {
+      Callback.guardStackoverflow(() -> {
+        order.push('a');
+        atStackLimit(() -> {
+          Callback.guardStackoverflow(() -> order.push('a1'));
+          Callback.guardStackoverflow(() -> order.push('a2'));
+        });
+      });
+      Callback.guardStackoverflow(() -> order.push('b'));
+      Callback.guardStackoverflow(() -> order.push('c'));
+    });
+
+    // the queue is drained once the guarded stack unwinds, which happens after
+    // this test method returns, hence the deferred assertion
+    Callback.defer(() -> {
+      // parked continuations run in the order they were parked, and those parked
+      // while a parked continuation runs go before the rest of the queue
+      asserts.assert(order.join(',') == 'a,a1,a2,b,c', 'order: ' + order.join(','));
+      asserts.done();
+    });
+
+    return asserts;
+  }
+
+  public function testOverflowVolume() {
+    final total = 10000;
+    var count = 0;
+
+    atStackLimit(() -> for (i in 0...total) Callback.guardStackoverflow(() -> count++));
+
+    Callback.defer(() -> {
+      asserts.assert(count == total, '$count of $total parked callbacks ran');
+      asserts.done();
+    });
+
+    return asserts;
+  }
+
   public function testDefer() {
 
     var counter = 0;

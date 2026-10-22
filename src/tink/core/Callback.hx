@@ -13,15 +13,8 @@ abstract Callback<T>(T->Void) from (T->Void) {
   static var depth = 0;
   static inline final MAX_DEPTH = #if (eval || python || interp) 100 #else 500 #end;
 
-  // When the guarded call stack is exhausted, continuations are parked here
-  // and executed when the stack unwinds, so that synchronous delivery chains
-  // are never split across macro-tasks (splitting them loses signal events
-  // fired in between, see SignalStream). Two invariants keep delivery order
-  // identical to fully synchronous execution:
-  //   1. once anything is parked, all subsequent guarded calls park behind it
-  //      (nothing may overtake a parked continuation), and
-  //   2. continuations parked while a drained item runs are processed before
-  //      the remainder of the queue (depth-first order).
+  // When the guarded call stack is exhausted, continuations are parked here and
+  // run once it unwinds. See `Callbacks::testOverflowOrder` for the ordering guarantees.
   static var overflow:Array<()->Void> = [];
   static var draining = false;
 
@@ -29,13 +22,10 @@ abstract Callback<T>(T->Void) from (T->Void) {
     if (!draining) {
       draining = true;
       while (overflow.length > 0) {
-        final fn = overflow.shift();
-        final rest = overflow;
-        // give the item a clean queue so its own nested guarded
-        // calls run synchronously until it hits the wall itself
+        final batch = overflow;
         overflow = [];
-        guardStackoverflow(fn);
-        overflow = overflow.concat(rest);
+        for (fn in batch)
+          guardStackoverflow(fn);
       }
       draining = false;
     }
@@ -178,8 +168,7 @@ private class ListCell<T> implements LinkObject {
   }
 
   public inline function invoke(data)
-    if (list != null)
-      cb(data);
+    if (list != null) cb(data);
 
   public inline function clear() {
     cb = null;
@@ -234,18 +223,14 @@ class CallbackList<T> extends SimpleDisposable {
     }
   }
 
-  // onfill/ondrain are state synchronization hooks and must run synchronously:
-  // deferring them under guardStackoverflow leaves observers with stale state
-  // (e.g. a Suspendable signal that is not activated when `handle` returns).
-  // Recursion-prone implementations (see SuspendableFuture) guard themselves.
   inline function drain()
-    ondrain();
+    Callback.guardStackoverflow(ondrain);
 
   public inline function add(cb:Callback<T>):CallbackLink {
     if (disposed) return null;
     final node = new ListCell(cb, this);//perhaps adding during and after destructive invokations should be disallowed altogether
     cells.push(node);
-    if (used++ == 0) onfill();
+    if (used++ == 0) Callback.guardStackoverflow(onfill);
     return node;
   }
 
